@@ -9,50 +9,54 @@ import {
 import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
 import userIcon from "../../assets/images/userIcon.jpg";
 import ThemedView from "../../components/ThemedView";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Settings() {
   return (
     <ThemedView style={styles.container}>
-      <ScrollView
+      <SafeAreaView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
 
-        <View style={styles.profileSection}>
-          <Image source={userIcon} style={styles.avatar} />
-          <Text style={styles.name}>User Name</Text>
-        </View>
+      <View style={styles.profileSection}>
+        <Image source={userIcon} style={styles.avatar} />
+        <Text style={styles.name}>User Name</Text>
+      </View>
 
-        <View style={styles.optionsSection}>
-          <SettingsOption
-            label="Profile"
-            icon={<Feather name="user" size={22} color="#222" />}
-          />
-          <SettingsOption
-            label="Goals"
-            icon={<Feather name="target" size={22} color="#222" />}
-          />
-          <SettingsOption
-            label="Notifications"
-            icon={
-              <Ionicons name="notifications-outline" size={22} color="#222" />
-            }
-          />
-          <SettingsOption
-            label="Help"
-            icon={<Feather name="help-circle" size={22} color="#222" />}
-          />
-          <SettingsOption
-            label="About"
-            icon={<Feather name="info" size={22} color="#222" />}
-          />
-          <SettingsOption
-            label="Log out"
-            icon={<MaterialIcons name="logout" size={22} color="#d00" />}
-            isDestructive
-          />
-        </View>
-      </ScrollView>
+
+        <ScrollView>
+          <View style={styles.optionsSection}>
+            <SettingsOption
+              label="Profile"
+              icon={<Feather name="user" size={22} color="#222" />}
+            />
+            <SettingsOption
+              label="Goals"
+              icon={<Feather name="target" size={22} color="#222" />}
+            />
+            <SettingsOption
+              label="Notifications"
+              icon={
+                <Ionicons name="notifications-outline" size={22} color="#222" />
+              }
+            />
+            <SettingsOption
+              label="Help"
+              icon={<Feather name="help-circle" size={22} color="#222" />}
+            />
+            <SettingsOption
+              label="About"
+              icon={<Feather name="info" size={22} color="#222" />}
+            />
+            <SettingsOption
+              label="Log out"
+              icon={<MaterialIcons name="logout" size={22} color="#d00" />}
+              isDestructive
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </ThemedView>
   );
 }
