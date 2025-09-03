@@ -7,8 +7,8 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
-import userIcon from "../assets/images/userIcon.jpg";
-import ThemedView from "../components/themedView";
+import userIcon from "../../assets/images/userIcon.jpg";
+import ThemedView from "../../components/ThemedView";
 
 export default function Settings() {
   return (
@@ -17,13 +17,12 @@ export default function Settings() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
-        {/* Profile Section */}
+
         <View style={styles.profileSection}>
           <Image source={userIcon} style={styles.avatar} />
           <Text style={styles.name}>User Name</Text>
         </View>
 
-        {/* Settings Options */}
         <View style={styles.optionsSection}>
           <SettingsOption
             label="Profile"
@@ -69,6 +68,7 @@ function SettingsOption({
 }) {
   return (
     <TouchableOpacity style={styles.option}>
+
       <View style={styles.optionContent}>
         {icon}
         <Text style={[styles.optionText, isDestructive && styles.destructive]}>

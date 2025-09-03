@@ -1,20 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Redirect } from 'expo-router';
 
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Edit app/index.tsx to edit this screen.</Text>
-    </View>
-  );
+  return <Redirect href="/food-entry" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center', 
-    justifyContent: 'center',
-  },
-  text: {
-    textAlign: 'center', // Center the text
-  },
-});
