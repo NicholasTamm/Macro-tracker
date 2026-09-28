@@ -98,7 +98,7 @@ export function ErrorBanner({
             onPress={onAction}
             hitSlop={8}
           >
-            <Text style={{ color: accent, fontSize: 11, fontWeight: '750' as never }}>
+            <Text style={{ color: accent, fontSize: 11, fontWeight: '700' }}>
               {actionLabel}
             </Text>
           </Pressable>
