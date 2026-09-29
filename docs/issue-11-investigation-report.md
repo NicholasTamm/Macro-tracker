@@ -1,7 +1,7 @@
 # Issue #11 investigation report — Expo reconciliation
 
 **Reconciled:** 2026-09-27 PT  
-**Status:** Submitted as a GitHub PR for review (`docs/issue-11-expo-reconciliation`); not merged. Awaiting Nicholas approval — do not merge without explicit approval.  
+**Status:** Approved by Nicholas; PR #16 remains open and unmerged pending final review.
 **Shipping stack:** Expo + React Native + TypeScript.  
 **Target platforms:** iOS and Android first, with web kept viable where a capability exists.  
 **Source issue:** [NicholasTamm/Macro-tracker #11](https://github.com/NicholasTamm/Macro-tracker/issues/11)  
@@ -13,7 +13,29 @@ Issue #11 remains the product-research record for competitive context, safety bo
 
 The app in `/workspace/Macro-tracker/software` is the product. It is not a prototype that will later be replaced by SwiftUI. New product work must be implemented in React Native/Expo unless a narrowly scoped native platform extension is required and exposed through an Expo-compatible adapter.
 
-This reconciliation does not authorize publication or alter the public issue. The eventual publication target is `NicholasTamm/Macro-tracker` on `feat/m1-design-system-scaffold`, subject to explicit human approval.
+The approved reconciliation is also summarized directly in [issue #11](https://github.com/NicholasTamm/Macro-tracker/issues/11). PR #16 remains the review vehicle for this repository snapshot and must not be merged without explicit human approval.
+
+## GitHub tracking source of truth
+
+GitHub issue bodies and discussion are the source of truth for status, ownership, decisions, and follow-up work. This document is a versioned decision snapshot; it does not replace issue tracking.
+
+### Core research and delivery records
+
+- [#11 — Investigation report and Expo/RN reconciliation](https://github.com/NicholasTamm/Macro-tracker/issues/11)
+- [#12 — Food schema and seed contract](https://github.com/NicholasTamm/Macro-tracker/issues/12)
+- [#13 — MVP backlog and implementation tasks](https://github.com/NicholasTamm/Macro-tracker/issues/13)
+- [#14 — Freemium policy and entitlement boundaries](https://github.com/NicholasTamm/Macro-tracker/issues/14)
+- [#15 — Primary-source verification log](https://github.com/NicholasTamm/Macro-tracker/issues/15)
+
+### Cross-cutting follow-ups from this report
+
+- [#18 — Product identity and trademark clearance](https://github.com/NicholasTamm/Macro-tracker/issues/18)
+- [#19 — Cross-platform sync architecture and conflict policy](https://github.com/NicholasTamm/Macro-tracker/issues/19)
+- [#20 — Food-data licensing and optional vendor approval](https://github.com/NicholasTamm/Macro-tracker/issues/20)
+- [#21 — Clinical review of adaptive target safety and nutrition copy](https://github.com/NicholasTamm/Macro-tracker/issues/21)
+- [#22 — Privacy and security architecture for health, provider, and AI data](https://github.com/NicholasTamm/Macro-tracker/issues/22)
+- [#23 — Cross-platform billing and store operations](https://github.com/NicholasTamm/Macro-tracker/issues/23)
+- [#24 — Accessibility, localization, and inclusive release audit](https://github.com/NicholasTamm/Macro-tracker/issues/24)
 
 ## Evidence and originality boundary
 
@@ -178,4 +200,4 @@ Issue #11 is reconciled when reviewers agree that:
 5. M1 remains an offline-first manual diary and does not inherit M2/M3 scope.
 6. Legal, clinical, privacy/security, accessibility, store, and trademark gates remain explicit.
 
-After explicit human approval of this document, work may proceed to issue #12. Until then, no later issue or M1 task should be started.
+Issue #11 has received explicit human approval. Subsequent work remains gated and ordered by the linked GitHub issues; this document does not itself authorize implementation or merge any PR.
