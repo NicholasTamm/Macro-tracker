@@ -83,6 +83,9 @@ CREATE TABLE serving (
 
 CREATE INDEX serving_food_idx ON serving(food_id, sequence);
 
+CREATE UNIQUE INDEX serving_one_default_idx
+    ON serving(food_id) WHERE is_default = 1;
+
 CREATE TABLE alias (
     alias_id            INTEGER PRIMARY KEY,
     food_id             TEXT NOT NULL REFERENCES food(food_id) ON DELETE CASCADE,
@@ -108,9 +111,9 @@ CREATE VIRTUAL TABLE food_fts USING fts5(
 
 CREATE TABLE category_quota (
     category            TEXT PRIMARY KEY,
-    selected_count      INTEGER NOT NULL,
-    target_min          INTEGER NOT NULL,
-    target_max          INTEGER NOT NULL,
+    selected_count      INTEGER NOT NULL CHECK (selected_count >= 0),
+    target_min          INTEGER NOT NULL CHECK (target_min >= 0),
+    target_max          INTEGER NOT NULL CHECK (target_max >= target_min),
     reviewer            TEXT,
     reviewed_at         TEXT
 ) WITHOUT ROWID;

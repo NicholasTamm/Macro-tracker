@@ -25,7 +25,7 @@ Canonical in-repo copies: `software/modules/food-catalog/schema/*.sql`, `types.t
 | Store | Contents | Sync | Mutation model |
 | --- | --- | --- | --- |
 | `FoodSeed.sqlite` | Curated USDA Foundation + SR Legacy foods, nutrients, servings, aliases, FTS index, source metadata | CDN artifact replacement; never CloudKit | Immutable at runtime |
-| `UserData.sqlite` (expo-sqlite) | Custom foods/recipes, diary entries + immutable nutrient snapshots, favorites/recents, weights, goals, later coaching outputs | Local only in M1 | User-owned CRUD |
+| `UserData.sqlite` (expo-sqlite) | Custom foods/recipes, diary entries + immutable nutrient snapshots, favorites/recents, and weights in this contract; profile/goals/coaching tables are owned by later #13 tasks | Local only in M1 | User-owned CRUD |
 | Remote cache (table in user DB or sibling file) | OFF and FDC Branded responses where allowed; provider IDs/expiry for restricted sources | Device-local; not CloudKit by default | TTL/provider policy |
 
 Do not model a 2,000–5,000 row nutrient catalog as ORM objects in JS memory as the primary store. SQLite gives predictable FTS, compact delivery, and atomic seed replacement. Do not add OFF, FatSecret, Edamam, Spoonacular, or Nutritionix rows to `FoodSeed.sqlite` under the MVP plan.
@@ -81,7 +81,7 @@ Query stages: exact name/alias → FTS prefix + bm25 (name > aliases > category)
 
 ## 5. User-data schema (expo-sqlite, replaces SwiftData)
 
-Logical models mapped to SQL in [`schema/user-store-v1.sql`](../software/modules/food-catalog/schema/user-store-v1.sql). All stable identifiers are application-generated UUID strings.
+The food/diary-owned portion of the logical user store is mapped to SQL in [`schema/user-store-v1.sql`](../software/modules/food-catalog/schema/user-store-v1.sql). All stable identifiers are application-generated UUID strings. This contract deliberately does not start the #13 profile, goals, targets, or coaching model tasks; those tables must be added through reviewed migrations before their features ship.
 
 ### CustomFood
 
@@ -187,7 +187,7 @@ cd software/modules/food-catalog
 bash demo/smoke.sh
 ```
 
-Creates a tiny in-memory-path `FoodSeed` from DDL + fixture, builds empty `UserData`, prints nutrient IDs / schema version from TypeScript, runs `tsc --noEmit`.
+Creates a tiny temporary `FoodSeed` from DDL + fixture, builds the empty food/diary portion of `UserData`, verifies integrity/FKs/default-serving ownership/required macros/FTS parity, prints nutrient IDs and schema versions from TypeScript, and compiles the scoped TypeScript contract.
 
 ## Definition of done for this issue
 
@@ -195,4 +195,4 @@ Creates a tiny in-memory-path `FoodSeed` from DDL + fixture, builds empty `UserD
 2. Canonical SQL + TypeScript types under `software/modules/food-catalog/`.
 3. Runnable smoke demo.
 4. No multi-thousand-row USDA download in this PR.
-5. Human approval before merge; do not start issues #13–#15 from this work.
+5. Human approval before merge; do not start any M1 implementation task from #13 as part of this contract work.

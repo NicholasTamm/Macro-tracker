@@ -1,6 +1,6 @@
 # food-catalog
 
-Expo/TypeScript contract for the replaceable read-only food seed and M1 user store.
+Expo/TypeScript contract for the replaceable read-only food seed and the food/diary-owned portion of the M1 user store. Profile, goal, target, and coaching models remain separate #13 work.
 
 ## Docs
 
