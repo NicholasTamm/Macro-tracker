@@ -1,2 +1,4 @@
-/** Food catalog shell — local USDA seed + search (M1-06+). */
-export const FoodCatalogModule = { name: 'food-catalog', status: 'shell' as const };
+/** Food catalog — seed SQLite, FTS, provider adapters, provenance (M1 contract). */
+export { FoodCatalogModule } from './module';
+export * from './types';
+export * from './nutrients';

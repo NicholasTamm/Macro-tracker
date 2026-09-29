@@ -3,7 +3,7 @@
 **Stack:** Expo Router + React Native (`software/`), **not** Swift/SwiftUI.  
 **Visual source of truth:** `/workspace/macrofactor-codex-research/design-system/` (`index.html`, `styles.css`, `scripts.js`).  
 **Repo:** `NicholasTamm/Macro-tracker` · branch `feat/m1-design-system-scaffold`  
-**Updated:** 2026-09-27 PT
+**Updated:** 2026-09-28 PT
 
 ## Design-system HTML reference
 
@@ -25,7 +25,7 @@
 | M1-02 | CI: lint / typecheck workflow for Expo | **in_progress** (workflow added; green run pending push) |
 | M1-03 | Typed tokens from HTML library (colors, spacing, radius, typography; light/dark) | **done** |
 | M1-04 | Starter components + gallery: PrimaryButton, Card/RaisedTile, MacroSummary, FoodRow, ErrorBanner, OfflinePill, Empty/Loading, ComponentGallery | **in_progress** (specimens in; AX5/VoiceOver polish remaining) |
-| M1-05 | User models + persistence (SQLite/AsyncStorage plan) | todo |
+| M1-05 | User models + persistence (SQLite/AsyncStorage plan) | **in_progress** (schema/contract in food-catalog; see issue #12) |
 | M1-06 | USDA seed build script | todo |
 | M1-07 | Selection/alias files | todo |
 | M1-08 | FoodSeed sqlite + FTS | todo |
@@ -52,6 +52,10 @@
 - `software/design-system/Gallery.tsx` — ComponentGallery
 - `software/app/(tabs)/component-gallery.tsx` — route
 - `software/modules/*` — feature shells
+
+## Issue #12 contract
+
+Food schema / seed contract (Expo-reconciled): [`docs/issue-12-food-schema-seed-contract.md`](../docs/issue-12-food-schema-seed-contract.md) · module [`modules/food-catalog/`](./modules/food-catalog/) · demo `modules/food-catalog/demo/smoke.sh`.
 
 ## Blockers
 

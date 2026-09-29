@@ -8,6 +8,8 @@ Original nutrition tracker (competitive-inspired only — no MacroFactor tradema
 
 Design tokens and components are ported from the interactive HTML library in the research workspace (`macrofactor-codex-research/design-system/`). See [`software/ROLLOUT-STATUS.md`](./software/ROLLOUT-STATUS.md) for Milestone 1 progress.
 
+Food schema / seed contract (#12): [`docs/issue-12-food-schema-seed-contract.md`](./docs/issue-12-food-schema-seed-contract.md).
+
 ```bash
 cd software
 npm install
