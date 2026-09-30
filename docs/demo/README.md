@@ -65,3 +65,14 @@ bash docs/demo/smoke-billing-store.sh
 ```
 
 Writes `out/issue-23-smoke-result.txt` on success/failure.
+
+## Issue #24 — Accessibility / localization smoke
+
+Validates the Expo-reconciled a11y/l10n audit checklist (VoiceOver/TalkBack, Dynamic Type, Reduce Motion, themes, locales/RTL, nutrient-not-color-alone, severity/gates).
+
+```bash
+# from repo root
+bash docs/demo/smoke-a11y-l10n.sh
+```
+
+Writes `out/issue-24-smoke-result.txt` on success/failure.

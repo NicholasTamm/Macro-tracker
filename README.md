@@ -26,6 +26,8 @@ Privacy / security architecture (#22): [`docs/issue-22-privacy-security.md`](./d
 
 Billing / store operations (#23): [`docs/issue-23-billing-store-ops.md`](./docs/issue-23-billing-store-ops.md) · smoke `bash docs/demo/smoke-billing-store.sh`.
 
+Accessibility / localization audit (#24): [`docs/issue-24-accessibility-localization.md`](./docs/issue-24-accessibility-localization.md) · smoke `bash docs/demo/smoke-a11y-l10n.sh`.
+
 ```bash
 cd software
 npm install

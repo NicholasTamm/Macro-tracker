@@ -41,7 +41,7 @@
 | M1-18 | Settings / About / data sources | todo |
 | M1-19 | CSV/JSON export | todo |
 | M1-20 | Seed updater (feature-flagged) | todo |
-| M1-21 | A11y / localization / privacy QA | todo |
+| M1-21 | A11y / localization / privacy QA | todo (checklist in #24 docs; device QA outstanding) |
 | M1-22 | Educational insight cards | todo |
 
 ## Paths added this pass
@@ -89,6 +89,10 @@ Expo-reconciled data-flow and threat-model outline (nutrition/weight/health/prov
 ## Issue #23 billing / store operations
 
 Cross-platform StoreKit + Play Billing entitlement contract (one logical premium; localized prices; M3 purchase/restore matrix): [`docs/issue-23-billing-store-ops.md`](../docs/issue-23-billing-store-ops.md) · smoke `bash docs/demo/smoke-billing-store.sh`. IAP deferred to M3; no live price strings as policy.
+
+## Issue #24 accessibility / localization audit
+
+Expo-reconciled VoiceOver/TalkBack, Dynamic Type, Reduce Motion, themes, locales/RTL checklist before external beta: [`docs/issue-24-accessibility-localization.md`](../docs/issue-24-accessibility-localization.md) · smoke `bash docs/demo/smoke-a11y-l10n.sh`. Execution/remediation remains M1-21 (+ M2-19 / M3-19); criticals block external beta.
 
 ## Blockers
 
