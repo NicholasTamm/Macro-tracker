@@ -70,6 +70,10 @@ Demo smoke: `bash docs/demo/smoke-mvp-backlog.sh` → `out/issue-13-smoke-result
 
 M2/M3 detailed rows live only in the backlog doc until those milestones start; M1 rows above remain the live checklist.
 
+## Issue #14 freemium matrix
+
+Expo-reconciled free vs premium capability matrix (IAP / StoreKit+Play deferred to M3): [`docs/issue-14-freemium-matrix.md`](../docs/issue-14-freemium-matrix.md) · smoke `bash docs/demo/smoke-freemium-matrix.sh`. Free diary/export/deletion never gated; paywall module shell: `modules/paywall/`.
+
 ## Blockers
 
 - Full Expo runtime / simulator not verified on this Linux box; TypeScript sources are authored for Expo 53 / RN 0.79.

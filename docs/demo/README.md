@@ -10,3 +10,14 @@ bash docs/demo/smoke-mvp-backlog.sh
 ```
 
 Writes `out/issue-13-smoke-result.txt` on success/failure.
+
+## Issue #14 — Freemium matrix smoke
+
+Validates the Expo-reconciled freemium matrix (structure, supersession keywords, free/premium rows, entitlements, policy guards).
+
+```bash
+# from repo root
+bash docs/demo/smoke-freemium-matrix.sh
+```
+
+Writes `out/issue-14-smoke-result.txt` on success/failure.

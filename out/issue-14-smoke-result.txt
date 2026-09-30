@@ -1,0 +1,5 @@
+SMOKE OK — issue-14 freemium matrix (2026-09-30 10:17:42 PDT)
+pass=38 fail=0
+matrix=/workspace/Macro-tracker-worktrees/worktree-14-freemium-matrix/docs/issue-14-freemium-matrix.md
+bytes=13225 lines=148
+sections=8 entitlements=free,premiumTrial,premium
