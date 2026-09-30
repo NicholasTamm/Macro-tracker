@@ -22,6 +22,8 @@ Primary-source verification log (#15): [`docs/issue-15-source-verification-log.m
 
 Sync architecture ADR (#19): [`docs/issue-19-sync-architecture.md`](./docs/issue-19-sync-architecture.md) · smoke `bash docs/demo/smoke-sync-arch.sh`.
 
+Privacy / security architecture (#22): [`docs/issue-22-privacy-security.md`](./docs/issue-22-privacy-security.md) · smoke `bash docs/demo/smoke-privacy-security.sh`.
+
 ```bash
 cd software
 npm install
