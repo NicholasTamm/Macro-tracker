@@ -23,10 +23,10 @@ Swift-era Keychain / CloudKit / HealthKit-only / VisionKit-only prescriptions fr
 **Pointers**
 
 - Food schema / storage boundary (#12): [`docs/issue-12-food-schema-seed-contract.md`](./issue-12-food-schema-seed-contract.md)
-- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (PR may still be open)
-- Freemium / AI allowance (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (PR may still be open)
-- Provider constraints (#15): [`docs/issue-15-source-verification-log.md`](./issue-15-source-verification-log.md) (PR may still be open)
-- Sync architecture (#19): open — this doc constrains any future choice
+- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged)
+- Freemium / AI allowance (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (merged)
+- Provider constraints (#15): [`docs/issue-15-source-verification-log.md`](./issue-15-source-verification-log.md) (merged)
+- Sync architecture (#19): [`docs/issue-19-sync-architecture.md`](./issue-19-sync-architecture.md) (merged) — this doc constrains implementation
 - Health module shell: [`software/modules/health-sync/`](../software/modules/health-sync/)
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
 
@@ -117,7 +117,7 @@ Swift-era Keychain / CloudKit / HealthKit-only / VisionKit-only prescriptions fr
 
 ### Mitigations (approved design intent)
 
-1. **Encryption / at-rest:** Rely on OS file protection / Android credential-encrypted storage for app sandbox; put credentials in **expo-secure-store**; keep domain data in sqlite files that never hold secrets. Device-passcode / biometric gate for app unlock is optional post-M1. Document whether future sync uses end-to-end vs server-side encryption before choosing #19.
+1. **Encryption / at-rest:** Rely on OS file protection / Android credential-encrypted storage for app sandbox; put credentials in **expo-secure-store**; keep domain data in sqlite files that never hold secrets. Device-passcode / biometric gate for app unlock is optional post-M1. Document whether future sync uses end-to-end vs server-side encryption per [#19](./issue-19-sync-architecture.md) (offline-first SQLite ↔ Postgres candidate).
 2. **Secret management:** Backend secrets manager (rotated). Client receives **opaque, short-lived** tokens only. No `EXPO_PUBLIC_*` commercial keys. CI secret scanning on PRs.
 3. **Short-lived credentials:** Proxy issues ≤15–60 min access tokens (exact TTL TBD with backend). FatSecret OAuth client secret stays server-side ([FatSecret OAuth](https://platform.fatsecret.com/docs/guides/authentication/oauth2)).
 4. **Rate limits:** Per-user / per-device / per-IP on proxy; honor OFF public limits (15 product / 10 search req/min/IP) and USDA shared-key limits; never bypass with client-embedded keys.
@@ -208,7 +208,7 @@ Swift-era Keychain / CloudKit / HealthKit-only / VisionKit-only prescriptions fr
 
 ## Sync (future — constrained by #19)
 
-Until #19 selects a stack: no automatic multi-device sync. Any chosen design must provide stable IDs, tombstones, conflict policy, E2E or documented server encryption, account takeover recovery, and deletion that reaches all replicas. CloudKit is not default.
+[#19](./issue-19-sync-architecture.md) selected **M1 local-only** and an **M2+ offline-first SQLite ↔ Postgres** direction (CloudKit rejected as SoR). No automatic multi-device sync until that stack ships. Implementation must provide stable IDs, tombstones, conflict policy, E2E or documented server encryption, account takeover recovery, and deletion that reaches all replicas.
 
 ---
 
