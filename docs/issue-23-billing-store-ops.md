@@ -21,9 +21,9 @@ Swift-era StoreKit-only / `SubscriptionStoreView`-only / Apple-receipt-only pres
 
 **Pointers**
 
-- Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md)
-- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) — M3-09 products, M3-10 entitlement service, M3-11 paywalls, M3-18 storefront validation
-- Privacy / entitlement assertions (#22): [`docs/issue-22-privacy-security.md`](./issue-22-privacy-security.md)
+- Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (merged)
+- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged) — M3-09 products, M3-10 entitlement service, M3-11 paywalls, M3-18 storefront validation
+- Privacy / entitlement assertions (#22): [`docs/issue-22-privacy-security.md`](./issue-22-privacy-security.md) (merged)
 - Paywall module shell: [`software/modules/paywall/`](../software/modules/paywall/)
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
 

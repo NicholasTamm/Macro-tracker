@@ -57,7 +57,6 @@
 
 Food schema / seed contract (Expo-reconciled): [`docs/issue-12-food-schema-seed-contract.md`](../docs/issue-12-food-schema-seed-contract.md) · module [`modules/food-catalog/`](./modules/food-catalog/) · demo `modules/food-catalog/demo/smoke.sh`.
 
-
 ## Issue #13 — MVP backlog (Expo)
 
 Full Expo-reconciled Milestones 1–3 contract: [`docs/issue-13-mvp-backlog.md`](../docs/issue-13-mvp-backlog.md).  
