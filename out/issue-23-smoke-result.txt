@@ -1,0 +1,5 @@
+SMOKE OK — issue-23 billing store ops (2026-09-29 22:00:32 PDT)
+pass=57 fail=0
+doc=/workspace/Macro-tracker-worktrees/worktree-23-billing/docs/issue-23-billing-store-ops.md
+bytes=17439 lines=248
+sections=14 entitlements=free,premiumTrial,premium,premiumGrace stores=StoreKit+Play

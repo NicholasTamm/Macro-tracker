@@ -57,6 +57,7 @@
 
 Food schema / seed contract (Expo-reconciled): [`docs/issue-12-food-schema-seed-contract.md`](../docs/issue-12-food-schema-seed-contract.md) · module [`modules/food-catalog/`](./modules/food-catalog/) · demo `modules/food-catalog/demo/smoke.sh`.
 
+
 ## Issue #13 — MVP backlog (Expo)
 
 Full Expo-reconciled Milestones 1–3 contract: [`docs/issue-13-mvp-backlog.md`](../docs/issue-13-mvp-backlog.md).  
@@ -85,6 +86,10 @@ Cross-platform sync architecture and conflict policy (M1 local-only; CloudKit re
 ## Issue #22 privacy / security architecture
 
 Expo-reconciled data-flow and threat-model outline (nutrition/weight/health/provider/AI; expo-secure-store; no secrets in AsyncStorage): [`docs/issue-22-privacy-security.md`](../docs/issue-22-privacy-security.md) · smoke `bash docs/demo/smoke-privacy-security.sh`. Review required before network/health/sync/AI betas; counsel sign-off still outstanding.
+
+## Issue #23 billing / store operations
+
+Cross-platform StoreKit + Play Billing entitlement contract (one logical premium; localized prices; M3 purchase/restore matrix): [`docs/issue-23-billing-store-ops.md`](../docs/issue-23-billing-store-ops.md) · smoke `bash docs/demo/smoke-billing-store.sh`. IAP deferred to M3; no live price strings as policy.
 
 ## Blockers
 

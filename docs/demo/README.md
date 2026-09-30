@@ -54,3 +54,14 @@ bash docs/demo/smoke-privacy-security.sh
 ```
 
 Writes `out/issue-22-smoke-result.txt` on success/failure.
+
+## Issue #23 — Billing / store operations smoke
+
+Validates the Expo-reconciled billing/store ops contract (headings, StoreKit+Play mapping, entitlement IDs, lifecycle coverage, no hard-coded price policy).
+
+```bash
+# from repo root
+bash docs/demo/smoke-billing-store.sh
+```
+
+Writes `out/issue-23-smoke-result.txt` on success/failure.
