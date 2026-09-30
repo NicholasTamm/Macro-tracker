@@ -16,6 +16,8 @@ Food schema / seed contract (#12): [`docs/issue-12-food-schema-seed-contract.md`
 
 MVP backlog Milestones 1–3 (#13): [`docs/issue-13-mvp-backlog.md`](./docs/issue-13-mvp-backlog.md) · smoke `bash docs/demo/smoke-mvp-backlog.sh`.
 
+Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./docs/issue-14-freemium-matrix.md) · smoke `bash docs/demo/smoke-freemium-matrix.sh`.
+
 ```bash
 cd software
 npm install
