@@ -1,5 +1,5 @@
-SMOKE OK — issue-24 accessibility/localization (2026-09-29 22:01:09 PDT)
+SMOKE OK — issue-24 accessibility/localization (2026-09-30 10:26:05 PDT)
 pass=66 fail=0
 doc=/workspace/Macro-tracker-worktrees/worktree-24-a11y/docs/issue-24-accessibility-localization.md
-bytes=19399 lines=265
+bytes=19470 lines=265
 sections=16 surfaces=VoiceOver,TalkBack,DynamicType,ReduceMotion,Themes,Locales

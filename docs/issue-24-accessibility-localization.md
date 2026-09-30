@@ -22,9 +22,9 @@ SwiftUI / UIKit-only accessibility prescriptions from research OUT and early #11
 
 **Pointers**
 
-- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (PR may still be open) — M1-21 owns execution; this doc is the gate checklist
-- Privacy / offline-camera-free QA overlap (#22): [`docs/issue-22-privacy-security.md`](./issue-22-privacy-security.md) (PR may still be open)
-- Freemium / paywall a11y (#14): continue-free never gated; paywalls need Reduce Motion + labels
+- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged) — M1-21 owns execution; this doc is the gate checklist
+- Privacy / offline-camera-free QA overlap (#22): [`docs/issue-22-privacy-security.md`](./issue-22-privacy-security.md) (merged)
+- Freemium / paywall a11y (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (merged) — continue-free never gated; paywalls need Reduce Motion + labels
 - Design-system specimens: [`software/design-system/`](../software/design-system/) · Component gallery tab
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
 
@@ -35,7 +35,7 @@ SwiftUI / UIKit-only accessibility prescriptions from research OUT and early #11
 ## Scope (before external beta)
 
 | Area | Platforms / settings | Pass bar |
-| --- | --- |
+| --- | --- | --- |
 | **Screen readers** | VoiceOver (iOS), TalkBack (Android) | Focus order logical; every control labeled; actions discoverable; live regions / announcements correct; charts have textual summaries |
 | **Text scaling** | iOS Dynamic Type / Larger Text; Android Font size + Display size to max supported | No clipped essential text; reflow; hit targets remain usable |
 | **Touch targets** | Both | **44×44 pt/dp effective** minimum for primary controls (AX5 / WCAG 2.5.5 aspiration for critical actions) |
@@ -49,7 +49,7 @@ SwiftUI / UIKit-only accessibility prescriptions from research OUT and early #11
 **Severity rubric (record in evidence log)**
 
 | Severity | Definition | External beta |
-| --- | --- |
+| --- | --- | --- |
 | **Critical** | Blocks task completion for AT users; missing label on primary action; color-only nutrient distinction on a decision UI; unreadable at max text size on core path | **Must close** |
 | **Major** | Difficult / confusing; wrong focus order on secondary path; target &lt;44×44 on frequent controls; RTL mirror broken on primary nav | Fix or waive with product sign-off |
 | **Minor** | Polish (redundant announcement, uneven spacing at large type) | Track; do not block if no criticals |
@@ -64,7 +64,7 @@ SwiftUI / UIKit-only accessibility prescriptions from research OUT and early #11
 Honest baseline against `software/design-system/` on `feat/m1-design-system-scaffold` — **not** a pass for external beta.
 
 | Component / token | Present a11y hooks | Known gaps for #24 |
-| --- | --- |
+| --- | --- | --- |
 | `PrimaryButton` | `accessibilityRole="button"`, `accessibilityState.disabled` | `minHeight` 42 (compact 36) — **below 44×44**; confirm width; add `accessibilityLabel` when `label` is icon-only later |
 | `MacroSummary` | Aggregate `accessibilityLabel` with calorie/macro words; role `summary` | Color dots + border accents — keep text labels; expand when goals present; chart surfaces still TODO (M1-17) |
 | `FoodRow` | Role button; name+detail label; action control labeled | Verify focus order name → action; long names at max scale |

@@ -99,4 +99,3 @@ Expo-reconciled VoiceOver/TalkBack, Dynamic Type, Reduce Motion, themes, locales
 - Full Expo runtime / simulator not verified on this Linux box; TypeScript sources are authored for Expo 53 / RN 0.79.
 - Parent owns commit/push to `feat/m1-design-system-scaffold`.
 - OUT-doc GitHub issue comments (#11→#15) deferred to parent/ChatGPT review loop unless requested again.
-
