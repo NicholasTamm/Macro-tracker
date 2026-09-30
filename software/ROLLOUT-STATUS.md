@@ -74,6 +74,10 @@ M2/M3 detailed rows live only in the backlog doc until those milestones start; M
 
 Expo-reconciled free vs premium capability matrix (IAP / StoreKit+Play deferred to M3): [`docs/issue-14-freemium-matrix.md`](../docs/issue-14-freemium-matrix.md) · smoke `bash docs/demo/smoke-freemium-matrix.sh`. Free diary/export/deletion never gated; paywall module shell: `modules/paywall/`.
 
+## Issue #15 primary-source verification log
+
+Expo-reconciled primary-source verification log (USDA/OFF/FatSecret/licenses + adaptive-math bases; competitor App Store prices are context only): [`docs/issue-15-source-verification-log.md`](../docs/issue-15-source-verification-log.md) · smoke `bash docs/demo/smoke-source-log.sh`. Cross-platform SKU verification (App Store + Play) remains open before M3 paywall copy.
+
 ## Blockers
 
 - Full Expo runtime / simulator not verified on this Linux box; TypeScript sources are authored for Expo 53 / RN 0.79.

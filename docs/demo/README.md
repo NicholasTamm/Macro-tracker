@@ -21,3 +21,14 @@ bash docs/demo/smoke-freemium-matrix.sh
 ```
 
 Writes `out/issue-14-smoke-result.txt` on success/failure.
+
+## Issue #15 — Source verification log smoke
+
+Validates the Expo-reconciled primary-source verification log (headings, Expo keywords, status keys, source URLs, policy guards).
+
+```bash
+# from repo root
+bash docs/demo/smoke-source-log.sh
+```
+
+Writes `out/issue-15-smoke-result.txt` on success/failure.
