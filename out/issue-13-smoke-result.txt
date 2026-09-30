@@ -1,0 +1,5 @@
+SMOKE OK — issue-13 MVP backlog (2026-09-29 21:51:40 PDT)
+pass=15 fail=0
+backlog=/workspace/Macro-tracker-worktrees/worktree-13-mvp-backlog/docs/issue-13-mvp-backlog.md
+bytes=19062 lines=192
+milestones=M1,M2,M3 task_ids=60

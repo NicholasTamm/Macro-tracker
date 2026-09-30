@@ -3,7 +3,7 @@
 **Stack:** Expo Router + React Native (`software/`), **not** Swift/SwiftUI.  
 **Visual source of truth:** `/workspace/macrofactor-codex-research/design-system/` (`index.html`, `styles.css`, `scripts.js`).  
 **Repo:** `NicholasTamm/Macro-tracker` · branch `feat/m1-design-system-scaffold`  
-**Updated:** 2026-09-28 PT
+**Updated:** 2026-09-29 PT
 
 ## Design-system HTML reference
 
@@ -56,6 +56,19 @@
 ## Issue #12 contract
 
 Food schema / seed contract (Expo-reconciled): [`docs/issue-12-food-schema-seed-contract.md`](../docs/issue-12-food-schema-seed-contract.md) · module [`modules/food-catalog/`](./modules/food-catalog/) · demo `modules/food-catalog/demo/smoke.sh`.
+
+## Issue #13 — MVP backlog (Expo)
+
+Full Expo-reconciled Milestones 1–3 contract: [`docs/issue-13-mvp-backlog.md`](../docs/issue-13-mvp-backlog.md).  
+Demo smoke: `bash docs/demo/smoke-mvp-backlog.sh` → `out/issue-13-smoke-result.txt`.
+
+| Milestone | Exit (short) | Task IDs | Notes |
+| --- | --- | --- | --- |
+| M1 offline diary | Onboarding → USDA search → log/edit → custom food → weight → export (offline, no account) | M1-01…M1-22 | P0 blocks usable outcome; see backlog for Expo wording |
+| M2 packaged + sync | OFF/FDC barcode, recipes, cross-platform sync (not CloudKit-default), health import | M2-01…M2-19 | Scanner/OCR/health behind platform-neutral adapters |
+| M3 coaching + premium | TransparentTrend v1 opt-in check-in; IAP; free diary/export ungated | M3-01…M3-19 | Pure TS estimator; clinical/legal external gates |
+
+M2/M3 detailed rows live only in the backlog doc until those milestones start; M1 rows above remain the live checklist.
 
 ## Blockers
 
