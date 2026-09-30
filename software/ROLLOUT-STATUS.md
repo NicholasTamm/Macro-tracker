@@ -78,6 +78,11 @@ Expo-reconciled free vs premium capability matrix (IAP / StoreKit+Play deferred 
 
 Expo-reconciled primary-source verification log (USDA/OFF/FatSecret/licenses + adaptive-math bases; competitor App Store prices are context only): [`docs/issue-15-source-verification-log.md`](../docs/issue-15-source-verification-log.md) · smoke `bash docs/demo/smoke-source-log.sh`. Cross-platform SKU verification (App Store + Play) remains open before M3 paywall copy.
 
+## Issue #19 sync architecture ADR
+
+Cross-platform sync architecture and conflict policy (M1 local-only; CloudKit rejected as SoR; M2+ offline-first SQLite ↔ Postgres candidate): [`docs/issue-19-sync-architecture.md`](../docs/issue-19-sync-architecture.md) · smoke `bash docs/demo/smoke-sync-arch.sh`. Implementation remains M2-11/M2-12 in the MVP backlog.
+
+
 ## Blockers
 
 - Full Expo runtime / simulator not verified on this Linux box; TypeScript sources are authored for Expo 53 / RN 0.79.

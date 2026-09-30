@@ -20,6 +20,8 @@ Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./docs/issue-14-free
 
 Primary-source verification log (#15): [`docs/issue-15-source-verification-log.md`](./docs/issue-15-source-verification-log.md) · smoke `bash docs/demo/smoke-source-log.sh`.
 
+Sync architecture ADR (#19): [`docs/issue-19-sync-architecture.md`](./docs/issue-19-sync-architecture.md) · smoke `bash docs/demo/smoke-sync-arch.sh`.
+
 ```bash
 cd software
 npm install
