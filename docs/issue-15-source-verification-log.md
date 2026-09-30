@@ -25,8 +25,8 @@ The research OUT and original GitHub issue #15 body are a **primary-source verif
 **Pointers**
 
 - Food schema / seed (#12): [`docs/issue-12-food-schema-seed-contract.md`](./issue-12-food-schema-seed-contract.md)
-- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (PR may still be open)
-- Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (PR may still be open)
+- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged)
+- Freemium matrix (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (merged)
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
 - Design system (RN): [`software/design-system/`](../software/design-system/)
 
