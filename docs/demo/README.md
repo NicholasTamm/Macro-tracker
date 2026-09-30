@@ -32,3 +32,14 @@ bash docs/demo/smoke-source-log.sh
 ```
 
 Writes `out/issue-15-smoke-result.txt` on success/failure.
+
+## Issue #19 — Sync architecture smoke
+
+Validates the Expo-reconciled sync architecture ADR (headings, options, conflict keywords, CloudKit-not-SoR guard).
+
+```bash
+# from repo root
+bash docs/demo/smoke-sync-arch.sh
+```
+
+Writes `out/issue-19-smoke-result.txt` on success/failure.
