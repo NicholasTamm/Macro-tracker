@@ -10,20 +10,16 @@ The shipping client is **React Native / Expo**, not SwiftUI. The Expo reconcilia
 
 **Product app:** Expo React Native under [`software/`](./software/).
 
+Design tokens and components are ported from the interactive HTML library in the research workspace (`macrofactor-codex-research/design-system/`). See [`software/ROLLOUT-STATUS.md`](./software/ROLLOUT-STATUS.md) for Milestone 1 progress.
+
+Food schema / seed contract (#12): [`docs/issue-12-food-schema-seed-contract.md`](./docs/issue-12-food-schema-seed-contract.md).
+
 ```bash
 cd software
 npm install
 npx expo start
 ```
 
-## Preview this docs PR
-
-```bash
-# From the repo root (this branch):
-less docs/issue-11-investigation-report.md
-# or open in an editor / markdown preview:
-#   code docs/issue-11-investigation-report.md
-#   glow docs/issue-11-investigation-report.md   # if glow is installed
-```
+Open the **Component gallery** tab to review RN specimens against the HTML library.
 
 Related: [Issue #11](https://github.com/NicholasTamm/Macro-tracker/issues/11).
