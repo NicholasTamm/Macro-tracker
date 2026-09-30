@@ -43,3 +43,14 @@ bash docs/demo/smoke-sync-arch.sh
 ```
 
 Writes `out/issue-19-smoke-result.txt` on success/failure.
+
+## Issue #22 — Privacy / security smoke
+
+Validates the Expo-reconciled privacy/security architecture (headings, SecureStore/AsyncStorage rules, mitigations, health/AI/provider controls, store-declaration maps).
+
+```bash
+# from repo root
+bash docs/demo/smoke-privacy-security.sh
+```
+
+Writes `out/issue-22-smoke-result.txt` on success/failure.

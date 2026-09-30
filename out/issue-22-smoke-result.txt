@@ -1,0 +1,5 @@
+SMOKE OK — issue-22 privacy/security (2026-09-30 10:22:18 PDT)
+pass=58 fail=0
+doc=/workspace/Macro-tracker-worktrees/worktree-22-privacy/docs/issue-22-privacy-security.md
+bytes=21659 lines=255
+sections=16 stores=FoodSeed,UserData,SecureStore,AsyncStorage
