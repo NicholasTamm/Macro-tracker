@@ -1,5 +1,5 @@
-SMOKE OK — issue-19 sync architecture (2026-09-29 21:58:38 PDT)
+SMOKE OK — issue-19 sync architecture (2026-09-30 10:20:32 PDT)
 pass=41 fail=0
 adr=/workspace/Macro-tracker-worktrees/worktree-19-sync-arch/docs/issue-19-sync-architecture.md
-bytes=16513 lines=218
+bytes=16485 lines=218
 sections=10 m1=local-only cloudkit_sor=rejected

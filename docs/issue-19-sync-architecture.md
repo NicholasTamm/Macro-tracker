@@ -21,8 +21,8 @@ SwiftData + private CloudKit as the default multi-device system of record in the
 **Pointers**
 
 - Food schema / user-store boundary (#12): [`docs/issue-12-food-schema-seed-contract.md`](./issue-12-food-schema-seed-contract.md)
-- MVP backlog M2-11 / M2-12 (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (PR may still be open)
-- Freemium: sync as premium convenience (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (PR may still be open)
+- MVP backlog M2-11 / M2-12 (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged)
+- Freemium: sync as premium convenience (#14): [`docs/issue-14-freemium-matrix.md`](./issue-14-freemium-matrix.md) (merged)
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
 
 **Hard exclusions:** No MacroFactor trademarks, assets, copy, private APIs, food data, or Expenditure V3 reverse engineering. No ads or sale of nutrition/health profiling data.
