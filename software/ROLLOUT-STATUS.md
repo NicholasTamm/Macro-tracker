@@ -86,6 +86,10 @@ Cross-platform sync architecture and conflict policy (M1 local-only; CloudKit re
 
 Expo-reconciled data-flow and threat-model outline (nutrition/weight/health/provider/AI; expo-secure-store; no secrets in AsyncStorage): [`docs/issue-22-privacy-security.md`](../docs/issue-22-privacy-security.md) · smoke `bash docs/demo/smoke-privacy-security.sh`. Review required before network/health/sync/AI betas; counsel sign-off still outstanding.
 
+## Issue #23 billing / store operations
+
+Cross-platform StoreKit + Play Billing entitlement contract (one logical premium; localized prices; M3 purchase/restore matrix): [`docs/issue-23-billing-store-ops.md`](../docs/issue-23-billing-store-ops.md) · smoke `bash docs/demo/smoke-billing-store.sh`. IAP deferred to M3; no live price strings as policy.
+
 ## Blockers
 
 - Full Expo runtime / simulator not verified on this Linux box; TypeScript sources are authored for Expo 53 / RN 0.79.

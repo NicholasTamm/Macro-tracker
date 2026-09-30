@@ -24,6 +24,8 @@ Sync architecture ADR (#19): [`docs/issue-19-sync-architecture.md`](./docs/issue
 
 Privacy / security architecture (#22): [`docs/issue-22-privacy-security.md`](./docs/issue-22-privacy-security.md) · smoke `bash docs/demo/smoke-privacy-security.sh`.
 
+Billing / store operations (#23): [`docs/issue-23-billing-store-ops.md`](./docs/issue-23-billing-store-ops.md) · smoke `bash docs/demo/smoke-billing-store.sh`.
+
 ```bash
 cd software
 npm install
