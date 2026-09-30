@@ -22,7 +22,7 @@ StoreKit-only / CloudKit / HealthKit / Apple Watch / Siri / App Intents / `Subsc
 
 **Pointers**
 
-- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (PR may still be open) · M3-10/M3-11 own IAP + paywall tasks
+- MVP backlog (#13): [`docs/issue-13-mvp-backlog.md`](./issue-13-mvp-backlog.md) (merged) · M3-10/M3-11 own IAP + paywall tasks
 - Food schema (#12): [`docs/issue-12-food-schema-seed-contract.md`](./issue-12-food-schema-seed-contract.md)
 - Paywall module shell: [`software/modules/paywall/`](../software/modules/paywall/)
 - Rollout checklist: [`software/ROLLOUT-STATUS.md`](../software/ROLLOUT-STATUS.md)
