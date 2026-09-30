@@ -10,6 +10,8 @@ Design tokens and components are ported from the interactive HTML library in the
 
 Food schema / seed contract (#12): [`docs/issue-12-food-schema-seed-contract.md`](./docs/issue-12-food-schema-seed-contract.md).
 
+MVP backlog Milestones 1–3 (#13): [`docs/issue-13-mvp-backlog.md`](./docs/issue-13-mvp-backlog.md) · smoke `bash docs/demo/smoke-mvp-backlog.sh`.
+
 ```bash
 cd software
 npm install
