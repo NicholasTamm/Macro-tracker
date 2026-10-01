@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   View,
   Text,
@@ -5,27 +6,22 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-} from "react-native";
-import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
-import userIcon from "../../assets/images/userIcon.jpg";
-import ThemedView from "../../components/ThemedView";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native';
+import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
+import userIcon from '../../assets/images/userIcon.jpg';
+import ThemedView from '../../components/ThemedView';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Settings() {
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-      >
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.contentContainer}>
+          <View style={styles.profileSection}>
+            <Image source={userIcon} style={styles.avatar} />
+            <Text style={styles.name}>User Name</Text>
+          </View>
 
-      <View style={styles.profileSection}>
-        <Image source={userIcon} style={styles.avatar} />
-        <Text style={styles.name}>User Name</Text>
-      </View>
-
-
-        <ScrollView>
           <View style={styles.optionsSection}>
             <SettingsOption
               label="Profile"
@@ -67,12 +63,15 @@ function SettingsOption({
   isDestructive = false,
 }: {
   label: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   isDestructive?: boolean;
 }) {
   return (
-    <TouchableOpacity style={styles.option}>
-
+    <TouchableOpacity
+      style={styles.option}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+    >
       <View style={styles.optionContent}>
         {icon}
         <Text style={[styles.optionText, isDestructive && styles.destructive]}>
@@ -86,14 +85,14 @@ function SettingsOption({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
   },
   contentContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     paddingVertical: 32,
   },
   profileSection: {
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 32,
   },
   avatar: {
@@ -104,35 +103,32 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 4,
   },
-  email: {
-    fontSize: 14,
-    color: "#888",
-  },
   optionsSection: {
-    width: "100%",
+    width: '100%',
     maxWidth: 400,
   },
   option: {
     paddingVertical: 18,
     paddingHorizontal: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    backgroundColor: "#fff",
+    borderBottomColor: '#eee',
+    backgroundColor: '#fff',
+    minHeight: 44,
   },
   optionContent: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   optionText: {
     fontSize: 16,
-    color: "#222",
+    color: '#222',
     marginLeft: 16,
   },
   destructive: {
-    color: "#d00",
-    fontWeight: "bold",
+    color: '#d00',
+    fontWeight: 'bold',
   },
 });
