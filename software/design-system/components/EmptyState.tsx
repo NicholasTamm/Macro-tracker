@@ -14,7 +14,11 @@ export type EmptyStateProps = {
 export function EmptyState({ title, message, actionLabel, onAction }: EmptyStateProps) {
   const { colors, spacing, typography } = useTheme();
   return (
-    <View style={[styles.wrap, { padding: spacing.xl, gap: spacing.md }]}>
+    <View
+      accessibilityRole="text"
+      accessibilityLabel={message ? `${title}. ${message}` : title}
+      style={[styles.wrap, { padding: spacing.xl, gap: spacing.md }]}
+    >
       <View style={styles.graphic} accessibilityElementsHidden>
         <View style={[styles.circle, { backgroundColor: colors.control }]}>
           <Text style={{ fontSize: 20 }}>📋</Text>

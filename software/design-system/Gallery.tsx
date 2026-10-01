@@ -206,10 +206,15 @@ function SchemeToggle({
         return (
           <Pressable
             key={opt.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Color scheme: ${opt.label}`}
+            accessibilityState={{ selected: active }}
             onPress={() => onChange(opt.id === 'system' ? undefined : opt.id)}
             style={{
               paddingHorizontal: spacing.md,
-              paddingVertical: spacing.xs,
+              paddingVertical: spacing.sm,
+              minHeight: 44,
+              justifyContent: 'center',
               borderRadius: radius.pill,
               backgroundColor: active ? colors.ink : colors.control,
             }}

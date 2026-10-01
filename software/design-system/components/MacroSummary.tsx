@@ -43,7 +43,7 @@ export function MacroSummary({ totals }: { totals: MacroTotals }) {
 
   return (
     <Card
-      accessibilityRole="summary"
+      accessibilityRole="text"
       accessibilityLabel={`Daily macros: ${a11y}`}
       style={styles.wrap}
     >
