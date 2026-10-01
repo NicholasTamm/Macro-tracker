@@ -1,4 +1,4 @@
-/** Shared app foundation — feature flags and route keys (RN). */
+/** Shared app foundation — feature flags, route keys, UserData.sqlite (RN). */
 export const AppCore = {
   moduleName: 'app-core',
   productWorkingTitle: 'Nutrition Tracker',
@@ -27,3 +27,5 @@ export type AppRoute =
   | 'analytics'
   | 'settings'
   | 'component-gallery';
+
+export * from './user-data';

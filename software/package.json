@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/secret-scan.test.mjs design-system/tokens/tokens.test.mjs",
+    "test": "node --test scripts/secret-scan.test.mjs design-system/tokens/tokens.test.mjs design-system/components/__tests__/a11y-targets.test.mjs modules/app-core/user-data/user-data.test.mjs",
     "secret-scan": "node scripts/secret-scan.mjs",
     "ci": "npm run typecheck && npm run lint && npm run secret-scan && npm test"
   },
@@ -28,6 +28,7 @@
     "expo-linking": "~7.1.5",
     "expo-router": "~5.1.1",
     "expo-splash-screen": "~0.30.9",
+    "expo-sqlite": "~15.2.12",
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.9",
@@ -40,11 +41,14 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "sql.js": "^1.14.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@types/node": "^26.6.3",
     "@types/react": "~19.0.10",
+    "@types/sql.js": "^1.4.11",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"
