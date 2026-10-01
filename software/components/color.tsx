@@ -1,6 +1,3 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-
 const colors = {
   lightTheme: {
     mode: 'light',
@@ -25,7 +22,6 @@ const colors = {
       icon: '#FFFFFF',
     },
   },
-}
+} as const;
 
-export default colors
-
+export default colors;
