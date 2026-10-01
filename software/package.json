@@ -8,7 +8,11 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/secret-scan.test.mjs design-system/tokens/tokens.test.mjs",
+    "secret-scan": "node scripts/secret-scan.mjs",
+    "ci": "npm run typecheck && npm run lint && npm run secret-scan && npm test"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

@@ -1,4 +1,4 @@
-import { TextInput, ScrollView, View, Text, StyleSheet } from 'react-native';
+import { TextInput, StyleSheet } from 'react-native';
 import * as React from "react"
 import { SafeAreaView } from 'react-native-safe-area-context';
 
