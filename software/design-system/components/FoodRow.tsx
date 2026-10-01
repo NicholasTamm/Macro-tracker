@@ -24,7 +24,6 @@ export function FoodRow({
 
   return (
     <View
-      accessibilityRole="button"
       accessibilityLabel={`${name}. ${detail}`}
       style={[
         styles.row,
@@ -84,8 +83,8 @@ const styles = StyleSheet.create({
   emoji: { width: 34, fontSize: 24, textAlign: 'center' },
   copy: { flex: 1, minWidth: 0 },
   action: {
-    width: 29,
-    height: 29,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },

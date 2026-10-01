@@ -97,6 +97,7 @@ export function ErrorBanner({
             accessibilityLabel={actionLabel}
             onPress={onAction}
             hitSlop={8}
+            style={{ minWidth: 44, minHeight: 44, justifyContent: 'center', justifyContent: 'center' }}
           >
             <Text style={{ color: accent, fontSize: 11, fontWeight: '700' }}>
               {actionLabel}
@@ -109,6 +110,7 @@ export function ErrorBanner({
             accessibilityLabel="Dismiss"
             onPress={onDismiss}
             hitSlop={8}
+            style={styles.hitTarget}
           >
             <Text style={{ color: accent, fontSize: 16 }}>×</Text>
           </Pressable>
@@ -129,4 +131,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  hitTarget: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

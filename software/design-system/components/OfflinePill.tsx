@@ -10,6 +10,7 @@ export function OfflinePill({ label = 'Offline' }: { label?: string }) {
   return (
     <View
       accessibilityRole="text"
+      accessibilityLiveRegion="polite"
       accessibilityLabel={label}
       style={[
         styles.pill,

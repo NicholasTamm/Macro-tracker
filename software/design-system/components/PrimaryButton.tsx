@@ -45,12 +45,13 @@ export function PrimaryButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       style={(state) => [
         styles.base,
         {
-          minHeight: compact ? 36 : 42,
+          minHeight: compact ? 44 : 44,
           paddingHorizontal: compact ? spacing.md : spacing.lg,
           borderRadius: radius.pill,
           backgroundColor: bg,

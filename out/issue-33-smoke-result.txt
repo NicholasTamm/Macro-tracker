@@ -1,0 +1,6 @@
+smoke-m1-04-gallery PASS 2026-10-01T12:08:16Z
+
+Runnable demo:
+  cd software && npx expo start
+  Open the Component Gallery tab; toggle System/Light/Dark.
+  Confirm PrimaryButton/FoodRow/ErrorBanner hit targets and VoiceOver/TalkBack labels.
