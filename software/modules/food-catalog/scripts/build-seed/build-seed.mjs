@@ -7,7 +7,8 @@
  * Full:    USE_FULL_USDA=1 downloads pinned Foundation + SR Legacy zips,
  *          verifies SHA-256, normalizes, then requires selection.full.csv.
  *
- * Final compression / signed packaging remains M1-08.
+ * M1-08: emit validates integrity/FK/golden queries, compresses (zstd),
+ * and writes a signed seed-manifest.json (Ed25519 over SHA-256).
  *
  * Usage:
  *   node build-seed.mjs [--out <dir>] [--seed-version <ver>] [--limit <n>]
@@ -200,7 +201,9 @@ Env: USE_FULL_USDA=1 to fetch pinned USDA archives (checksum-verified).
   if (selectionReport) {
     console.log(`OK: ${join(args.outDir, 'selection-report.json')}`);
   }
-  console.log(`    foods=${emitted.manifest.content.foodCount} sha256=${emitted.manifest.artifact.sha256.slice(0, 12)}…`);
+  console.log(`    foods=${emitted.manifest.content.foodCount} sha256=${emitted.manifest.artifact.sha256.slice(0, 12)}… compression=${emitted.manifest.artifact.compression} key=${emitted.manifest.artifact.signingKeyID}`);
+  if (emitted.seedManifestPath) console.log(`OK: ${emitted.seedManifestPath}`);
+  if (emitted.packaged) console.log(`OK: ${emitted.packaged.artifactPath}`);
   for (const s of emitted.manifest.sources) {
     console.log(`    source ${s.id} release=${s.release} archive_sha256=${s.archiveSHA256.slice(0, 12)}…`);
   }

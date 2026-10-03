@@ -64,4 +64,22 @@ USE_FULL_USDA=1 node modules/food-catalog/scripts/build-seed/build-seed.mjs
 
 Smoke: `bash docs/demo/smoke-m1-07-selection.sh`
 
-Final compression / signed packaging is **M1-08**.
+## Seed emit packaging (M1-08)
+
+After selection, the pipeline validates the SQLite catalog (integrity, FK,
+default-serving ownership, required macros, FTS parity, golden queries),
+compresses `FoodSeed.sqlite` (zstd, gzip fallback), and writes a signed
+`seed-manifest.json` (Ed25519 over the compressed artifact SHA-256).
+
+Dev signing keypair: `scripts/build-seed/keys/` (`food-seed-2026-01`).
+Artifacts land under `scripts/build-seed/out/` (gitignored — no huge binaries in git).
+
+```bash
+cd software
+node modules/food-catalog/scripts/build-seed/build-seed.mjs
+# outputs: FoodSeed.sqlite, FoodSeed.sqlite.zst, seed-manifest.json, build-manifest.json
+```
+
+Smoke: `bash docs/demo/smoke-m1-08-foodseed-emit.sh`
+
+Does **not** implement `LocalFoodRepository` runtime open (M1-09).

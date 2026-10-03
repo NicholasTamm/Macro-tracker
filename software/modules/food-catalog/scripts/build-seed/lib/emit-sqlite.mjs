@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { validateFoodSeed } from './validate-seed.mjs';
+import { packageFoodSeed } from './package-seed.mjs';
 
 const execFileAsync = promisify(execFile);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -69,6 +71,10 @@ export async function emitSqliteCatalog(opts) {
     retrievedAt = new Date().toISOString(),
     sourceOverrides = [],
     categoryQuotas = [],
+    skipPackage = false,
+    skipGolden = false,
+    compression = 'zstd',
+    privateKeyPath,
   } = opts;
 
   const schemaPath = join(moduleRootFromHere(), 'schema/food-seed-v1.sql');
@@ -218,13 +224,17 @@ SELECT 'required_macros',
   await execFileAsync('sqlite3', [dbPath, `.read '${insertPath.replace(/'/g, "''")}'`]);
   try { await unlink(schemaTmp); } catch { /* ok */ }
 
+  // Initial SQL-level gates (fts_parity / required_macros) already inserted.
   const failCount = (
     await execFileAsync('sqlite3', [dbPath, "SELECT COUNT(*) FROM build_validation WHERE status='fail';"])
   ).stdout.trim();
   if (failCount !== '0') {
-    const details = (await execFileAsync('sqlite3', [dbPath, 'SELECT check_name, observed_value, message FROM build_validation WHERE status=\"fail\";'])).stdout;
+    const details = (await execFileAsync('sqlite3', [dbPath, 'SELECT check_name, observed_value, message FROM build_validation WHERE status="fail";'])).stdout;
     throw new Error(`build validation failed:\n${details}`);
   }
+
+  // M1-08: full integrity / FK / default-serving / golden-query validations
+  const validation = await validateFoodSeed(dbPath, { skipGolden });
 
   const buf = await readFile(dbPath);
   const dbSha = createHash('sha256').update(buf).digest('hex');
@@ -245,40 +255,73 @@ SELECT 'required_macros',
       };
     });
 
-  const manifest = {
-    manifestVersion: 1,
-    catalogSchemaVersion: 1,
-    seedVersion,
-    minimumAppBuild: 1,
-    createdAt: retrievedAt,
-    buildMode: mode,
-    artifact: {
-      url: `file://${dbPath}`,
-      compression: 'none',
-      compressedBytes: buf.length,
-      uncompressedBytes: buf.length,
-      sha256: dbSha,
-      signature: '',
-      signingKeyID: 'unsigned-local-build',
-    },
-    content: {
-      foodCount,
-      servingCount,
-      nutrientValueCount,
-      ftsDocumentCount: foodCount,
-      locales: ['en'],
-    },
-    sources: sourcesMeta,
-    releaseNotes: `M1-06 ${mode} seed build (${foodCount} foods)`,
-    pinnedSourcesFile: 'pinned-sources.json',
+  const content = {
+    foodCount,
+    servingCount,
+    nutrientValueCount,
+    ftsDocumentCount: foodCount,
+    locales: ['en'],
   };
 
+  let packaged = null;
+  let manifest;
+
+  if (!skipPackage) {
+    packaged = await packageFoodSeed({
+      dbPath,
+      outDir,
+      seedVersion,
+      createdAt: retrievedAt,
+      mode,
+      content,
+      sources: sourcesMeta,
+      compression,
+      privateKeyPath,
+      releaseNotes: `M1-08 ${mode} FoodSeed emit (${foodCount} foods)`,
+    });
+    manifest = packaged.manifest;
+  } else {
+    manifest = {
+      manifestVersion: 1,
+      catalogSchemaVersion: 1,
+      seedVersion,
+      minimumAppBuild: 1,
+      createdAt: retrievedAt,
+      buildMode: mode,
+      artifact: {
+        url: `file://${dbPath}`,
+        compression: 'none',
+        compressedBytes: buf.length,
+        uncompressedBytes: buf.length,
+        sha256: dbSha,
+        signature: '',
+        signingKeyID: 'unsigned-local-build',
+      },
+      content,
+      sources: sourcesMeta,
+      releaseNotes: `M1-06 ${mode} seed build (${foodCount} foods)`,
+      pinnedSourcesFile: 'pinned-sources.json',
+    };
+  }
+
+  // build-manifest.json kept for M1-06/07 smoke compatibility; mirrors signed seed-manifest when packaged
   const manifestPath = join(outDir, 'build-manifest.json');
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  const seedManifestPath = packaged ? packaged.manifestPath : null;
   const rowsPath = join(outDir, 'normalized-foods.json');
   await writeFile(rowsPath, `${JSON.stringify(foods, null, 2)}\n`);
 
-  return { dbPath, manifestPath, rowsPath, manifest, byteLength: buf.length, insertPath };
+  return {
+    dbPath,
+    manifestPath,
+    seedManifestPath,
+    rowsPath,
+    manifest,
+    byteLength: buf.length,
+    insertPath,
+    validation,
+    packaged,
+  };
 }
 
 /** Run a read-only sqlite3 query; returns stdout trimmed. */
