@@ -26,5 +26,5 @@ export default function Index() {
     return <Redirect href="/onboarding" />;
   }
 
-  return <Redirect href="/food-entry" />;
+  return <Redirect href="/today" />;
 }
