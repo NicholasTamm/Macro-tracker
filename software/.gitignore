@@ -40,3 +40,7 @@ yarn-error.*
 .vscode
 
 app-example
+
+# USDA seed build artifacts (M1-06)
+modules/food-catalog/scripts/build-seed/cache/
+modules/food-catalog/scripts/build-seed/out/

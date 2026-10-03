@@ -27,3 +27,18 @@ bash demo/smoke.sh
 ```
 
 SwiftData / CloudKit language in research OUT docs is **superseded**. M1 is local expo-sqlite only; AsyncStorage is for non-sensitive prefs only.
+
+## Seed build (M1-06)
+
+Pinned USDA Foundation + SR Legacy download → checksum → normalize → `FoodSeed.sqlite` pipeline:
+
+```bash
+cd software
+npm run build-seed
+# or: node modules/food-catalog/scripts/build-seed/build-seed.mjs
+```
+
+Default mode uses the tiny golden fixture under `scripts/build-seed/fixture/` (no network).
+Set `USE_FULL_USDA=1` to fetch the pinned archives listed in `scripts/build-seed/pinned-sources.json` (SHA-256 verified). Full curated 2k–5k selection is **M1-07**.
+
+Smoke: `bash docs/demo/smoke-m1-06-seed-build.sh`

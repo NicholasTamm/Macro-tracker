@@ -1,0 +1,5 @@
+smoke-m1-06-seed-build PASS 2026-10-03T12:09:58Z
+mode=fixture foods=3
+manifest=modules/food-catalog/scripts/build-seed/out/smoke/build-manifest.json
+one-command: cd software && node modules/food-catalog/scripts/build-seed/build-seed.mjs
+full USDA (optional): USE_FULL_USDA=1 node modules/food-catalog/scripts/build-seed/build-seed.mjs
