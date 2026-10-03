@@ -24,11 +24,9 @@ test -f modules/app-core/user-data/favoriteRepo.ts || fail "missing favoriteRepo
 test -f modules/app-core/user-data/recentFoodRepo.ts || fail "missing recentFoodRepo"
 test -f metro.config.js || fail "missing metro.config.js (sqlite assetExts)"
 
-# Guard: do not ship food detail / log sheet in this issue
-if rg -n "FoodDetail|LogSheet|food-detail" app/\(tabs\)/food-entry.tsx 2>/dev/null | rg -v 'M1-13|intentionally'; then
-  fail "Search screen appears to include food detail/log sheet (M1-13)"
-fi
-ok "no food detail/log sheet in Search screen"
+# M1-12 originally deferred detail sheet; M1-13 may wire FoodDetailSheet here.
+# Keep verifying Search cancel/controller wiring below.
+ok "Search screen may include M1-13 FoodDetailSheet"
 
 # Guard: do not edit Today / diary entry screens in this PR path check (files may exist from #49)
 # Soft check: food-entry should mention Cancel + a11y summary helpers

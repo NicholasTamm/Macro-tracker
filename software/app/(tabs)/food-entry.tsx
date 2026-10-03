@@ -1,6 +1,7 @@
 /**
- * M1-12 Search — Recent / Favorites / My Foods + local FTS.
- * Does not open food detail / log sheet (M1-13).
+ * M1-12 Search + M1-13 Food detail/log sheet.
+ * Select opens detail sheet; Log writes diary entry atomically into Today.
+ * Edit/delete/undo remain M1-14.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -13,6 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
   FoodRow,
   EmptyState,
@@ -30,24 +32,41 @@ import {
   type SearchController,
 } from '@/modules/food-catalog';
 import {
+  getCustomFood,
   listCustomFoods,
   listFavorites,
   listRecentFoods,
 } from '@/modules/app-core/user-data';
+import {
+  buildCustomFoodDetail,
+  buildSeedFoodDetail,
+  type FoodDetailModel,
+} from '@/modules/diary';
+import { FoodDetailSheet } from '@/modules/diary/food-detail/FoodDetailSheet';
 
-type ListRow = { key: string; name: string; detail: string };
+type ListRow = {
+  key: string;
+  name: string;
+  detail: string;
+  foodKind: 'seed' | 'custom' | 'off' | 'fdc_branded' | 'fatsecret';
+  foodStableId: string;
+};
 type ListSection = { title: string; id: string; data: ListRow[] };
 
 export default function SearchScreen() {
   const { colors, spacing, typography, radius } = useTheme();
-  const { db: userDb, ready: userReady } = useUserData();
+  const { db: userDb, ready: userReady, refresh } = useUserData();
   const { repo, ready: catalogReady, error: catalogError } = useFoodCatalog();
+  const router = useRouter();
 
   const [query, setQuery] = useState('');
   const [browsing, setBrowsing] = useState(true);
   const [results, setResults] = useState<EnrichedSearchResult[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [browseTick, setBrowseTick] = useState(0);
+  const [detailModel, setDetailModel] = useState<FoodDetailModel | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const controllerRef = useRef<SearchController | null>(null);
 
   const browseSections: BrowseSection[] = useMemo(() => {
@@ -100,7 +119,6 @@ export default function SearchScreen() {
       onError: (message) => setSearchError(message),
     });
     controllerRef.current = controller;
-    // Catalog may finish loading after the user already typed.
     if (query.trim()) {
       setBrowsing(false);
       controller.setQuery(query);
@@ -115,7 +133,6 @@ export default function SearchScreen() {
   const onChangeQuery = (text: string) => {
     setQuery(text);
     if (text.trim()) {
-      // Leave browse immediately so Recent/Favorites do not linger during debounce.
       setBrowsing(false);
     }
     controllerRef.current?.setQuery(text);
@@ -124,6 +141,39 @@ export default function SearchScreen() {
   const onCancel = () => {
     setQuery('');
     controllerRef.current?.cancel();
+  };
+
+  const openDetail = (foodKind: ListRow['foodKind'], foodStableId: string) => {
+    setDetailError(null);
+    if (foodKind === 'seed') {
+      if (!repo) {
+        setDetailError('Food catalog unavailable.');
+        return;
+      }
+      const model = buildSeedFoodDetail(repo, foodStableId);
+      if (!model) {
+        setDetailError('Food not found in catalog.');
+        return;
+      }
+      setDetailModel(model);
+      setDetailOpen(true);
+      return;
+    }
+    if (foodKind === 'custom') {
+      if (!userDb) {
+        setDetailError('User data unavailable.');
+        return;
+      }
+      const custom = getCustomFood(userDb, foodStableId);
+      if (!custom) {
+        setDetailError('Custom food not found.');
+        return;
+      }
+      setDetailModel(buildCustomFoodDetail(custom));
+      setDetailOpen(true);
+      return;
+    }
+    setDetailError('Only offline seed and My Foods can be logged in M1.');
   };
 
   const a11ySummary = formatSearchA11ySummary({
@@ -142,6 +192,8 @@ export default function SearchScreen() {
             key: i.key,
             name: i.name,
             detail: i.detail,
+            foodKind: i.foodKind,
+            foodStableId: i.foodStableId,
           })),
         }))
     : [
@@ -152,6 +204,8 @@ export default function SearchScreen() {
             key: r.foodId,
             name: r.name,
             detail: r.detail,
+            foodKind: 'seed' as const,
+            foodStableId: r.foodId,
           })),
         },
       ];
@@ -235,6 +289,17 @@ export default function SearchScreen() {
           <ErrorBanner title="Search failed" message={searchError} tone="error" />
         </View>
       ) : null}
+      {detailError ? (
+        <View style={{ paddingHorizontal: spacing.md }}>
+          <ErrorBanner
+            title="Cannot open food"
+            message={detailError}
+            tone="error"
+            actionLabel="Dismiss"
+            onAction={() => setDetailError(null)}
+          />
+        </View>
+      ) : null}
 
       {!ready ? (
         <View style={styles.centered}>
@@ -282,13 +347,28 @@ export default function SearchScreen() {
               name={item.name}
               detail={item.detail}
               actionLabel="Select"
-              onAction={() => {
-                /* M1-13 food detail / log sheet — intentionally not opened here */
-              }}
+              onAction={() => openDetail(item.foodKind, item.foodStableId)}
             />
           )}
         />
       )}
+
+      <FoodDetailSheet
+        visible={detailOpen}
+        model={detailModel}
+        db={userDb}
+        onClose={() => {
+          setDetailOpen(false);
+          setDetailModel(null);
+        }}
+        onLogged={() => {
+          setDetailOpen(false);
+          setDetailModel(null);
+          refresh();
+          setBrowseTick((n) => n + 1);
+          router.push('/(tabs)/today');
+        }}
+      />
     </SafeAreaView>
   );
 }

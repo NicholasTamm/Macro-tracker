@@ -19,9 +19,9 @@ grep -q 'loadTodayDay' "app/(tabs)/today.tsx" || fail "Today screen missing load
 grep -q 'MacroSummary' "app/(tabs)/today.tsx" || fail "Today screen missing MacroSummary"
 grep -q 'OfflinePill' "app/(tabs)/today.tsx" || fail "Today screen missing OfflinePill"
 
-# Must not ship Search / food-detail UI in this issue
-! grep -RIn --include='*.tsx' --include='*.ts' 'SearchScreen\|FoodDetail\|food-detail' modules/diary app/\(tabs\)/today.tsx 2>/dev/null \
-  || fail "Search/food-detail leaked into M1-11 scope"
+# Today screen must not embed Search UI (food-detail module may exist from M1-13+)
+! grep -n 'SearchScreen\|createSearchController' "app/(tabs)/today.tsx" 2>/dev/null \
+  || fail "Search leaked into Today screen"
 
 if [[ ! -d node_modules/sql.js ]]; then npm ci; fi
 
