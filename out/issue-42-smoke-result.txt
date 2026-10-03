@@ -1,0 +1,6 @@
+smoke-m1-08-foodseed-emit PASS 2026-10-03T12:22:43Z
+mode=fixture foods=14 compression=zstd
+seed_manifest=modules/food-catalog/scripts/build-seed/out/smoke-m1-08/seed-manifest.json
+compressed=modules/food-catalog/scripts/build-seed/out/smoke-m1-08/FoodSeed.sqlite.zst
+sha256=498ccc0b78bb7a4f7a576b565fd79ef04e24a4df81dcffc6c1650e02baa0e9f1
+one-command: cd software && node modules/food-catalog/scripts/build-seed/build-seed.mjs

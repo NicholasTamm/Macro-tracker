@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "description": "Golden FTS queries for FoodSeed emit validation (M1-08). Queries use token AND/OR so they pass on fixture names even before reviewed aliases; selection aliases further boost ranking for M1-09.",
+  "queries": [
+    {
+      "id": "egg",
+      "match": "egg",
+      "expectAnyFoodId": ["usda-foundation:748967"],
+      "notes": "whole egg staple"
+    },
+    {
+      "id": "chicken_breast",
+      "match": "chicken AND breast",
+      "expectAnyFoodId": ["usda-sr-legacy:171077", "usda-sr-legacy:171079"],
+      "notes": "raw/cooked pair must remain searchable"
+    },
+    {
+      "id": "brown_rice",
+      "match": "brown AND rice",
+      "expectAnyFoodId": ["usda-sr-legacy:168875", "usda-sr-legacy:168878"],
+      "notes": "raw/cooked cereal pair"
+    },
+    {
+      "id": "olive_oil",
+      "match": "olive AND oil",
+      "expectAnyFoodId": ["usda-sr-legacy:171413"],
+      "notes": "fats staple (tokens present in USDA description)"
+    },
+    {
+      "id": "banana",
+      "match": "bananas OR banana",
+      "expectAnyFoodId": ["usda-sr-legacy:173944"],
+      "notes": "name bananas + reviewed alias banana"
+    },
+    {
+      "id": "broccoli",
+      "match": "broccoli",
+      "expectAnyFoodId": ["usda-sr-legacy:170379"],
+      "notes": "vegetable staple"
+    }
+  ]
+}

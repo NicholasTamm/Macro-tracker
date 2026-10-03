@@ -79,7 +79,7 @@ reviewed lists may live outside git; keep a SHA-256 note in the PR when swapping
 - `selection-report.json` — quota math, deficits, raw/cooked pair checks, alias counts
 - `selected-food-ids.json` — ordered selected IDs
 - Existing M1-06 emit outputs (`FoodSeed.sqlite`, manifest) still run so the pipeline
-  stays end-to-end; **compression / signing / golden-query packaging is M1-08**.
+  stays end-to-end; **compression / signing / golden-query packaging is implemented in M1-08**.
 
 ## Demo
 
