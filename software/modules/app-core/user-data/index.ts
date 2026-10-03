@@ -22,9 +22,19 @@ export {
   getCustomFood,
   updateCustomFoodNutrients,
   deleteCustomFood,
+  listCustomFoods,
   type CustomFood,
   type CustomFoodCreate,
 } from './customFoodRepo';
+export {
+  listFavorites,
+  type FavoriteRecord,
+  type FoodKind,
+} from './favoriteRepo';
+export {
+  listRecentFoods,
+  type RecentFoodRecord,
+} from './recentFoodRepo';
 export {
   createDiaryEntry,
   listDiaryEntriesForDay,

@@ -172,6 +172,8 @@ test('TypeScript user-data sources exist', () => {
     'migrate.ts',
     'customFoodRepo.ts',
     'diaryEntryRepo.ts',
+    'favoriteRepo.ts',
+    'recentFoodRepo.ts',
     'nutrients.ts',
     'openSqlJs.ts',
     'openExpo.ts',
