@@ -3,7 +3,7 @@
 **Stack:** Expo Router + React Native (`software/`), **not** Swift/SwiftUI.  
 **Visual source of truth:** `/workspace/macrofactor-codex-research/design-system/` (`index.html`, `styles.css`, `scripts.js`).  
 **Repo:** `NicholasTamm/Macro-tracker` · branch `feat/m1-design-system-scaffold`  
-**Updated:** 2026-09-29 PT
+**Updated:** 2026-10-03 PT
 
 ## Design-system HTML reference
 
@@ -33,7 +33,7 @@
 | M1-10 | Onboarding + profile | **done** (issue #44) |
 | M1-11 | Today / journal with macros + meal slots | **done** (issue #49) |
 | M1-12 | Search Recent/Favorites/My Foods | **done** (issue #50) |
-| M1-13 | Food detail/log sheet | todo |
+| M1-13 | Food detail/log sheet | **done** (issue #51) |
 | M1-14 | Edit/delete/undo + snapshots | todo |
 | M1-15 | Custom food CRUD | todo |
 | M1-16 | Favorites/recents/quick-add | todo |
