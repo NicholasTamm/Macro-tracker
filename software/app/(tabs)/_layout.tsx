@@ -20,20 +20,21 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
+        name="today"
+        options={{
+          title: 'Today',
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="sun" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="analytics"
         options={{
           title: 'Analytics',
           tabBarIcon: ({ color, size }) => (
             <Feather name="bar-chart-2" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="journal"
-        options={{
-          title: 'Journal',
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="book-open" size={size} color={color} />
           ),
         }}
       />
@@ -71,6 +72,13 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Feather name="layers" size={size} color={color} />
           ),
+        }}
+      />
+      {/* Legacy placeholder — hide from tab bar; route kept only if linked */}
+      <Tabs.Screen
+        name="journal"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

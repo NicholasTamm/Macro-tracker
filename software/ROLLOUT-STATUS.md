@@ -30,9 +30,9 @@
 | M1-07 | Selection/alias files + category quotas | done |
 | M1-08 | FoodSeed sqlite + FTS | done |
 | M1-09 | LocalFoodRepository search | done |
-| M1-10 | Onboarding + profile | todo |
-| M1-11 | Today / journal with macros + meal slots | todo |
-| M1-12 | Search Recent/Favorites/My Foods | done |
+| M1-10 | Onboarding + profile | **done** (issue #44) |
+| M1-11 | Today / journal with macros + meal slots | **done** (issue #49) |
+| M1-12 | Search Recent/Favorites/My Foods | **done** (issue #50) |
 | M1-13 | Food detail/log sheet | todo |
 | M1-14 | Edit/delete/undo + snapshots | todo |
 | M1-15 | Custom food CRUD | todo |
