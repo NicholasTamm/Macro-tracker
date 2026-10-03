@@ -1,32 +1,56 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { TextInput, View, Text } from 'react-native';
 import { OnboardingShell } from './OnboardingShell';
 import { ChoiceRow } from './ChoiceRow';
 import { useUserData } from '@/components/UserDataProvider';
-import { saveBiometrics, type Sex } from '@/modules/app-core/user-data';
+import {
+  cmToIn,
+  inToCm,
+  kgToLb,
+  lbToKg,
+  round1,
+  saveBiometrics,
+  type Sex,
+} from '@/modules/app-core/user-data';
 import { useTheme } from '@/design-system';
 
 export default function BiometricsScreen() {
   const { db, snapshot, refresh } = useUserData();
   const { colors, spacing, typography, radius } = useTheme();
   const p = snapshot?.profile;
+  const massUnit = p?.massUnit ?? 'kg';
+  const heightUnit = p?.heightUnit ?? 'cm';
+
   const [sex, setSex] = useState<Sex>(p?.sex ?? 'unspecified');
   const [birthYear, setBirthYear] = useState(String(p?.birthYear ?? 1995));
-  const [heightCm, setHeightCm] = useState(String(p?.heightCm ?? 170));
-  const [weightKg, setWeightKg] = useState(String(p?.weightKg ?? 70));
+
+  const initialHeightDisplay = useMemo(() => {
+    const cm = p?.heightCm ?? 170;
+    return String(heightUnit === 'in' ? round1(cmToIn(cm)) : cm);
+  }, [p?.heightCm, heightUnit]);
+  const initialWeightDisplay = useMemo(() => {
+    const kg = p?.weightKg ?? 70;
+    return String(massUnit === 'lb' ? round1(kgToLb(kg)) : kg);
+  }, [p?.weightKg, massUnit]);
+
+  const [heightDisplay, setHeightDisplay] = useState(initialHeightDisplay);
+  const [weightDisplay, setWeightDisplay] = useState(initialWeightDisplay);
 
   const year = Number(birthYear);
-  const height = Number(heightCm);
-  const weight = Number(weightKg);
+  const heightNum = Number(heightDisplay);
+  const weightNum = Number(weightDisplay);
+  const heightCm = heightUnit === 'in' ? inToCm(heightNum) : heightNum;
+  const weightKg = massUnit === 'lb' ? lbToKg(weightNum) : weightNum;
+
   const valid =
     Number.isFinite(year) &&
     year >= 1900 &&
     year <= new Date().getFullYear() - 18 &&
-    Number.isFinite(height) &&
-    height > 0 &&
-    Number.isFinite(weight) &&
-    weight > 0;
+    Number.isFinite(heightCm) &&
+    heightCm > 0 &&
+    Number.isFinite(weightKg) &&
+    weightKg > 0;
 
   const field = (label: string, value: string, onChange: (v: string) => void, a11y: string) => (
     <View style={{ marginBottom: spacing.sm }}>
@@ -52,12 +76,17 @@ export default function BiometricsScreen() {
   return (
     <OnboardingShell
       title="Biometrics"
-      subtitle="Stored only on this device. Used for a transparent starter calorie estimate."
+      subtitle="Stored only on this device (canonical cm/kg). Used for a transparent starter calorie estimate."
       primaryLabel="Continue"
       primaryDisabled={!valid}
       onPrimary={() => {
         if (!db || !valid) return;
-        saveBiometrics(db, { sex, birthYear: year, heightCm: height, weightKg: weight });
+        saveBiometrics(db, {
+          sex,
+          birthYear: year,
+          heightCm: round1(heightCm),
+          weightKg: round1(weightKg),
+        });
         refresh();
         router.push('/onboarding/goal');
       }}
@@ -74,8 +103,18 @@ export default function BiometricsScreen() {
           onPress={() => setSex('unspecified')}
         />
         {field('Birth year', birthYear, setBirthYear, 'Birth year')}
-        {field('Height (cm)', heightCm, setHeightCm, 'Height in centimetres')}
-        {field('Weight (kg)', weightKg, setWeightKg, 'Weight in kilograms')}
+        {field(
+          `Height (${heightUnit})`,
+          heightDisplay,
+          setHeightDisplay,
+          `Height in ${heightUnit}`,
+        )}
+        {field(
+          `Weight (${massUnit})`,
+          weightDisplay,
+          setWeightDisplay,
+          `Weight in ${massUnit}`,
+        )}
       </View>
     </OnboardingShell>
   );

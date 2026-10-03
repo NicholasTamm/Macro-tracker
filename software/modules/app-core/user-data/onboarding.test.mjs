@@ -208,3 +208,35 @@ test('TypeScript onboarding sources exist', () => {
     assert.ok(readFileSync(join(__dirname, f), 'utf8').length > 40, f);
   }
 });
+
+test('unit convert round-trip lb/in ↔ kg/cm', () => {
+  const lbToKg = (lb) => lb * 0.45359237;
+  const kgToLb = (kg) => kg / 0.45359237;
+  const inToCm = (inches) => inches * 2.54;
+  const cmToIn = (cm) => cm / 2.54;
+  const round1 = (n) => Math.round(n * 10) / 10;
+  assert.equal(round1(lbToKg(154)), 69.9);
+  assert.ok(Math.abs(kgToLb(lbToKg(154)) - 154) < 1e-9);
+  assert.equal(round1(inToCm(67)), 170.2);
+  assert.ok(Math.abs(cmToIn(inToCm(67)) - 67) < 1e-9);
+});
+
+test('sql.js exportBytes round-trip keeps profile step', async () => {
+  const SQL = await initSqlJs();
+  const db1 = new SQL.Database();
+  applyV1V2(db1);
+  ensureProfile(db1);
+  const ts = new Date().toISOString();
+  db1.run(
+    `UPDATE user_profile SET onboarding_step='goal', is_adult_confirmed=1, adult_confirmed_at=?, updated_at=? WHERE id='local-profile'`,
+    [ts, ts],
+  );
+  const bytes = db1.export();
+  db1.close();
+  const db2 = new SQL.Database(bytes);
+  const stmt = db2.prepare(`SELECT onboarding_step FROM user_profile WHERE id='local-profile'`);
+  stmt.step();
+  assert.equal(stmt.getAsObject().onboarding_step, 'goal');
+  stmt.free();
+  db2.close();
+});

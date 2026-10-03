@@ -79,3 +79,11 @@ export {
   nextStepAfter,
   type OnboardingSnapshot,
 } from './onboarding';
+
+export {
+  kgToLb,
+  lbToKg,
+  cmToIn,
+  inToCm,
+  round1,
+} from './unitConvert';
