@@ -32,7 +32,7 @@
 | M1-09 | LocalFoodRepository search | done |
 | M1-10 | Onboarding + profile | todo |
 | M1-11 | Today / journal with macros + meal slots | todo |
-| M1-12 | Search Recent/Favorites/My Foods | todo |
+| M1-12 | Search Recent/Favorites/My Foods | done |
 | M1-13 | Food detail/log sheet | todo |
 | M1-14 | Edit/delete/undo + snapshots | todo |
 | M1-15 | Custom food CRUD | todo |

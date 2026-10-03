@@ -112,3 +112,24 @@ export function deleteCustomFood(db: SqlExecutor, id: string): void {
     [ts, ts, id],
   );
 }
+
+/** Active (non-deleted, non-archived) custom foods for My Foods browse (M1-12). */
+export function listCustomFoods(
+  db: SqlExecutor,
+  opts: { limit?: number; includeArchived?: boolean } = {},
+): CustomFood[] {
+  const limit = opts.limit ?? 50;
+  const includeArchived = opts.includeArchived === true;
+  const rows = includeArchived
+    ? db.all(
+        `SELECT * FROM custom_food WHERE deleted_at IS NULL
+         ORDER BY updated_at DESC LIMIT ?`,
+        [limit],
+      )
+    : db.all(
+        `SELECT * FROM custom_food WHERE deleted_at IS NULL AND is_archived = 0
+         ORDER BY updated_at DESC LIMIT ?`,
+        [limit],
+      );
+  return rows.map(mapRow);
+}

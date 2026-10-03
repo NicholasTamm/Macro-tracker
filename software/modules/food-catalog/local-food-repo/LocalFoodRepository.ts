@@ -8,7 +8,7 @@
  * 4. Fuzzy rerank of the top 50 (edit distance) — never full-table fuzzy scan
  * 5. Rank adjustments via alias.rank_boost
  *
- * Does not implement Search UI (M1-12).
+ * Search UI lives in food-catalog/search + app/(tabs)/food-entry (M1-12).
  */
 import { bestFuzzyScore } from './fuzzy';
 import {
@@ -197,9 +197,19 @@ export class LocalFoodRepository {
     }));
   }
 
+  getSource(sourceId: string): { sourceId: string; displayName: string } | null {
+    const row = this.db.get<{ source_id: string; display_name: string }>(
+      `SELECT source_id, display_name FROM source WHERE source_id = ?`,
+      [sourceId],
+    );
+    if (!row) return null;
+    return { sourceId: row.source_id, displayName: row.display_name };
+  }
+
   /**
    * Offline search: exact → FTS (or LIKE fallback) → fuzzy top-50 rerank.
    */
+
   search(rawQuery: string, opts: SearchOptions = {}): SearchHit[] {
     const limit = Math.min(opts.limit ?? DEFAULT_LIMIT, FUZZY_POOL);
     const locale = opts.locale ?? 'en';

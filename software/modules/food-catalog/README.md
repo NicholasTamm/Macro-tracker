@@ -87,7 +87,7 @@ Runtime open + search: see **LocalFoodRepository (M1-09)** below.
 ## LocalFoodRepository (M1-09)
 
 Read-only open of bundled `FoodSeed` + offline search (exact → FTS/LIKE → fuzzy top-50).
-Does **not** build Search UI (M1-12).
+Search UI (M1-12) lives in `search/` + `app/(tabs)/food-entry.tsx`.
 
 | Path | Role |
 | --- | --- |
