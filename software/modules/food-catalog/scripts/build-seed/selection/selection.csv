@@ -1,0 +1,15 @@
+food_id,source_id,external_id,category,preparation_state,notes,reviewer,reviewed_at
+usda-foundation:748967,usda-foundation,748967,Dairy and Egg Products,,staple whole egg,nicholas,2026-10-03
+usda-sr-legacy:173410,usda-sr-legacy,173410,Dairy and Egg Products,,whole milk staple,nicholas,2026-10-03
+usda-sr-legacy:173944,usda-sr-legacy,173944,Fruits and Fruit Juices,raw,banana raw,nicholas,2026-10-03
+usda-sr-legacy:171077,usda-sr-legacy,171077,Poultry Products,raw,chicken breast raw pair,nicholas,2026-10-03
+usda-sr-legacy:171079,usda-sr-legacy,171079,Poultry Products,cooked,chicken breast cooked pair,nicholas,2026-10-03
+usda-sr-legacy:168875,usda-sr-legacy,168875,Cereal Grains and Pasta,raw,brown rice raw pair,nicholas,2026-10-03
+usda-sr-legacy:168878,usda-sr-legacy,168878,Cereal Grains and Pasta,cooked,brown rice cooked pair,nicholas,2026-10-03
+usda-sr-legacy:171413,usda-sr-legacy,171413,Fats and Oils,,olive oil,nicholas,2026-10-03
+usda-sr-legacy:173735,usda-sr-legacy,173735,Legumes and Legume Products,cooked,black beans boiled,nicholas,2026-10-03
+usda-sr-legacy:175167,usda-sr-legacy,175167,Finfish and Shellfish Products,raw,salmon raw,nicholas,2026-10-03
+usda-sr-legacy:170379,usda-sr-legacy,170379,Vegetables and Vegetable Products,raw,broccoli raw,nicholas,2026-10-03
+usda-sr-legacy:170567,usda-sr-legacy,170567,Nut and Seed Products,,almonds,nicholas,2026-10-03
+usda-sr-legacy:171890,usda-sr-legacy,171890,Beverages,,brewed coffee,nicholas,2026-10-03
+usda-sr-legacy:173468,usda-sr-legacy,173468,Spices and Herbs,,table salt,nicholas,2026-10-03

@@ -106,7 +106,8 @@ test('fixture normalize: Foundation/SR filter + golden macros', async () => {
   assert.equal(egg.servings[0].gramWeight, 50.3);
 
   const sr = await normalizeUsdaDirectory(join(__dirname, 'fixture/sr_legacy'));
-  assert.equal(sr.foods.length, 2);
+  assert.ok(sr.foods.length >= 2);
+  assert.equal(sr.foods.length, 13);
   const banana = sr.foods.find((f) => f.externalId === '173944');
   assert.ok(banana);
   assert.equal(banana.dataType, 'sr_legacy');
@@ -134,7 +135,7 @@ test('emitSqliteCatalog writes schema-compatible FoodSeed + manifest with source
   });
 
   const { sqliteQuery } = await import('./lib/emit-sqlite.mjs');
-  assert.equal(await sqliteQuery(emitted.dbPath, 'SELECT COUNT(*) FROM food'), '3');
+  assert.equal(await sqliteQuery(emitted.dbPath, 'SELECT COUNT(*) FROM food'), String(foods.length));
   assert.equal(
     await sqliteQuery(emitted.dbPath, 'SELECT GROUP_CONCAT(data_type) FROM (SELECT DISTINCT data_type FROM food ORDER BY 1)'),
     'foundation,sr_legacy',
@@ -170,7 +171,7 @@ test('emitSqliteCatalog writes schema-compatible FoodSeed + manifest with source
 
   const manifest = JSON.parse(await readFile(emitted.manifestPath, 'utf8'));
   assert.equal(manifest.manifestVersion, 1);
-  assert.equal(manifest.content.foodCount, 3);
+  assert.equal(manifest.content.foodCount, foods.length);
   assert.ok(manifest.sources.every((s) => /^[0-9a-f]{64}$/.test(s.archiveSHA256)));
   assert.ok(manifest.sources.every((s) => s.downloadURL.startsWith('https://fdc.nal.usda.gov/')));
 
