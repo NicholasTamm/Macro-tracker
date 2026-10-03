@@ -35,7 +35,7 @@ export default function TargetScreen() {
         if (!db) return;
         completeOnboardingWithStarterTarget(db);
         refresh();
-        router.replace('/food-entry');
+        router.replace('/today');
       }}
       secondaryLabel="Back"
       onSecondary={() => router.back()}
