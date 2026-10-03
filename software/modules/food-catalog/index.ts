@@ -2,3 +2,4 @@
 export { FoodCatalogModule } from './module';
 export * from './types';
 export * from './nutrients';
+export * from './local-food-repo';

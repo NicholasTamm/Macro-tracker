@@ -1,0 +1,49 @@
+{
+  "manifestVersion": 1,
+  "catalogSchemaVersion": 1,
+  "seedVersion": "fixture.m1-09.1",
+  "minimumAppBuild": 1,
+  "createdAt": "2026-10-03T12:24:56.974Z",
+  "buildMode": "fixture",
+  "artifact": {
+    "url": "file:///tmp/m109-seed/FoodSeed.sqlite.zst",
+    "compression": "zstd",
+    "compressedBytes": 11236,
+    "uncompressedBytes": 131072,
+    "sha256": "5c1b858a34dbd5b3313b5685eb381ad1c7881cb407be525b3e1308397758d105",
+    "signature": "J5gZs6EknWbwUKnPlQKCCROKv8N7O3fN8IuiQ9vIDytwrdLoiCEreP3+87QAspRWki/QA5qHNEJQsJfC/NisDg==",
+    "signingKeyID": "food-seed-2026-01"
+  },
+  "content": {
+    "foodCount": 14,
+    "servingCount": 15,
+    "nutrientValueCount": 90,
+    "ftsDocumentCount": 14,
+    "locales": [
+      "en"
+    ]
+  },
+  "sources": [
+    {
+      "id": "usda-foundation",
+      "release": "2024-10-31+fixture",
+      "downloadURL": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_csv_2024-10-31.zip",
+      "retrievedAt": "2026-10-03T12:24:56.945Z",
+      "archiveSHA256": "8587f941ec252bd9aaf7b85a18a42980fb540f509b34300ed8dd4d10ca9edf44",
+      "license": "CC0-1.0",
+      "attribution": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: Foundation Foods, October 2024 release. https://fdc.nal.usda.gov/"
+    },
+    {
+      "id": "usda-sr-legacy",
+      "release": "2018-04+fixture",
+      "downloadURL": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_csv_2018-04.zip",
+      "retrievedAt": "2026-10-03T12:24:56.945Z",
+      "archiveSHA256": "b80817294b8850530aaedf2e515c02593b1824f763a0ff356e5c2081643e6fd0",
+      "license": "CC0-1.0",
+      "attribution": "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central: SR Legacy, April 2018 final release. https://fdc.nal.usda.gov/"
+    }
+  ],
+  "releaseNotes": "Bundled fixture FoodSeed for M1-09 LocalFoodRepository (until CDN).",
+  "pinnedSourcesFile": "pinned-sources.json",
+  "uncompressedSha256": "50a560d9aafa13d29f628b78c22f7ad804dec297cf6bfbde967f868048d4637f"
+}
