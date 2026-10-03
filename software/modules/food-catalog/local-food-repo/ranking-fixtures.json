@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "description": "Deterministic ranking fixtures for LocalFoodRepository (M1-09). Uses bundled FoodSeed.fixture.sqlite (14 foods).",
+  "seedAsset": "modules/food-catalog/assets/FoodSeed.fixture.sqlite",
+  "warmBudgetP95Ms": 150,
+  "cases": [
+    {
+      "id": "exact_alias_banana",
+      "query": "banana",
+      "stage": "exact",
+      "expectTopFoodId": "usda-sr-legacy:173944",
+      "expectMatchKind": "exact",
+      "notes": "reviewed alias exact match"
+    },
+    {
+      "id": "exact_alias_large_egg",
+      "query": "large egg",
+      "stage": "exact",
+      "expectTopFoodId": "usda-foundation:748967",
+      "expectMatchKind": "exact",
+      "notes": "reviewed alias for whole egg"
+    },
+    {
+      "id": "fts_chicken_breast",
+      "query": "chicken breast",
+      "stage": "fts",
+      "expectTopFoodIdsAnyOf": ["usda-sr-legacy:171077", "usda-sr-legacy:171079"],
+      "expectBothPresent": ["usda-sr-legacy:171077", "usda-sr-legacy:171079"],
+      "notes": "raw/cooked pair both searchable via FTS"
+    },
+    {
+      "id": "fts_olive_oil",
+      "query": "olive oil",
+      "stage": "fts",
+      "expectTopFoodId": "usda-sr-legacy:171413",
+      "notes": "alias + name tokens"
+    },
+    {
+      "id": "fts_brown_rice",
+      "query": "brown rice",
+      "stage": "fts",
+      "expectTopFoodIdsAnyOf": ["usda-sr-legacy:168875", "usda-sr-legacy:168878"],
+      "expectBothPresent": ["usda-sr-legacy:168875", "usda-sr-legacy:168878"],
+      "notes": "raw/cooked cereal pair"
+    },
+    {
+      "id": "fuzzy_broccoli_typo_pool",
+      "query": "brocc",
+      "stage": "fuzzy",
+      "expectTopFoodId": "usda-sr-legacy:170379",
+      "notes": "prefix FTS pool then fuzzy boost for broccoli"
+    },
+    {
+      "id": "fuzzy_egg_near",
+      "query": "eggs",
+      "stage": "fuzzy",
+      "expectTopFoodId": "usda-foundation:748967",
+      "notes": "near-exact / plural against egg staple"
+    }
+  ]
+}

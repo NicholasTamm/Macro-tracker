@@ -28,8 +28,8 @@
 | M1-05 | User models + persistence (SQLite/AsyncStorage plan) | todo (issue #12 defines the food/diary storage boundary; implementation has not started) |
 | M1-06 | USDA seed build script | done |
 | M1-07 | Selection/alias files + category quotas | done |
-| M1-08 | FoodSeed sqlite + FTS | todo |
-| M1-09 | LocalFoodRepository search | todo |
+| M1-08 | FoodSeed sqlite + FTS | done |
+| M1-09 | LocalFoodRepository search | done |
 | M1-10 | Onboarding + profile | todo |
 | M1-11 | Today / journal with macros + meal slots | todo |
 | M1-12 | Search Recent/Favorites/My Foods | todo |

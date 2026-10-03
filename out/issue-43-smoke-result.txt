@@ -1,0 +1,6 @@
+smoke-m1-09-local-food-repo PASS 2026-10-03T12:30:35Z
+seed=modules/food-catalog/assets/FoodSeed.fixture.sqlite
+warm=p95_ms=1.594 budget_ms=150 foods=14 fts=true
+budget_doc=modules/food-catalog/local-food-repo/BUDGET.md
+fixtures=modules/food-catalog/local-food-repo/ranking-fixtures.json
+one-command: cd software && node --test modules/food-catalog/local-food-repo/local-food-repo.test.mjs

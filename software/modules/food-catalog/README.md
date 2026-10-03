@@ -82,4 +82,28 @@ node modules/food-catalog/scripts/build-seed/build-seed.mjs
 
 Smoke: `bash docs/demo/smoke-m1-08-foodseed-emit.sh`
 
-Does **not** implement `LocalFoodRepository` runtime open (M1-09).
+Runtime open + search: see **LocalFoodRepository (M1-09)** below.
+
+## LocalFoodRepository (M1-09)
+
+Read-only open of bundled `FoodSeed` + offline search (exact → FTS/LIKE → fuzzy top-50).
+Does **not** build Search UI (M1-12).
+
+| Path | Role |
+| --- | --- |
+| `local-food-repo/LocalFoodRepository.ts` | Repository API |
+| `local-food-repo/openSeed.ts` | sql.js bytes + expo-sqlite wrap (RN-safe) |
+| `local-food-repo/openSeedNode.ts` | Node FTS5 open via `node-sqlite3-wasm` |
+| `local-food-repo/ranking-fixtures.json` | Deterministic ranking cases |
+| `local-food-repo/BUDGET.md` | Warm common-query p95 ≤ 150 ms |
+| `assets/FoodSeed.fixture.sqlite` | Bundled fixture seed until CDN |
+
+```bash
+cd software
+node --test modules/food-catalog/local-food-repo/local-food-repo.test.mjs
+# or:
+bash docs/demo/smoke-m1-09-local-food-repo.sh
+```
+
+Expo: copy the fixture (or CDN artifact) into the document directory and
+`wrapExpoSqliteSeed(SQLite.openDatabaseSync('FoodSeed.sqlite'))`.
