@@ -164,9 +164,13 @@ export function selectFoods(foods, selectionById) {
     if (seen.has(id)) continue;
     seen.add(id);
     const meta = selectionById.get(id);
+    const preparationState =
+      detectPreparationState(hit.description) || meta?.preparationState || null;
     selected.push({
       ...hit,
-      preparationState: detectPreparationState(hit.description) || meta?.preparationState || null,
+      // Persist into schema food.state so raw/cooked survives beyond description text.
+      state: preparationState || hit.state || null,
+      preparationState,
       selectionMeta: meta || null,
     });
   }
@@ -411,7 +415,11 @@ export async function runSelection(foods, opts = {}) {
 
   // Soft-ok: quota deficits are allowed only when opts.allowDeficitReport and deficits are explicit
   if (!quotaReport.allMet && opts.allowDeficitReport) {
-    report.ok = pairCheck.allOk && missingFromPool.length === 0;
+    // Deficit allowance does not waive pair, pool, or alias-rejection failures.
+    report.ok =
+      pairCheck.allOk &&
+      missingFromPool.length === 0 &&
+      aliased.rejected.length === 0;
     report.quotaDeficitAllowed = true;
   }
 

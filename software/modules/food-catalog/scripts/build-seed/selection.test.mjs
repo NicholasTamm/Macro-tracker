@@ -94,6 +94,8 @@ test('selectFoods + raw/cooked pairs survive when both listed', async () => {
   assert.ok(chickenCooked);
   assert.equal(detectPreparationState(chickenRaw.description), 'raw');
   assert.equal(detectPreparationState(chickenCooked.description), 'cooked');
+  assert.equal(chickenRaw.state, 'raw');
+  assert.equal(chickenCooked.state, 'cooked');
 
   const pairs = await loadRawCookedPairs();
   const check = checkRawCookedPairs(
@@ -146,6 +148,8 @@ test('runSelection on fixture pool meets quotas and writes-shaped report', async
   assert.equal(result.foods.length, 14);
   assert.equal(result.report.ok, true);
   assert.equal(result.report.quotas.allMet, true);
+  const rawChicken = result.foods.find((f) => f.foodId === 'usda-sr-legacy:171077');
+  assert.equal(rawChicken.state, 'raw');
   assert.equal(result.report.rawCookedPairs.allOk, true);
   assert.equal(result.report.missingFromPool.length, 0);
   assert.ok(result.report.aliases.appliedCount >= 8);

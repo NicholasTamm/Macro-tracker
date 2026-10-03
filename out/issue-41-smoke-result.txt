@@ -1,4 +1,4 @@
-smoke-m1-07-selection PASS 2026-10-03T12:15:58Z
+smoke-m1-07-selection PASS 2026-10-03T12:16:37Z
 mode=fixture selected=14 quotas_met=yes pairs=yes aliases_applied=10
 report=modules/food-catalog/scripts/build-seed/out/smoke-m1-07/selection-report.json
 one-command: cd software && node modules/food-catalog/scripts/build-seed/build-seed.mjs
