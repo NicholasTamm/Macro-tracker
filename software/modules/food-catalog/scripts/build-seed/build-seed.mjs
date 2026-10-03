@@ -1,23 +1,25 @@
 #!/usr/bin/env node
 /**
- * M1-06 USDA seed build pipeline.
+ * M1-06/M1-07 USDA seed build pipeline.
  *
- * Default: consume golden fixture under ./fixture (no network).
+ * Default: consume golden fixture under ./fixture (no network), then apply
+ * reviewed selection/aliases/quotas from ./selection (M1-07).
  * Full:    USE_FULL_USDA=1 downloads pinned Foundation + SR Legacy zips,
- *          verifies SHA-256, extracts, and normalizes (still does not emit
- *          the full 2k–5k curated selection — that is M1-07).
+ *          verifies SHA-256, normalizes, then requires selection.full.csv.
+ *
+ * Final compression / signed packaging remains M1-08.
  *
  * Usage:
  *   node build-seed.mjs [--out <dir>] [--seed-version <ver>] [--limit <n>]
  *   USE_FULL_USDA=1 node build-seed.mjs [--out <dir>]
  */
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizeUsdaDirectory, loadPinnedSources, loadNutrientMap } from './lib/normalize.mjs';
 import { downloadAndVerify, unzipArchive, findCsvRoot } from './lib/download.mjs';
 import { emitSqliteCatalog } from './lib/emit-sqlite.mjs';
-import { sha256Hex, assertSha256 } from './lib/checksum.mjs';
+import { runSelection } from './lib/selection.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +29,8 @@ function parseArgs(argv) {
     seedVersion: null,
     limit: null,
     useFull: process.env.USE_FULL_USDA === '1' || process.env.USE_FULL_USDA === 'true',
+    skipSelection: false,
+    allowDeficit: process.env.ALLOW_QUOTA_DEFICIT === '1',
   };
   for (let i = 2; i < argv.length; i += 1) {
     const a = argv[i];
@@ -34,6 +38,8 @@ function parseArgs(argv) {
     else if (a === '--seed-version') out.seedVersion = argv[++i];
     else if (a === '--limit') out.limit = Number(argv[++i]);
     else if (a === '--full') out.useFull = true;
+    else if (a === '--skip-selection') out.skipSelection = true;
+    else if (a === '--allow-deficit') out.allowDeficit = true;
     else if (a === '--help' || a === '-h') out.help = true;
     else throw new Error(`Unknown arg: ${a}`);
   }
@@ -50,8 +56,6 @@ async function resolveInputDirs(args, pinned) {
       ],
       sourceOverrides: pinned.sources.map((s) => ({
         sourceId: s.sourceId,
-        // Fixture builds still record the *pinned* archive URL/hash as provenance,
-        // with an explicit fixture marker in release notes / build_mode.
         releaseVersion: `${s.releaseVersion}+fixture`,
         releaseDate: s.releaseDate,
         sourceUrl: s.sourceUrl,
@@ -95,8 +99,9 @@ async function resolveInputDirs(args, pinned) {
 async function main() {
   const args = parseArgs(process.argv);
   if (args.help) {
-    console.log(`Usage: node build-seed.mjs [--out dir] [--seed-version ver] [--limit n] [--full]
-Env: USE_FULL_USDA=1 to fetch pinned USDA archives (checksum-verified).`);
+    console.log(`Usage: node build-seed.mjs [--out dir] [--seed-version ver] [--limit n] [--full] [--skip-selection] [--allow-deficit]
+Env: USE_FULL_USDA=1 to fetch pinned USDA archives (checksum-verified).
+     ALLOW_QUOTA_DEFICIT=1 to emit an explicit deficit report without failing.`);
     process.exit(0);
   }
 
@@ -138,6 +143,47 @@ Env: USE_FULL_USDA=1 to fetch pinned USDA archives (checksum-verified).`);
     );
   }
 
+  let categoryQuotas = [];
+  let selectionReport = null;
+
+  if (!args.skipSelection) {
+    console.log(`==> selection (${input.mode}) from selection/`);
+    const sel = await runSelection(allFoods, {
+      mode: input.mode,
+      allowDeficitReport: args.allowDeficit,
+    });
+    selectionReport = sel.report;
+    await writeFile(
+      join(args.outDir, 'selection-report.json'),
+      `${JSON.stringify(sel.report, null, 2)}\n`,
+    );
+    await writeFile(
+      join(args.outDir, 'selected-food-ids.json'),
+      `${JSON.stringify(
+        sel.foods.map((f) => f.foodId),
+        null,
+        2,
+      )}\n`,
+    );
+    console.log(
+      `    selected=${sel.foods.length} quotas=${sel.report.quotas.allMet ? 'met' : 'DEFICIT'} pairs=${sel.report.rawCookedPairs.allOk ? 'ok' : 'FAIL'} aliases_applied=${sel.report.aliases.appliedCount}`,
+    );
+    if (!sel.report.ok) {
+      const deficitSummary = (sel.report.quotas.deficits || [])
+        .map((d) => `${d.category}:${d.selectedCount}/${d.targetMin}-${d.targetMax}`)
+        .join('; ');
+      throw new Error(
+        `Selection gate failed (ok=false). deficits=[${deficitSummary}] missingFromPool=${JSON.stringify(sel.report.missingFromPool)} aliasRejected=${sel.report.aliases.rejectedCount}. See ${join(args.outDir, 'selection-report.json')}`,
+      );
+    }
+    allFoods = sel.foods;
+    categoryQuotas = sel.categoryQuotaRows.map((q) => ({
+      ...q,
+      reviewer: sel.report.reviewer,
+      reviewedAt: sel.report.reviewedAt,
+    }));
+  }
+
   console.log(`==> emit sqlite (${allFoods.length} foods) → ${args.outDir}`);
   const emitted = await emitSqliteCatalog({
     foods: allFoods,
@@ -146,10 +192,14 @@ Env: USE_FULL_USDA=1 to fetch pinned USDA archives (checksum-verified).`);
     outDir: args.outDir,
     mode: input.mode,
     sourceOverrides: input.sourceOverrides,
+    categoryQuotas,
   });
 
   console.log(`OK: ${emitted.dbPath}`);
   console.log(`OK: ${emitted.manifestPath}`);
+  if (selectionReport) {
+    console.log(`OK: ${join(args.outDir, 'selection-report.json')}`);
+  }
   console.log(`    foods=${emitted.manifest.content.foodCount} sha256=${emitted.manifest.artifact.sha256.slice(0, 12)}…`);
   for (const s of emitted.manifest.sources) {
     console.log(`    source ${s.id} release=${s.release} archive_sha256=${s.archiveSHA256.slice(0, 12)}…`);
@@ -161,6 +211,9 @@ main().catch((err) => {
   if (err.code === 'CHECKSUM_MISMATCH') {
     console.error('  expected:', err.expected);
     console.error('  actual:  ', err.actual);
+  }
+  if (err.code === 'SELECTION_FULL_MISSING') {
+    console.error('  See software/modules/food-catalog/scripts/build-seed/selection/README.md');
   }
   process.exit(1);
 });

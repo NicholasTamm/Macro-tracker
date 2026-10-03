@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "reviewer": "nicholas",
+  "reviewedAt": "2026-10-03",
+  "notes": "Fixture quotas are scaled for the golden selection set (offline CI). Full block documents production 2k–5k targets; raise counts only via reviewed selection.full.csv, never emit hard-coding.",
+  "fixture": {
+    "totalTargetMin": 12,
+    "totalTargetMax": 30,
+    "categories": [
+      { "category": "Dairy and Egg Products", "targetMin": 2, "targetMax": 4 },
+      { "category": "Poultry Products", "targetMin": 2, "targetMax": 4 },
+      { "category": "Fruits and Fruit Juices", "targetMin": 1, "targetMax": 3 },
+      { "category": "Cereal Grains and Pasta", "targetMin": 2, "targetMax": 4 },
+      { "category": "Fats and Oils", "targetMin": 1, "targetMax": 2 },
+      { "category": "Legumes and Legume Products", "targetMin": 1, "targetMax": 2 },
+      { "category": "Finfish and Shellfish Products", "targetMin": 1, "targetMax": 2 },
+      { "category": "Vegetables and Vegetable Products", "targetMin": 1, "targetMax": 3 },
+      { "category": "Nut and Seed Products", "targetMin": 1, "targetMax": 2 },
+      { "category": "Beverages", "targetMin": 1, "targetMax": 2 },
+      { "category": "Spices and Herbs", "targetMin": 1, "targetMax": 2 }
+    ]
+  },
+  "full": {
+    "totalTargetMin": 2000,
+    "totalTargetMax": 5000,
+    "selectionFile": "selection.full.csv",
+    "categories": [
+      { "category": "Dairy and Egg Products", "targetMin": 80, "targetMax": 250 },
+      { "category": "Poultry Products", "targetMin": 60, "targetMax": 200 },
+      { "category": "Beef Products", "targetMin": 60, "targetMax": 200 },
+      { "category": "Pork Products", "targetMin": 40, "targetMax": 150 },
+      { "category": "Fruits and Fruit Juices", "targetMin": 100, "targetMax": 300 },
+      { "category": "Vegetables and Vegetable Products", "targetMin": 150, "targetMax": 400 },
+      { "category": "Cereal Grains and Pasta", "targetMin": 80, "targetMax": 250 },
+      { "category": "Fats and Oils", "targetMin": 30, "targetMax": 100 },
+      { "category": "Legumes and Legume Products", "targetMin": 40, "targetMax": 120 },
+      { "category": "Finfish and Shellfish Products", "targetMin": 60, "targetMax": 200 },
+      { "category": "Nut and Seed Products", "targetMin": 40, "targetMax": 120 },
+      { "category": "Beverages", "targetMin": 40, "targetMax": 150 },
+      { "category": "Spices and Herbs", "targetMin": 20, "targetMax": 80 },
+      { "category": "Baked Products", "targetMin": 40, "targetMax": 150 },
+      { "category": "Soups, Sauces, and Gravies", "targetMin": 30, "targetMax": 100 }
+    ],
+    "instructions": "Place reviewed food_ids in selection.full.csv (same columns as selection.csv). Run with USE_FULL_USDA=1. Quotas must pass or the selection-report.json deficits block must list rationale."
+  }
+}

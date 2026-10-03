@@ -27,7 +27,7 @@
 | M1-04 | Starter components + gallery: PrimaryButton, Card/RaisedTile, MacroSummary, FoodRow, ErrorBanner, OfflinePill, Empty/Loading, ComponentGallery | **in_progress** (specimens in; AX5/VoiceOver polish remaining) |
 | M1-05 | User models + persistence (SQLite/AsyncStorage plan) | todo (issue #12 defines the food/diary storage boundary; implementation has not started) |
 | M1-06 | USDA seed build script | done |
-| M1-07 | Selection/alias files | todo |
+| M1-07 | Selection/alias files + category quotas | done |
 | M1-08 | FoodSeed sqlite + FTS | todo |
 | M1-09 | LocalFoodRepository search | todo |
 | M1-10 | Onboarding + profile | todo |
