@@ -9,4 +9,6 @@ export type SqlExecutor = {
   get<T extends SqlRow = SqlRow>(sql: string, params?: unknown[]): T | undefined;
   all<T extends SqlRow = SqlRow>(sql: string, params?: unknown[]): T[];
   close(): void;
+  /** Optional: sql.js (and similar) can snapshot bytes for relaunch persistence. */
+  exportBytes?: () => Uint8Array;
 };

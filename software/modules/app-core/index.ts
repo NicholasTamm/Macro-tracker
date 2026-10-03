@@ -26,6 +26,7 @@ export type AppRoute =
   | 'food-entry'
   | 'analytics'
   | 'settings'
-  | 'component-gallery';
+  | 'component-gallery'
+  | 'onboarding';
 
 export * from './user-data';

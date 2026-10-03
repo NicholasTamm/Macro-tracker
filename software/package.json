@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/secret-scan.test.mjs design-system/tokens/tokens.test.mjs design-system/components/__tests__/a11y-targets.test.mjs modules/app-core/user-data/user-data.test.mjs modules/food-catalog/scripts/build-seed/build-seed.test.mjs modules/food-catalog/scripts/build-seed/selection.test.mjs",
+    "test": "node --test scripts/secret-scan.test.mjs design-system/tokens/tokens.test.mjs design-system/components/__tests__/a11y-targets.test.mjs modules/app-core/user-data/user-data.test.mjs modules/app-core/user-data/onboarding.test.mjs modules/food-catalog/scripts/build-seed/build-seed.test.mjs modules/food-catalog/scripts/build-seed/selection.test.mjs",
     "secret-scan": "node scripts/secret-scan.mjs",
     "ci": "npm run typecheck && npm run lint && npm run secret-scan && npm test",
     "build-seed": "node modules/food-catalog/scripts/build-seed/build-seed.mjs"

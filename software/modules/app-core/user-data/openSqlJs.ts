@@ -39,5 +39,8 @@ export async function openSqlJsDatabase(bytes?: ArrayLike<number>): Promise<SqlE
     close() {
       db.close();
     },
+    exportBytes() {
+      return db.export();
+    },
   };
 }

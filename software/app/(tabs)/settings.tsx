@@ -10,6 +10,8 @@ import {
 import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 import userIcon from '../../assets/images/userIcon.jpg';
 import ThemedView from '../../components/ThemedView';
+import { useUserData } from '@/components/UserDataProvider';
+import { isCoachingShellEntryEnabled } from '@/modules/coaching';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Settings() {
@@ -20,6 +22,7 @@ export default function Settings() {
           <View style={styles.profileSection}>
             <Image source={userIcon} style={styles.avatar} />
             <Text style={styles.name}>User Name</Text>
+            <CoachingShellStatus />
           </View>
 
           <View style={styles.optionsSection}>
@@ -132,3 +135,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+
+function CoachingShellStatus() {
+  const { snapshot } = useUserData();
+  if (!snapshot) return null;
+  const on = isCoachingShellEntryEnabled({
+    isAdultConfirmed: snapshot.profile.isAdultConfirmed,
+    exclusions: snapshot.profile.exclusions,
+  });
+  return (
+    <Text style={{ marginTop: 8, color: '#666', fontSize: 13 }}>
+      Coaching shell: {on ? 'eligible (stub)' : 'disabled'}
+    </Text>
+  );
+}

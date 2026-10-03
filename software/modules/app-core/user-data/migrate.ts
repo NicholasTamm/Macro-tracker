@@ -1,42 +1,46 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { SqlExecutor } from './sqlExecutor';
+import { USER_STORE_V1_SQL } from './schemaV1';
+import { USER_STORE_V2_PROFILE_SQL } from './schemaV2';
 
-export const USER_STORE_SCHEMA_VERSION = '1';
+/** Current user-store schema version after M1-10 profile tables. */
+export const USER_STORE_SCHEMA_VERSION = '2';
 
-/** Default path relative to `software/` cwd. */
-export function userStoreSchemaPath(softwareRoot?: string): string {
-  const root = softwareRoot ?? process.cwd();
-  return join(root, 'modules/food-catalog/schema/user-store-v1.sql');
-}
-
-export function loadUserStoreSchemaSql(schemaPath?: string): string {
-  return readFileSync(schemaPath ?? userStoreSchemaPath(), 'utf8');
-}
+export const USER_STORE_V1_VERSION = '1';
 
 export type MigrateResult = {
   applied: boolean;
   version: string;
+  fromVersion: string | null;
 };
 
 /**
- * Apply user-store-v1.sql when schema_meta.user_store_version is missing.
+ * Apply user-store v1 (food/diary) then v2 (profile/goal/target) as needed.
+ * Pass optional SQL overrides; defaults use bundled schema strings (no fs).
  */
-export function migrateUserStore(db: SqlExecutor, schemaSql?: string): MigrateResult {
-  const sql = schemaSql ?? loadUserStoreSchemaSql();
+export function migrateUserStore(
+  db: SqlExecutor,
+  schemaSql?: string,
+  schemaV2Sql?: string,
+): MigrateResult {
+  const v1 = schemaSql ?? USER_STORE_V1_SQL;
+  const v2 = schemaV2Sql ?? USER_STORE_V2_PROFILE_SQL;
   db.exec('PRAGMA foreign_keys = ON;');
 
   const table = db.get<{ name: string }>(
     "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_meta'",
   );
+
+  let fromVersion: string | null = null;
+  let applied = false;
+
   if (!table) {
-    db.exec(sql);
-    // DDL may already insert nothing into schema_meta — set version
+    db.exec(v1);
     db.run(
       "INSERT INTO schema_meta(key, value) VALUES ('user_store_version', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-      [USER_STORE_SCHEMA_VERSION],
+      [USER_STORE_V1_VERSION],
     );
-    return { applied: true, version: USER_STORE_SCHEMA_VERSION };
+    applied = true;
+    fromVersion = null;
   }
 
   const row = db.get<{ value: string }>(
@@ -44,14 +48,51 @@ export function migrateUserStore(db: SqlExecutor, schemaSql?: string): MigrateRe
   );
   if (!row) {
     db.run("INSERT INTO schema_meta(key, value) VALUES ('user_store_version', ?)", [
-      USER_STORE_SCHEMA_VERSION,
+      USER_STORE_V1_VERSION,
     ]);
-    return { applied: true, version: USER_STORE_SCHEMA_VERSION };
+    applied = true;
   }
-  if (row.value !== USER_STORE_SCHEMA_VERSION) {
-    throw new Error(
-      `Unsupported user store schema version ${row.value}; expected ${USER_STORE_SCHEMA_VERSION}`,
+
+  const afterV1 = db.get<{ value: string }>(
+    "SELECT value FROM schema_meta WHERE key = 'user_store_version'",
+  );
+  if (!afterV1) {
+    throw new Error('user_store_version missing after v1 migrate');
+  }
+
+  if (afterV1.value === USER_STORE_SCHEMA_VERSION) {
+    return {
+      applied,
+      version: USER_STORE_SCHEMA_VERSION,
+      fromVersion: fromVersion ?? afterV1.value,
+    };
+  }
+
+  if (afterV1.value === USER_STORE_V1_VERSION) {
+    db.exec(v2);
+    db.run(
+      "UPDATE schema_meta SET value = ? WHERE key = 'user_store_version'",
+      [USER_STORE_SCHEMA_VERSION],
     );
+    return {
+      applied: true,
+      version: USER_STORE_SCHEMA_VERSION,
+      fromVersion: fromVersion ?? USER_STORE_V1_VERSION,
+    };
   }
-  return { applied: false, version: row.value };
+
+  throw new Error(
+    `Unsupported user store schema version ${afterV1.value}; expected ${USER_STORE_V1_VERSION} or ${USER_STORE_SCHEMA_VERSION}`,
+  );
+}
+
+/** Path helper for docs/smoke (relative to software/). */
+export function userStoreSchemaPath(softwareRoot?: string): string {
+  const root = softwareRoot ?? (typeof process !== 'undefined' ? process.cwd() : '');
+  return `${root}/modules/food-catalog/schema/user-store-v1.sql`;
+}
+
+/** Returns bundled v1 SQL (no fs). Kept for callers that previously loaded from disk. */
+export function loadUserStoreSchemaSql(_schemaPath?: string): string {
+  return USER_STORE_V1_SQL;
 }
