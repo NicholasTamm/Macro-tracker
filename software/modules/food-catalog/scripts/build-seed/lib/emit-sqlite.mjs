@@ -207,8 +207,8 @@ SELECT 'required_macros',
   // Apply schema then inserts via sqlite3 (requires FTS5)
   const schemaTmp = join(outDir, '_schema.sql');
   await writeFile(schemaTmp, ddl);
-  await execFileAsync('sqlite3', [dbPath, `.read ${schemaTmp}`]);
-  await execFileAsync('sqlite3', [dbPath, `.read ${insertPath}`]);
+  await execFileAsync('sqlite3', [dbPath, `.read '${schemaTmp.replace(/'/g, "''")}'`]);
+  await execFileAsync('sqlite3', [dbPath, `.read '${insertPath.replace(/'/g, "''")}'`]);
   try { await unlink(schemaTmp); } catch { /* ok */ }
 
   const failCount = (
