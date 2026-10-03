@@ -100,14 +100,24 @@ export default function SearchScreen() {
       onError: (message) => setSearchError(message),
     });
     controllerRef.current = controller;
+    // Catalog may finish loading after the user already typed.
+    if (query.trim()) {
+      setBrowsing(false);
+      controller.setQuery(query);
+    }
     return () => {
       controller.dispose();
       if (controllerRef.current === controller) controllerRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bind once per repo; query synced on mount only
   }, [repo]);
 
   const onChangeQuery = (text: string) => {
     setQuery(text);
+    if (text.trim()) {
+      // Leave browse immediately so Recent/Favorites do not linger during debounce.
+      setBrowsing(false);
+    }
     controllerRef.current?.setQuery(text);
   };
 
@@ -123,15 +133,17 @@ export default function SearchScreen() {
   });
 
   const sections: ListSection[] = browsing
-    ? browseSections.map((s) => ({
-        id: s.id,
-        title: s.title,
-        data: s.items.map((i) => ({
-          key: i.key,
-          name: i.name,
-          detail: i.detail,
-        })),
-      }))
+    ? browseSections
+        .filter((s) => s.items.length > 0)
+        .map((s) => ({
+          id: s.id,
+          title: s.title,
+          data: s.items.map((i) => ({
+            key: i.key,
+            name: i.name,
+            detail: i.detail,
+          })),
+        }))
     : [
         {
           id: 'results',
