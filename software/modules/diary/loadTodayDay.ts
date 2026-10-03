@@ -43,8 +43,11 @@ export function loadTodayDay(db: SqlExecutor, localDayKey: string): TodayDayView
   const bySlot = new Map<string, DiaryEntry[]>();
   const unscheduled: DiaryEntry[] = [];
 
+  const activeSlotIds = new Set(slotsMeta.map((s) => s.id));
+
   for (const entry of entries) {
-    if (entry.mealSlotId == null) {
+    if (entry.mealSlotId == null || !activeSlotIds.has(entry.mealSlotId)) {
+      // Null or unknown/archived slot → Unscheduled. Timestamp stays on the entry.
       unscheduled.push(entry);
       continue;
     }

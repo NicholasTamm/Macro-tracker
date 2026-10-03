@@ -187,6 +187,39 @@ test('populated day: macros reflect entries; timestamp independent of slot id', 
   db.close();
 });
 
+
+test('archived meal slot entries land in Unscheduled (not dropped)', async () => {
+  const db = await openDb();
+  userData.ensureDefaultMealSlots(db);
+  const breakfast = userData.listMealSlots(db).find((s) => s.name === 'Breakfast');
+  assert.ok(breakfast);
+  userData.createDiaryEntry(db, {
+    timestamp: '2026-10-03T12:00:00.000Z',
+    localDayKey: '2026-10-03',
+    timezoneIdentifier: 'America/Vancouver',
+    mealSlotId: breakfast.id,
+    foodKind: 'seed',
+    foodStableId: 'food-x',
+    foodDisplayName: 'Archived-slot food',
+    foodLicenseTag: 'USDA',
+    quantity: 1,
+    unitLabel: 'serving',
+    grams: 50,
+    nutritionSnapshot: { energy_kcal: 40, protein: 1, fat_total: 0, carbohydrate: 8 },
+    sourceDisplayName: 'USDA',
+    licenseTag: 'USDA',
+  });
+  db.run('UPDATE meal_slot SET is_archived = 1 WHERE id = ?', [breakfast.id]);
+  const view = loadToday.loadTodayDay(db, '2026-10-03');
+  assert.equal(view.entryCount, 1);
+  assert.equal(view.totals.calories, 40);
+  assert.ok(!view.slots.some((s) => s.name === 'Breakfast'));
+  assert.equal(view.unscheduled.length, 1);
+  assert.equal(view.unscheduled[0].foodDisplayName, 'Archived-slot food');
+  assert.equal(view.unscheduled[0].mealSlotId, breakfast.id);
+  db.close();
+});
+
 test('Today screen + smoke paths exist', () => {
   assert.ok(readFileSync(join(softwareRoot, 'app/(tabs)/today.tsx'), 'utf8').includes('loadTodayDay'));
   assert.ok(readFileSync(join(softwareRoot, 'modules/diary/loadTodayDay.ts'), 'utf8').length > 50);
