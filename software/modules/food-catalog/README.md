@@ -38,7 +38,30 @@ npm run build-seed
 # or: node modules/food-catalog/scripts/build-seed/build-seed.mjs
 ```
 
-Default mode uses the tiny golden fixture under `scripts/build-seed/fixture/` (no network).
-Set `USE_FULL_USDA=1` to fetch the pinned archives listed in `scripts/build-seed/pinned-sources.json` (SHA-256 verified). Full curated 2k–5k selection is **M1-07**.
+Default mode uses the golden fixture under `scripts/build-seed/fixture/` (no network).
+Set `USE_FULL_USDA=1` to fetch the pinned archives listed in `scripts/build-seed/pinned-sources.json` (SHA-256 verified).
 
 Smoke: `bash docs/demo/smoke-m1-06-seed-build.sh`
+
+## Seed selection (M1-07)
+
+Reviewed selection, alias overrides, and category quotas live under
+`scripts/build-seed/selection/` (file-based — not emit hard-coding). The default
+build applies `selection/selection.csv` after normalize and writes
+`selection-report.json` + `selected-food-ids.json`.
+
+```bash
+cd software
+node modules/food-catalog/scripts/build-seed/build-seed.mjs
+```
+
+Full USDA path: author `selection/selection.full.csv` (see `selection.full.csv.example`
+and `selection/README.md`), then:
+
+```bash
+USE_FULL_USDA=1 node modules/food-catalog/scripts/build-seed/build-seed.mjs
+```
+
+Smoke: `bash docs/demo/smoke-m1-07-selection.sh`
+
+Final compression / signed packaging is **M1-08**.

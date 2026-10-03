@@ -68,6 +68,7 @@ export async function emitSqliteCatalog(opts) {
     mode = 'fixture',
     retrievedAt = new Date().toISOString(),
     sourceOverrides = [],
+    categoryQuotas = [],
   } = opts;
 
   const schemaPath = join(moduleRootFromHere(), 'schema/food-seed-v1.sql');
@@ -154,6 +155,12 @@ export async function emitSqliteCatalog(opts) {
     const aliasText = food.aliases.map((a) => a.normalizedAlias).join(' ');
     lines.push(
       `INSERT INTO food_fts(food_id, name, aliases, category) VALUES (${sqlString(food.foodId)}, ${sqlString(food.normalizedName)}, ${sqlString(aliasText)}, ${sqlString(food.category || '')});`,
+    );
+  }
+
+  for (const q of categoryQuotas) {
+    lines.push(
+      `INSERT INTO category_quota(category, selected_count, target_min, target_max, reviewer, reviewed_at) VALUES (${sqlString(q.category)}, ${sqlNumber(q.selectedCount)}, ${sqlNumber(q.targetMin)}, ${sqlNumber(q.targetMax)}, ${sqlString(q.reviewer)}, ${sqlString(q.reviewedAt)});`,
     );
   }
 

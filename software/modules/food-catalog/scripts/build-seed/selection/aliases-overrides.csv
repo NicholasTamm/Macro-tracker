@@ -1,0 +1,11 @@
+food_id,alias,locale,alias_type,rank_boost,reason,reviewer,reviewed_at
+usda-foundation:748967,large egg,en,reviewed,0.5,common shorthand,nicholas,2026-10-03
+usda-foundation:748967,whole egg,en,reviewed,0.5,common shorthand,nicholas,2026-10-03
+usda-sr-legacy:173944,banana,en,reviewed,1.0,common singular,nicholas,2026-10-03
+usda-sr-legacy:171077,chicken breast raw,en,reviewed,1.0,preserve raw state in alias,nicholas,2026-10-03
+usda-sr-legacy:171079,chicken breast cooked,en,reviewed,1.0,preserve cooked state in alias,nicholas,2026-10-03
+usda-sr-legacy:168875,brown rice raw,en,reviewed,1.0,preserve raw state,nicholas,2026-10-03
+usda-sr-legacy:168878,brown rice cooked,en,reviewed,1.0,preserve cooked state,nicholas,2026-10-03
+usda-sr-legacy:171413,olive oil,en,reviewed,1.0,common name,nicholas,2026-10-03
+usda-sr-legacy:173410,whole milk,en,reviewed,0.8,common name,nicholas,2026-10-03
+usda-sr-legacy:170379,broccoli,en,reviewed,0.5,common singular,nicholas,2026-10-03

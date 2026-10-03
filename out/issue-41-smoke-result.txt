@@ -1,0 +1,5 @@
+smoke-m1-07-selection PASS 2026-10-03T12:15:58Z
+mode=fixture selected=14 quotas_met=yes pairs=yes aliases_applied=10
+report=modules/food-catalog/scripts/build-seed/out/smoke-m1-07/selection-report.json
+one-command: cd software && node modules/food-catalog/scripts/build-seed/build-seed.mjs
+full USDA path: copy selection/selection.full.csv.example → selection.full.csv, then USE_FULL_USDA=1 node …/build-seed.mjs
