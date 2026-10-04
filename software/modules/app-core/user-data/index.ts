@@ -21,11 +21,26 @@ export {
   createCustomFood,
   getCustomFood,
   updateCustomFoodNutrients,
+  updateCustomFood,
   deleteCustomFood,
+  archiveCustomFood,
+  unarchiveCustomFood,
   listCustomFoods,
+  validateCustomFoodFields,
+  REQUIRED_MACRO_KEYS,
   type CustomFood,
   type CustomFoodCreate,
+  type CustomFoodUpdate,
+  type CustomFoodValidation,
+  type BasisKind,
 } from './customFoodRepo';
+export {
+  digitsOnly,
+  gtin14CheckDigit,
+  isValidGtin14,
+  validateAndNormalizeBarcode,
+  type BarcodeValidation,
+} from './barcode';
 export {
   listFavorites,
   type FavoriteRecord,
