@@ -67,7 +67,7 @@ async function seedFixture(db) {
     heightCm: 180,
     weightKg: 80,
   });
-  userData.setActiveGoal(db, 'maintain', null);
+  userData.setActiveGoal(db, { goalKind: 'maintain' });
   userData.saveStarterTarget(db, {
     energyKcal: 2500,
     proteinG: 150,
@@ -162,10 +162,12 @@ test('JSON round-trip fixture preserves diary snapshot + provenance', async () =
   assert.equal(third.provenance.formatVersion, 1);
 });
 
-test('share path module documents Expo file URI option + exports share helper', async () => {
+test('share path module documents Expo file URI option + RN Share helper file', async () => {
   await loadMods();
-  assert.equal(typeof exp.shareExportViaPlatform, 'function');
   assert.match(exp.EXPO_FILE_SHARE_PATH_DOC, /expo-sharing/i);
+  const shareSrc = readFileSync(join(__dirname, 'shareExport.ts'), 'utf8');
+  assert.match(shareSrc, /Share\.share/);
+  assert.match(shareSrc, /shareExportViaPlatform/);
   const readme = readFileSync(join(__dirname, 'README.md'), 'utf8');
   assert.match(readme, /Share/);
 });

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 import userIcon from '../../assets/images/userIcon.jpg';
@@ -13,10 +14,9 @@ import ThemedView from '../../components/ThemedView';
 import { useUserData } from '@/components/UserDataProvider';
 import {
   buildUserDataExportFiles,
-  shareExportViaPlatform,
   EXPO_FILE_SHARE_PATH_DOC,
 } from '@/modules/app-core/export';
-import { ActivityIndicator } from 'react-native';
+import { shareExportViaPlatform } from '@/modules/app-core/export/shareExport';
 import { isCoachingShellEntryEnabled } from '@/modules/coaching';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

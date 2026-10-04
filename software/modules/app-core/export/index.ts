@@ -21,8 +21,5 @@ export {
   buildUserDataExport,
   buildUserDataExportFiles,
 } from './buildUserDataExportFiles';
-export {
-  shareExportViaPlatform,
-  EXPO_FILE_SHARE_PATH_DOC,
-  type ShareExportResult,
-} from './shareExport';
+
+export { EXPO_FILE_SHARE_PATH_DOC } from './sharePathDoc';

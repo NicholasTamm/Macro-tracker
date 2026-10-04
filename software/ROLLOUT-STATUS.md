@@ -39,7 +39,7 @@
 | M1-16 | Favorites/recents/quick-add | todo |
 | M1-17 | Weight samples + chart | todo |
 | M1-18 | Settings / About / data sources | todo |
-| M1-19 | CSV/JSON export | todo |
+| M1-19 | CSV/JSON export | **done** (issue #59) |
 | M1-20 | Seed updater (feature-flagged) | todo |
 | M1-21 | A11y / localization / privacy QA | todo (checklist in #24 docs; device QA outstanding) |
 | M1-22 | Educational insight cards | todo |
