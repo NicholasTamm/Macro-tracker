@@ -43,12 +43,21 @@ export {
 } from './barcode';
 export {
   listFavorites,
+  getFavorite,
+  isFavorite,
+  addFavorite,
+  removeFavorite,
+  toggleFavorite,
   type FavoriteRecord,
+  type FavoriteInput,
   type FoodKind,
 } from './favoriteRepo';
 export {
   listRecentFoods,
+  getRecentFood,
+  recordRecentFood,
   type RecentFoodRecord,
+  type RecentFoodTouch,
 } from './recentFoodRepo';
 export {
   createDiaryEntry,

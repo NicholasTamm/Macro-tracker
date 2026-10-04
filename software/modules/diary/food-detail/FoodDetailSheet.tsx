@@ -29,7 +29,14 @@ import {
   quantityErrorMessage,
 } from './parseQuantity';
 import type { SqlExecutor } from '../../app-core/user-data';
-import { ensureDefaultMealSlots, listMealSlots } from '../../app-core/user-data';
+import {
+  ensureDefaultMealSlots,
+  getRecentFood,
+  isFavorite,
+  listMealSlots,
+  toggleFavorite,
+  type FoodKind,
+} from '../../app-core/user-data';
 import {
   localDayKeyFromDate,
   localTimeHHMM,
@@ -88,17 +95,42 @@ export function FoodDetailSheet({
   const [timeText, setTimeText] = useState(localTimeHHMM());
   const [logError, setLogError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [favorited, setFavorited] = useState(false);
 
   const showGrams = model ? gramsUnitAvailable(model) : false;
 
   useEffect(() => {
     if (!visible || !model) return;
-    setQtyText(String(model.suggestedQuantity));
-    setUnitSelection(initialUnitSelection(model));
     setTimeText(localTimeHHMM());
     setLogError(null);
     setSubmitting(false);
-  }, [visible, model]);
+
+    let qty = String(model.suggestedQuantity);
+    let unitSel = initialUnitSelection(model);
+    if (db) {
+      const kind: FoodKind = model.kind === 'seed' ? 'seed' : 'custom';
+      setFavorited(isFavorite(db, kind, model.foodStableId));
+      const recent = getRecentFood(db, kind, model.foodStableId);
+      if (recent?.lastQuantity != null && recent.lastQuantity > 0) {
+        qty = String(recent.lastQuantity);
+      }
+      if (recent?.lastUnit) {
+        const lu = recent.lastUnit.toLowerCase();
+        if (lu === 'g' || lu === 'grams' || lu === 'gram') {
+          if (gramsUnitAvailable(model)) unitSel = 'grams';
+        } else if (/^\d+$/.test(recent.lastUnit) && model.servings.some((s) => String(s.servingId) === recent.lastUnit)) {
+          unitSel = recent.lastUnit;
+        } else {
+          const match = model.servings.find((s) => s.unit === recent.lastUnit);
+          if (match) unitSel = String(match.servingId);
+        }
+      }
+    } else {
+      setFavorited(false);
+    }
+    setQtyText(qty);
+    setUnitSelection(unitSel);
+  }, [visible, model, db]);
 
   useEffect(() => {
     if (!visible || !db) {
@@ -161,6 +193,19 @@ export function FoodDetailSheet({
     if (slot?.defaultTime) {
       setTimeText(slot.defaultTime);
     }
+  };
+
+  const onToggleFavorite = () => {
+    if (!model || !db) return;
+    const kind: FoodKind = model.kind === 'seed' ? 'seed' : 'custom';
+    const result = toggleFavorite(db, {
+      foodKind: kind,
+      foodStableId: model.foodStableId,
+      foodDisplayName: model.displayName,
+      foodLicenseTag: model.licenseTag,
+      foodBrand: model.brand,
+    });
+    setFavorited(result.favorited);
   };
 
   const onLog = () => {
@@ -232,7 +277,17 @@ export function FoodDetailSheet({
           <Text style={[typography.section, { color: colors.ink, flex: 1, textAlign: 'center' }]}>
             Log food
           </Text>
-          <View style={{ minWidth: 44 }} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={favorited ? 'Remove from favorites' : 'Add to favorites'}
+            onPress={onToggleFavorite}
+            hitSlop={8}
+            style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', alignItems: 'flex-end' }}
+          >
+            <Text style={[typography.bodyStrong, { color: colors.ink }]}>
+              {favorited ? '★' : '☆'}
+            </Text>
+          </Pressable>
         </View>
 
         {model ? (

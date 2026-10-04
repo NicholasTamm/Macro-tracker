@@ -36,7 +36,7 @@
 | M1-13 | Food detail/log sheet | **done** (issue #51) |
 | M1-14 | Edit/delete/undo + snapshots | **done** (issue #52) |
 | M1-15 | Custom food CRUD | **done** (issue #57) |
-| M1-16 | Favorites/recents/quick-add | todo |
+| M1-16 | Favorites/recents/quick-add | **done** (issue #58) |
 | M1-17 | Weight samples + chart | todo |
 | M1-18 | Settings / About / data sources | todo |
 | M1-19 | CSV/JSON export | **done** (issue #59) |

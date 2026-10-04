@@ -1,5 +1,5 @@
 /** Diary feature — Today / meal slots / entries (M1-11) + food detail log (M1-13). */
-export const DiaryModule = { name: 'diary', status: 'custom-food-m1-15' as const };
+export const DiaryModule = { name: 'diary', status: 'favorites-recents-m1-16' as const };
 
 // Re-export diary-facing user-data helpers for feature modules
 export {
@@ -85,3 +85,11 @@ export {
   type CustomFoodDraft,
   type SaveCustomFoodResult,
 } from './custom-food';
+
+export {
+  quickAddFood,
+  resolveQuickAddModel,
+  unitFromRemembered,
+  type QuickAddInput,
+  type QuickAddResult,
+} from './favorites-recents';
