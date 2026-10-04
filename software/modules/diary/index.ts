@@ -1,5 +1,5 @@
 /** Diary feature — Today / meal slots / entries (M1-11) + food detail log (M1-13). */
-export const DiaryModule = { name: 'diary', status: 'entry-edit-m1-14' as const };
+export const DiaryModule = { name: 'diary', status: 'custom-food-m1-15' as const };
 
 // Re-export diary-facing user-data helpers for feature modules
 export {
@@ -13,7 +13,11 @@ export {
   listMealSlots,
   createCustomFood,
   getCustomFood,
+  updateCustomFood,
   deleteCustomFood,
+  archiveCustomFood,
+  unarchiveCustomFood,
+  listCustomFoods,
   type DiaryEntry,
   type CustomFood,
 } from '../app-core/user-data';
@@ -71,3 +75,13 @@ export {
   type DiaryNutritionPrev,
   type EditQuantityResult,
 } from './entry-edit';
+
+export {
+  validateCustomFoodDraft,
+  saveCustomFoodCreate,
+  saveCustomFoodEdit,
+  archiveCustomFoodSafe,
+  CustomFoodEditorSheet,
+  type CustomFoodDraft,
+  type SaveCustomFoodResult,
+} from './custom-food';

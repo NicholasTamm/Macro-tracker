@@ -1,7 +1,7 @@
 /**
- * M1-12 Search + M1-13 Food detail/log sheet.
+ * M1-12 Search + M1-13 Food detail/log + M1-15 custom-food create/edit/archive.
  * Select opens detail sheet; Log writes diary entry atomically into Today.
- * Edit/delete/undo remain M1-14.
+ * Create/Edit custom foods via CustomFoodEditorSheet (snapshots stay immutable).
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -36,6 +36,7 @@ import {
   listCustomFoods,
   listFavorites,
   listRecentFoods,
+  type CustomFood,
 } from '@/modules/app-core/user-data';
 import {
   buildCustomFoodDetail,
@@ -43,6 +44,7 @@ import {
   type FoodDetailModel,
 } from '@/modules/diary';
 import { FoodDetailSheet } from '@/modules/diary/food-detail/FoodDetailSheet';
+import { CustomFoodEditorSheet } from '@/modules/diary/custom-food/CustomFoodEditorSheet';
 
 type ListRow = {
   key: string;
@@ -67,6 +69,8 @@ export default function SearchScreen() {
   const [detailModel, setDetailModel] = useState<FoodDetailModel | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorFood, setEditorFood] = useState<CustomFood | null>(null);
   const controllerRef = useRef<SearchController | null>(null);
 
   const browseSections: BrowseSection[] = useMemo(() => {
@@ -176,6 +180,25 @@ export default function SearchScreen() {
     setDetailError('Only offline seed and My Foods can be logged in M1.');
   };
 
+  const openCreateCustom = () => {
+    setEditorFood(null);
+    setEditorOpen(true);
+  };
+
+  const openEditCustom = (foodStableId: string) => {
+    if (!userDb) {
+      setDetailError('User data unavailable.');
+      return;
+    }
+    const custom = getCustomFood(userDb, foodStableId);
+    if (!custom) {
+      setDetailError('Custom food not found.');
+      return;
+    }
+    setEditorFood(custom);
+    setEditorOpen(true);
+  };
+
   const a11ySummary = formatSearchA11ySummary({
     query,
     resultCount: results.length,
@@ -273,6 +296,25 @@ export default function SearchScreen() {
         >
           {a11ySummary}
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Create custom food"
+          onPress={openCreateCustom}
+          hitSlop={8}
+          style={({ pressed }) => [
+            {
+              alignSelf: 'flex-start',
+              minHeight: 44,
+              justifyContent: 'center',
+              paddingHorizontal: spacing.sm,
+              opacity: pressed ? 0.7 : 1,
+            },
+          ]}
+        >
+          <Text style={[typography.bodyStrong, { color: colors.ink }]}>
+            + Create custom food
+          </Text>
+        </Pressable>
       </View>
 
       {catalogError ? (
@@ -343,12 +385,32 @@ export default function SearchScreen() {
             )
           }
           renderItem={({ item }) => (
-            <FoodRow
-              name={item.name}
-              detail={item.detail}
-              actionLabel="Select"
-              onAction={() => openDetail(item.foodKind, item.foodStableId)}
-            />
+            <View>
+              <FoodRow
+                name={item.name}
+                detail={item.detail}
+                actionLabel="Select"
+                onAction={() => openDetail(item.foodKind, item.foodStableId)}
+              />
+              {item.foodKind === 'custom' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Edit ${item.name}`}
+                  onPress={() => openEditCustom(item.foodStableId)}
+                  hitSlop={8}
+                  style={{
+                    minHeight: 44,
+                    paddingHorizontal: spacing.md,
+                    justifyContent: 'center',
+                    marginBottom: spacing.xs,
+                  }}
+                >
+                  <Text style={[typography.micro, { color: colors.muted }]}>
+                    Edit custom food
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
           )}
         />
       )}
@@ -367,6 +429,22 @@ export default function SearchScreen() {
           refresh();
           setBrowseTick((n) => n + 1);
           router.push('/(tabs)/today');
+        }}
+      />
+
+      <CustomFoodEditorSheet
+        visible={editorOpen}
+        db={userDb}
+        food={editorFood}
+        onClose={() => {
+          setEditorOpen(false);
+          setEditorFood(null);
+        }}
+        onSaved={() => {
+          setEditorOpen(false);
+          setEditorFood(null);
+          refresh();
+          setBrowseTick((n) => n + 1);
         }}
       />
     </SafeAreaView>
