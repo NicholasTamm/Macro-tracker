@@ -341,7 +341,7 @@ test('gramsUnitAvailable: seed always; custom only with gramWeightForBasis', asy
       basisAmount: 1,
       basisUnit: 'bottle',
       gramWeightForBasis: 250,
-      nutrients: { energy_kcal: 100, protein: 10, fat_total: null, carbohydrate: 5 },
+      nutrients: { energy_kcal: 100, protein: 10, fat_total: 0, carbohydrate: 5 },
     });
     assert.equal(build.gramsUnitAvailable(build.buildCustomFoodDetail(withGrams)), true);
 
@@ -351,20 +351,20 @@ test('gramsUnitAvailable: seed always; custom only with gramWeightForBasis', asy
       basisAmount: 1,
       basisUnit: 'scoop',
       gramWeightForBasis: null,
-      nutrients: { energy_kcal: 50, protein: 5, fat_total: null, carbohydrate: 2 },
+      nutrients: { energy_kcal: 50, protein: 5, fat_total: 0, carbohydrate: 2 },
     });
     const model = build.buildCustomFoodDetail(noGrams);
     assert.equal(build.gramsUnitAvailable(model), false);
     // Selecting grams must fail compute (UI hides chip; API still rejects).
     const live = compute.computeLiveNutrients(model, 1, { kind: 'grams' });
     assert.equal(live.ok, false);
-    // Basis serving still works; missing fat stays null in snapshot.
+    // Basis serving still works; required macros (incl. explicit zero fat) scale into snapshot.
     const ok = compute.computeLiveNutrients(model, 1, {
       kind: 'serving',
       serving: model.servings[0],
     });
     assert.equal(ok.ok, true);
-    assert.equal(ok.nutritionSnapshot.fat_total, null);
+    assert.equal(ok.nutritionSnapshot.fat_total, 0);
     assert.equal(ok.nutritionSnapshot.protein, 5);
   } finally {
     repo.close();
