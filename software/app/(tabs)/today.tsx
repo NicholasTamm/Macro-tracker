@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -162,6 +163,13 @@ export default function TodayScreen() {
     setTick((t) => t + 1);
   }, [refresh]);
 
+  // Reload when returning from Search / food detail log (atomic Today update).
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
+
   const view: TodayDayView | null = useMemo(() => {
     if (!db) return null;
     void tick;
@@ -224,7 +232,7 @@ export default function TodayScreen() {
         {view.entryCount === 0 ? (
           <EmptyState
             title="No foods logged"
-            message="This day is empty. Logging from Search arrives in a later milestone — meal slots stay ready offline."
+            message="This day is empty. Open Search, pick a food, and log it here offline."
           />
         ) : null}
 

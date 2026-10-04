@@ -39,3 +39,48 @@ export function formatEntryTime(isoTimestamp: string): string {
   if (Number.isNaN(d.getTime())) return isoTimestamp;
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
+
+/** Local wall-clock HH:MM (24h). */
+export function localTimeHHMM(date: Date = new Date()): string {
+  const h = String(date.getHours()).padStart(2, '0');
+  const m = String(date.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+export type LocalTimeParse =
+  | { ok: true; hours: number; minutes: number }
+  | { ok: false; reason: 'empty' | 'invalid' };
+
+/** Parse HH:MM or H:MM (24h). */
+export function parseLocalTimeHHMM(text: string): LocalTimeParse {
+  const trimmed = text.trim();
+  if (!trimmed) return { ok: false, reason: 'empty' };
+  const m = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
+  if (!m) return { ok: false, reason: 'invalid' };
+  const hours = Number(m[1]);
+  const minutes = Number(m[2]);
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return { ok: false, reason: 'invalid' };
+  }
+  return { ok: true, hours, minutes };
+}
+
+/**
+ * Build an ISO timestamp from a local day key + HH:MM in the device local zone.
+ */
+export function timestampFromLocalDayAndTime(localDayKey: string, hhmm: string): string {
+  const parsed = parseLocalTimeHHMM(hhmm);
+  if (!parsed.ok) {
+    throw new Error(`Invalid local time: ${hhmm}`);
+  }
+  const day = parseDayKey(localDayKey);
+  day.setHours(parsed.hours, parsed.minutes, 0, 0);
+  return day.toISOString();
+}
