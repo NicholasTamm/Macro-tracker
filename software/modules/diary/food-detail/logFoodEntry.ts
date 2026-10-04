@@ -1,12 +1,14 @@
 /**
- * Atomically log a food detail selection into the diary (Today).
- * Does not implement edit/delete/undo (M1-14).
+ * Atomically log a food detail selection into the diary (Today)
+ * and upsert recent_food (last qty/unit) in the same transaction (M1-16).
  */
 
 import {
   createDiaryEntry,
   ensureDefaultMealSlots,
+  recordRecentFood,
   type DiaryEntry,
+  type FoodKind,
   type SqlExecutor,
 } from '../../app-core/user-data';
 import { localDayKeyFromDate } from '../dayKey';
@@ -48,8 +50,8 @@ function withTransaction<T>(db: SqlExecutor, fn: () => T): T {
 }
 
 /**
- * Validate, compute immutable nutrition snapshot, and insert diary_entry in one transaction.
- * Today readers (loadTodayDay) see the new row after commit.
+ * Validate, compute immutable nutrition snapshot, insert diary_entry,
+ * and upsert recent_food in one transaction.
  */
 export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodResult {
   if (!isValidQuantity(input.quantity)) {
@@ -70,12 +72,12 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
       ? Intl.DateTimeFormat().resolvedOptions().timeZone
       : 'UTC');
 
-  const foodKind = input.model.kind === 'seed' ? 'seed' : 'custom';
+  const foodKind: FoodKind = input.model.kind === 'seed' ? 'seed' : 'custom';
 
   try {
     const entry = withTransaction(db, () => {
       ensureDefaultMealSlots(db);
-      return createDiaryEntry(db, {
+      const created = createDiaryEntry(db, {
         timestamp,
         localDayKey,
         timezoneIdentifier,
@@ -91,6 +93,17 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
         sourceDisplayName: input.model.sourceDisplayName,
         licenseTag: input.model.licenseTag,
       });
+      recordRecentFood(db, {
+        foodKind,
+        foodStableId: input.model.foodStableId,
+        foodDisplayName: input.model.displayName,
+        foodLicenseTag: input.model.licenseTag,
+        foodBrand: input.model.brand,
+        quantity: preview.quantity,
+        unit: preview.unitLabel,
+        usedAt: timestamp,
+      });
+      return created;
     });
     return { ok: true, entry };
   } catch (e) {

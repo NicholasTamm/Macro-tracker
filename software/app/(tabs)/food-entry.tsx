@@ -1,7 +1,6 @@
 /**
- * M1-12 Search + M1-13 Food detail/log + M1-15 custom-food create/edit/archive.
- * Select opens detail sheet; Log writes diary entry atomically into Today.
- * Create/Edit custom foods via CustomFoodEditorSheet (snapshots stay immutable).
+ * M1-12 Search + M1-13 detail/log + M1-15 custom foods + M1-16 favorites/recents/quick-add.
+ * Select opens detail sheet; Quick-add logs with remembered qty/unit; star toggles favorite.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -32,9 +31,11 @@ import {
   type SearchController,
 } from '@/modules/food-catalog';
 import {
+  ensureDefaultMealSlots,
   getCustomFood,
   listCustomFoods,
   listFavorites,
+  listMealSlots,
   listRecentFoods,
   type CustomFood,
 } from '@/modules/app-core/user-data';
@@ -45,6 +46,7 @@ import {
 } from '@/modules/diary';
 import { FoodDetailSheet } from '@/modules/diary/food-detail/FoodDetailSheet';
 import { CustomFoodEditorSheet } from '@/modules/diary/custom-food/CustomFoodEditorSheet';
+import { quickAddFood } from '@/modules/diary/favorites-recents/quickAdd';
 
 type ListRow = {
   key: string;
@@ -52,6 +54,7 @@ type ListRow = {
   detail: string;
   foodKind: 'seed' | 'custom' | 'off' | 'fdc_branded' | 'fatsecret';
   foodStableId: string;
+  sectionId: string;
 };
 type ListSection = { title: string; id: string; data: ListRow[] };
 
@@ -199,6 +202,28 @@ export default function SearchScreen() {
     setEditorOpen(true);
   };
 
+  const onQuickAdd = (foodKind: ListRow['foodKind'], foodStableId: string) => {
+    if (!userDb) {
+      setDetailError('User data unavailable.');
+      return;
+    }
+    ensureDefaultMealSlots(userDb);
+    const slots = listMealSlots(userDb);
+    const mealSlotId = slots[0]?.id ?? null;
+    const result = quickAddFood(userDb, repo, {
+      foodKind,
+      foodStableId,
+      mealSlotId,
+    });
+    if (!result.ok) {
+      setDetailError(result.reason);
+      return;
+    }
+    refresh();
+    setBrowseTick((n) => n + 1);
+    router.push('/(tabs)/today');
+  };
+
   const a11ySummary = formatSearchA11ySummary({
     query,
     resultCount: results.length,
@@ -217,6 +242,7 @@ export default function SearchScreen() {
             detail: i.detail,
             foodKind: i.foodKind,
             foodStableId: i.foodStableId,
+            sectionId: s.id,
           })),
         }))
     : [
@@ -229,6 +255,7 @@ export default function SearchScreen() {
             detail: r.detail,
             foodKind: 'seed' as const,
             foodStableId: r.foodId,
+            sectionId: 'results',
           })),
         },
       ];
@@ -392,6 +419,24 @@ export default function SearchScreen() {
                 actionLabel="Select"
                 onAction={() => openDetail(item.foodKind, item.foodStableId)}
               />
+              {item.sectionId === 'recent' || item.sectionId === 'favorites' ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Quick-add ${item.name}`}
+                  onPress={() => onQuickAdd(item.foodKind, item.foodStableId)}
+                  hitSlop={8}
+                  style={{
+                    minHeight: 44,
+                    paddingHorizontal: spacing.md,
+                    justifyContent: 'center',
+                    marginBottom: spacing.xs,
+                  }}
+                >
+                  <Text style={[typography.micro, { color: colors.muted }]}>
+                    Quick-add
+                  </Text>
+                </Pressable>
+              ) : null}
               {item.foodKind === 'custom' ? (
                 <Pressable
                   accessibilityRole="button"
