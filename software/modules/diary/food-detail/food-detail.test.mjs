@@ -326,3 +326,78 @@ test('Today updates atomically on log (entry + macros visible after commit)', as
     db.close();
   }
 });
+
+test('gramsUnitAvailable: seed always; custom only with gramWeightForBasis', async () => {
+  await loadMods();
+  const repo = await openSeedRepo();
+  const db = await openUserDb();
+  try {
+    const seed = build.buildSeedFoodDetail(repo, 'usda-foundation:748967');
+    assert.equal(build.gramsUnitAvailable(seed), true);
+
+    const withGrams = userData.createCustomFood(db, {
+      name: 'Shake w grams',
+      basisKind: 'serving',
+      basisAmount: 1,
+      basisUnit: 'bottle',
+      gramWeightForBasis: 250,
+      nutrients: { energy_kcal: 100, protein: 10, fat_total: null, carbohydrate: 5 },
+    });
+    assert.equal(build.gramsUnitAvailable(build.buildCustomFoodDetail(withGrams)), true);
+
+    const noGrams = userData.createCustomFood(db, {
+      name: 'Serving only',
+      basisKind: 'serving',
+      basisAmount: 1,
+      basisUnit: 'scoop',
+      gramWeightForBasis: null,
+      nutrients: { energy_kcal: 50, protein: 5, fat_total: null, carbohydrate: 2 },
+    });
+    const model = build.buildCustomFoodDetail(noGrams);
+    assert.equal(build.gramsUnitAvailable(model), false);
+    // Selecting grams must fail compute (UI hides chip; API still rejects).
+    const live = compute.computeLiveNutrients(model, 1, { kind: 'grams' });
+    assert.equal(live.ok, false);
+    // Basis serving still works; missing fat stays null in snapshot.
+    const ok = compute.computeLiveNutrients(model, 1, {
+      kind: 'serving',
+      serving: model.servings[0],
+    });
+    assert.equal(ok.ok, true);
+    assert.equal(ok.nutritionSnapshot.fat_total, null);
+    assert.equal(ok.nutritionSnapshot.protein, 5);
+  } finally {
+    repo.close();
+    db.close();
+  }
+});
+
+test('logFoodToDiary honors explicit meal timestamp (late breakfast)', async () => {
+  const db = await openUserDb();
+  const repo = await openSeedRepo();
+  try {
+    userData.ensureDefaultMealSlots(db);
+    const breakfast = userData.listMealSlots(db).find((s) => s.name === 'Breakfast');
+    assert.ok(breakfast);
+    assert.equal(breakfast.defaultTime, '08:00');
+
+    const model = build.buildSeedFoodDetail(repo, 'usda-foundation:748967');
+    const serving = model.servings[0];
+    // Noon wall clock would be wrong; user sets 08:00 intended breakfast time.
+    const result = logFood.logFoodToDiary(db, {
+      model,
+      quantity: 1,
+      unit: { kind: 'serving', serving },
+      mealSlotId: breakfast.id,
+      timestamp: '2026-10-03T15:00:00.000Z', // 08:00 America/Vancouver PDT
+      localDayKey: '2026-10-03',
+      timezoneIdentifier: 'America/Vancouver',
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.entry.timestamp, '2026-10-03T15:00:00.000Z');
+    assert.equal(result.entry.mealSlotId, breakfast.id);
+  } finally {
+    repo.close();
+    db.close();
+  }
+});

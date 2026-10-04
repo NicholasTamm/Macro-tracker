@@ -26,6 +26,7 @@ export {
   buildSeedFoodDetail,
   buildCustomFoodDetail,
   unitChoiceFromSelection,
+  gramsUnitAvailable,
   type FoodDetailKind,
   type FoodDetailModel,
 } from './buildFoodDetail';

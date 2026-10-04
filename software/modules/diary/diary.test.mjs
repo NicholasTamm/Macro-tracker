@@ -72,6 +72,25 @@ test('dayKey shift and Today/Yesterday labels', async () => {
   assert.equal(dayKey.formatDayLabel('2026-10-04', today), 'Tomorrow');
 });
 
+
+test('local time HH:MM parse + timestampFromLocalDayAndTime', async () => {
+  await loadMods();
+  assert.equal(dayKey.parseLocalTimeHHMM('').ok, false);
+  assert.equal(dayKey.parseLocalTimeHHMM('25:00').ok, false);
+  assert.equal(dayKey.parseLocalTimeHHMM('8:00').ok, true);
+  const ok = dayKey.parseLocalTimeHHMM('08:00');
+  assert.equal(ok.ok, true);
+  assert.equal(ok.hours, 8);
+  assert.equal(ok.minutes, 0);
+  const iso = dayKey.timestampFromLocalDayAndTime('2026-10-03', '08:00');
+  const d = new Date(iso);
+  assert.equal(d.getFullYear(), 2026);
+  assert.equal(d.getMonth(), 9);
+  assert.equal(d.getDate(), 3);
+  assert.equal(d.getHours(), 8);
+  assert.equal(d.getMinutes(), 0);
+});
+
 test('macro totals skip null/missing; sum numerics', async () => {
   await loadMods();
   const totals = macroTotals.sumMacroTotalsFromSnapshots([

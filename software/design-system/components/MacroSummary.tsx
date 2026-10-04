@@ -4,13 +4,14 @@ import { useTheme } from '../theme';
 import { Card } from './Card';
 
 export type MacroTotals = {
-  calories: number;
+  /** Null means unknown / unavailable — never display as zero. */
+  calories: number | null;
   calorieGoal?: number;
-  protein: number;
+  protein: number | null;
   proteinGoal?: number;
-  fat: number;
+  fat: number | null;
   fatGoal?: number;
-  carbs: number;
+  carbs: number | null;
   carbsGoal?: number;
 };
 
@@ -28,17 +29,29 @@ const ROWS: Row[] = [
   { key: 'carbs', label: 'Carbs', unit: 'g', colorKey: 'carbs' },
 ];
 
+function formatMacroValue(value: number | null, unit: string): string {
+  if (value == null) return '—';
+  return `${value}${unit}`;
+}
+
+function a11yValue(label: string, value: number | null, unit: string): string {
+  if (value == null) return `unknown ${label.toLowerCase()}`;
+  if (unit === 'g') return `${value} grams ${label.toLowerCase()}`;
+  return `${value} ${label.toLowerCase()}`;
+}
+
 /**
  * Matches HTML `.summary-chips` / `.timeline-summary` macro strip.
+ * Null nutrients render as an em dash — never coerce missing to zero.
  */
 export function MacroSummary({ totals }: { totals: MacroTotals }) {
   const { colors, spacing, typography } = useTheme();
 
   const a11y = [
-    `${totals.calories} calories`,
-    `${totals.protein} grams protein`,
-    `${totals.fat} grams fat`,
-    `${totals.carbs} grams carbs`,
+    a11yValue('Calories', totals.calories, ''),
+    a11yValue('Protein', totals.protein, 'g'),
+    a11yValue('Fat', totals.fat, 'g'),
+    a11yValue('Carbs', totals.carbs, 'g'),
   ].join(', ');
 
   return (
@@ -79,8 +92,7 @@ export function MacroSummary({ totals }: { totals: MacroTotals }) {
                 </Text>
               </View>
               <Text style={[typography.bodyStrong, { color: colors.ink }]}>
-                {value}
-                {row.unit}
+                {formatMacroValue(value, row.unit)}
                 {goal != null ? (
                   <Text style={{ color: colors.muted, fontWeight: '500' }}>
                     {` / ${goal}${row.unit}`}

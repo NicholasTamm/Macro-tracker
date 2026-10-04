@@ -21,6 +21,9 @@ export {
   shiftDayKey,
   formatDayLabel,
   formatEntryTime,
+  localTimeHHMM,
+  parseLocalTimeHHMM,
+  timestampFromLocalDayAndTime,
 } from './dayKey';
 
 export {
@@ -45,6 +48,7 @@ export {
   buildSeedFoodDetail,
   buildCustomFoodDetail,
   unitChoiceFromSelection,
+  gramsUnitAvailable,
   computeLiveNutrients,
   logFoodToDiary,
   type FoodDetailModel,

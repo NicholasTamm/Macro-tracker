@@ -108,6 +108,14 @@ export function buildCustomFoodDetail(food: CustomFood): FoodDetailModel {
   };
 }
 
+
+/** True when the Grams unit can resolve (seed always; custom needs gramWeightForBasis). */
+export function gramsUnitAvailable(model: FoodDetailModel): boolean {
+  if (model.kind === 'seed') return true;
+  const g = model.customBasis?.gramWeightForBasis;
+  return g != null && g > 0;
+}
+
 /** Pick UnitChoice from model + selected unit id (`grams` or serving id string). */
 export function unitChoiceFromSelection(
   model: FoodDetailModel,

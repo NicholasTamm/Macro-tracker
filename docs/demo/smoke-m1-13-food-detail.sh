@@ -40,6 +40,19 @@ if [[ ! -d node_modules/sql.js ]]; then npm ci; fi
 test -d node_modules/esbuild || fail "esbuild missing"
 test -d node_modules/node-sqlite3-wasm || fail "node-sqlite3-wasm missing"
 
+
+
+# Should-fix: meal time control, grams gate, null nutrients not coerced in preview
+rg -n "Meal time|timestampFromLocalDayAndTime|timeText" "$DETAIL/FoodDetailSheet.tsx" >/dev/null \
+  || fail "FoodDetailSheet missing editable meal time"
+rg -n "gramsUnitAvailable" "$DETAIL/buildFoodDetail.ts" "$DETAIL/FoodDetailSheet.tsx" >/dev/null \
+  || fail "missing gramsUnitAvailable gate for custom foods"
+if rg -n '\?\? 0' "$DETAIL/FoodDetailSheet.tsx" >/dev/null; then
+  fail "FoodDetailSheet still coerces null nutrients with ?? 0"
+fi
+rg -n "unknown|null" design-system/components/MacroSummary.tsx >/dev/null \
+  || fail "MacroSummary missing null/unknown display"
+
 echo "==> typecheck"
 npx tsc --noEmit
 ok "typecheck"

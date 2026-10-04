@@ -21,7 +21,7 @@ import {
   useTheme,
 } from '@/design-system';
 import type { FoodDetailModel } from './buildFoodDetail';
-import { unitChoiceFromSelection } from './buildFoodDetail';
+import { gramsUnitAvailable, unitChoiceFromSelection } from './buildFoodDetail';
 import { computeLiveNutrients } from './computeLiveNutrients';
 import { logFoodToDiary } from './logFoodEntry';
 import {
@@ -30,7 +30,12 @@ import {
 } from './parseQuantity';
 import type { SqlExecutor } from '../../app-core/user-data';
 import { ensureDefaultMealSlots, listMealSlots } from '../../app-core/user-data';
-import { localDayKeyFromDate } from '../dayKey';
+import {
+  localDayKeyFromDate,
+  localTimeHHMM,
+  parseLocalTimeHHMM,
+  timestampFromLocalDayAndTime,
+} from '../dayKey';
 
 export type FoodDetailSheetProps = {
   visible: boolean;
@@ -49,6 +54,22 @@ function servingLabel(unit: string, modifier?: string | null, qty?: number): str
   return mod ? `${base} (${mod})` : base;
 }
 
+function initialUnitSelection(model: FoodDetailModel): string {
+  const gramsOk = gramsUnitAvailable(model);
+  if (model.defaultUnit.kind === 'grams') {
+    if (gramsOk) return 'grams';
+    if (model.servings[0]) return String(model.servings[0].servingId);
+    return 'grams';
+  }
+  return String(model.defaultUnit.servingId);
+}
+
+function nutrientOrNull(raw: number | null | undefined, round: 'kcal' | 'g'): number | null {
+  if (raw == null || typeof raw !== 'number' || Number.isNaN(raw)) return null;
+  if (round === 'kcal') return Math.round(raw);
+  return Math.round(raw * 10) / 10;
+}
+
 export function FoodDetailSheet({
   visible,
   model,
@@ -61,18 +82,20 @@ export function FoodDetailSheet({
   const [qtyText, setQtyText] = useState('1');
   const [unitSelection, setUnitSelection] = useState('grams');
   const [mealSlotId, setMealSlotId] = useState<string | null>(null);
-  const [slots, setSlots] = useState<Array<{ id: string; name: string }>>([]);
+  const [slots, setSlots] = useState<
+    Array<{ id: string; name: string; defaultTime: string | null }>
+  >([]);
+  const [timeText, setTimeText] = useState(localTimeHHMM());
   const [logError, setLogError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const showGrams = model ? gramsUnitAvailable(model) : false;
 
   useEffect(() => {
     if (!visible || !model) return;
     setQtyText(String(model.suggestedQuantity));
-    setUnitSelection(
-      model.defaultUnit.kind === 'grams'
-        ? 'grams'
-        : String(model.defaultUnit.servingId),
-    );
+    setUnitSelection(initialUnitSelection(model));
+    setTimeText(localTimeHHMM());
     setLogError(null);
     setSubmitting(false);
   }, [visible, model]);
@@ -84,17 +107,32 @@ export function FoodDetailSheet({
     }
     ensureDefaultMealSlots(db);
     const list = listMealSlots(db);
-    setSlots(list.map((s) => ({ id: s.id, name: s.name })));
+    setSlots(list.map((s) => ({ id: s.id, name: s.name, defaultTime: s.defaultTime })));
+    let selectedId: string | null = null;
     if (initialMealSlotId) {
-      setMealSlotId(initialMealSlotId);
+      selectedId = initialMealSlotId;
     } else if (list.length > 0) {
-      setMealSlotId(list[0].id);
-    } else {
-      setMealSlotId(null);
+      selectedId = list[0].id;
+    }
+    setMealSlotId(selectedId);
+    if (selectedId) {
+      const selected = list.find((s) => s.id === selectedId);
+      if (selected?.defaultTime) {
+        setTimeText(selected.defaultTime);
+      }
     }
   }, [visible, db, initialMealSlotId]);
 
+  // If grams becomes unavailable while selected, fall back to first serving.
+  useEffect(() => {
+    if (!model) return;
+    if (unitSelection === 'grams' && !gramsUnitAvailable(model) && model.servings[0]) {
+      setUnitSelection(String(model.servings[0].servingId));
+    }
+  }, [model, unitSelection]);
+
   const qtyParsed = useMemo(() => parseQuantityInput(qtyText), [qtyText]);
+  const timeParsed = useMemo(() => parseLocalTimeHHMM(timeText), [timeText]);
   const unit = useMemo(() => {
     if (!model) return null;
     return unitChoiceFromSelection(model, unitSelection);
@@ -105,25 +143,45 @@ export function FoodDetailSheet({
     return computeLiveNutrients(model, qtyParsed.value, unit);
   }, [model, unit, qtyParsed]);
 
+  const localDayKey = localDayKeyFromDate();
+
   const canLog =
     !!model &&
     !!db &&
     !!unit &&
     qtyParsed.ok &&
+    timeParsed.ok &&
     !!preview &&
     preview.ok &&
     !submitting;
 
+  const onSelectMeal = (slotId: string) => {
+    setMealSlotId(slotId);
+    const slot = slots.find((s) => s.id === slotId);
+    if (slot?.defaultTime) {
+      setTimeText(slot.defaultTime);
+    }
+  };
+
   const onLog = () => {
-    if (!model || !db || !unit || !qtyParsed.ok) return;
+    if (!model || !db || !unit || !qtyParsed.ok || !timeParsed.ok) return;
     setSubmitting(true);
     setLogError(null);
+    let timestamp: string;
+    try {
+      timestamp = timestampFromLocalDayAndTime(localDayKey, timeText);
+    } catch (e) {
+      setSubmitting(false);
+      setLogError(e instanceof Error ? e.message : String(e));
+      return;
+    }
     const result = logFoodToDiary(db, {
       model,
       quantity: qtyParsed.value,
       unit,
       mealSlotId,
-      localDayKey: localDayKeyFromDate(),
+      timestamp,
+      localDayKey,
     });
     setSubmitting(false);
     if (!result.ok) {
@@ -136,12 +194,12 @@ export function FoodDetailSheet({
   const macros =
     preview && preview.ok
       ? {
-          calories: Math.round(Number(preview.nutritionSnapshot.energy_kcal ?? 0)),
-          protein: Number(preview.nutritionSnapshot.protein ?? 0),
-          fat: Number(preview.nutritionSnapshot.fat_total ?? 0),
-          carbs: Number(preview.nutritionSnapshot.carbohydrate ?? 0),
+          calories: nutrientOrNull(preview.nutritionSnapshot.energy_kcal, 'kcal'),
+          protein: nutrientOrNull(preview.nutritionSnapshot.protein, 'g'),
+          fat: nutrientOrNull(preview.nutritionSnapshot.fat_total, 'g'),
+          carbs: nutrientOrNull(preview.nutritionSnapshot.carbohydrate, 'g'),
         }
-      : { calories: 0, protein: 0, fat: 0, carbs: 0 };
+      : { calories: null, protein: null, fat: null, carbs: null };
 
   return (
     <Modal
@@ -230,31 +288,33 @@ export function FoodDetailSheet({
                 Unit
               </Text>
               <View style={styles.chipRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: unitSelection === 'grams' }}
-                  accessibilityLabel="Unit grams"
-                  onPress={() => setUnitSelection('grams')}
-                  style={[
-                    styles.chip,
-                    {
-                      minHeight: 44,
-                      borderRadius: radius.pill,
-                      backgroundColor:
-                        unitSelection === 'grams' ? colors.ink : colors.control,
-                      paddingHorizontal: spacing.md,
-                    },
-                  ]}
-                >
-                  <Text
+                {showGrams ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: unitSelection === 'grams' }}
+                    accessibilityLabel="Unit grams"
+                    onPress={() => setUnitSelection('grams')}
                     style={[
-                      typography.bodyStrong,
-                      { color: unitSelection === 'grams' ? colors.raised : colors.ink },
+                      styles.chip,
+                      {
+                        minHeight: 44,
+                        borderRadius: radius.pill,
+                        backgroundColor:
+                          unitSelection === 'grams' ? colors.ink : colors.control,
+                        paddingHorizontal: spacing.md,
+                      },
                     ]}
                   >
-                    Grams
-                  </Text>
-                </Pressable>
+                    <Text
+                      style={[
+                        typography.bodyStrong,
+                        { color: unitSelection === 'grams' ? colors.raised : colors.ink },
+                      ]}
+                    >
+                      Grams
+                    </Text>
+                  </Pressable>
+                ) : null}
                 {model.servings.map((s) => {
                   const id = String(s.servingId);
                   const selected = unitSelection === id;
@@ -302,7 +362,7 @@ export function FoodDetailSheet({
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
                       accessibilityLabel={`Meal ${slot.name}`}
-                      onPress={() => setMealSlotId(slot.id)}
+                      onPress={() => onSelectMeal(slot.id)}
                       style={[
                         styles.chip,
                         {
@@ -325,9 +385,44 @@ export function FoodDetailSheet({
                   );
                 })}
               </View>
-              <Text style={[typography.caption, { color: colors.muted }]}>
-                Logged at current time · {localDayKeyFromDate()}
+            </View>
+
+            <View style={{ gap: spacing.sm }}>
+              <Text style={[typography.micro, { color: colors.muted, textTransform: 'uppercase' }]}>
+                Time
               </Text>
+              <TextInput
+                accessibilityLabel="Meal time"
+                keyboardType="numbers-and-punctuation"
+                value={timeText}
+                onChangeText={setTimeText}
+                placeholder="HH:MM"
+                placeholderTextColor={colors.muted}
+                style={[
+                  typography.body,
+                  {
+                    minHeight: 44,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: colors.divider,
+                    borderRadius: radius.card,
+                    paddingHorizontal: spacing.md,
+                    color: colors.ink,
+                    backgroundColor: colors.raised,
+                  },
+                ]}
+              />
+              {!timeParsed.ok ? (
+                <Text
+                  accessibilityLiveRegion="polite"
+                  style={[typography.caption, { color: colors.danger }]}
+                >
+                  Enter time as HH:MM (24-hour).
+                </Text>
+              ) : (
+                <Text style={[typography.caption, { color: colors.muted }]}>
+                  Logs to {localDayKey} at {timeText} (local)
+                </Text>
+              )}
             </View>
 
             <View style={{ gap: spacing.sm }}>

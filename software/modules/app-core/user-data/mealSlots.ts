@@ -19,8 +19,23 @@ export function ensureDefaultMealSlots(db: SqlExecutor): void {
   }
 }
 
-export function listMealSlots(db: SqlExecutor): Array<{ id: string; name: string; sortOrder: number }> {
-  return db.all<{ id: string; name: string; sort_order: number }>(
-    `SELECT id, name, sort_order FROM meal_slot WHERE is_archived = 0 ORDER BY sort_order`,
-  ).map((r) => ({ id: String(r.id), name: String(r.name), sortOrder: Number(r.sort_order) }));
+export type MealSlotRow = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  /** HH:MM local default meal time, or null when unset. */
+  defaultTime: string | null;
+};
+
+export function listMealSlots(db: SqlExecutor): MealSlotRow[] {
+  return db
+    .all<{ id: string; name: string; sort_order: number; default_time: string | null }>(
+      `SELECT id, name, sort_order, default_time FROM meal_slot WHERE is_archived = 0 ORDER BY sort_order`,
+    )
+    .map((r) => ({
+      id: String(r.id),
+      name: String(r.name),
+      sortOrder: Number(r.sort_order),
+      defaultTime: r.default_time == null ? null : String(r.default_time),
+    }));
 }
