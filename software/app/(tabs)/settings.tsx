@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,44 @@ import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 import userIcon from '../../assets/images/userIcon.jpg';
 import ThemedView from '../../components/ThemedView';
 import { useUserData } from '@/components/UserDataProvider';
+import {
+  buildUserDataExportFiles,
+  shareExportViaPlatform,
+  EXPO_FILE_SHARE_PATH_DOC,
+} from '@/modules/app-core/export';
+import { ActivityIndicator } from 'react-native';
 import { isCoachingShellEntryEnabled } from '@/modules/coaching';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Settings() {
+  const { db, ready } = useUserData();
+  const [exporting, setExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState<string | null>(null);
+
+  const onExport = async () => {
+    if (!db) {
+      setExportMessage('User data not ready.');
+      return;
+    }
+    setExporting(true);
+    setExportMessage(null);
+    try {
+      const files = buildUserDataExportFiles(db);
+      const result = await shareExportViaPlatform(files);
+      if (!result.ok) {
+        setExportMessage(result.reason);
+      } else {
+        setExportMessage(
+          `Exported JSON (${files.suggestedJsonName}) + CSV via share sheet. ${EXPO_FILE_SHARE_PATH_DOC.split('\n')[0]}`,
+        );
+      }
+    } catch (e) {
+      setExportMessage(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.container}>
@@ -34,6 +68,19 @@ export default function Settings() {
               label="Goals"
               icon={<Feather name="target" size={22} color="#222" />}
             />
+            <SettingsOption
+              label={exporting ? 'Exporting…' : 'Export data (CSV + JSON)'}
+              icon={<Feather name="download" size={22} color="#222" />}
+              onPress={ready && !exporting ? onExport : undefined}
+            />
+            {exporting ? (
+              <ActivityIndicator style={{ marginVertical: 8 }} />
+            ) : null}
+            {exportMessage ? (
+              <Text style={{ paddingHorizontal: 24, color: '#666', fontSize: 13, marginBottom: 8 }}>
+                {exportMessage}
+              </Text>
+            ) : null}
             <SettingsOption
               label="Notifications"
               icon={
@@ -64,16 +111,19 @@ function SettingsOption({
   label,
   icon,
   isDestructive = false,
+  onPress,
 }: {
   label: string;
   icon: ReactNode;
   isDestructive?: boolean;
+  onPress?: () => void;
 }) {
   return (
     <TouchableOpacity
       style={styles.option}
       accessibilityRole="button"
       accessibilityLabel={label}
+      onPress={onPress}
     >
       <View style={styles.optionContent}>
         {icon}

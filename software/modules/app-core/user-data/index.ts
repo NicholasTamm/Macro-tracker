@@ -101,3 +101,10 @@ export {
   inToCm,
   round1,
 } from './unitConvert';
+
+export {
+  createWeightSample,
+  listWeightSamples,
+  type WeightSample,
+  type WeightSource,
+} from './weightSampleRepo';
