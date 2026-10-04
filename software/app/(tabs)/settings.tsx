@@ -12,10 +12,7 @@ import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
 import userIcon from '../../assets/images/userIcon.jpg';
 import ThemedView from '../../components/ThemedView';
 import { useUserData } from '@/components/UserDataProvider';
-import {
-  buildUserDataExportFiles,
-  EXPO_FILE_SHARE_PATH_DOC,
-} from '@/modules/app-core/export';
+import { buildUserDataExportFiles } from '@/modules/app-core/export';
 import { shareExportViaPlatform } from '@/modules/app-core/export/shareExport';
 import { isCoachingShellEntryEnabled } from '@/modules/coaching';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,7 +36,7 @@ export default function Settings() {
         setExportMessage(result.reason);
       } else {
         setExportMessage(
-          `Exported JSON (${files.suggestedJsonName}) + CSV via share sheet. ${EXPO_FILE_SHARE_PATH_DOC.split('\n')[0]}`,
+          `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`,
         );
       }
     } catch (e) {
