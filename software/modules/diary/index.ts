@@ -1,11 +1,14 @@
 /** Diary feature — Today / meal slots / entries (M1-11) + food detail log (M1-13). */
-export const DiaryModule = { name: 'diary', status: 'food-detail-m1-13' as const };
+export const DiaryModule = { name: 'diary', status: 'entry-edit-m1-14' as const };
 
 // Re-export diary-facing user-data helpers for feature modules
 export {
   createDiaryEntry,
   listDiaryEntriesForDay,
+  getDiaryEntry,
   tombstoneDiaryEntry,
+  restoreDiaryEntry,
+  updateDiaryEntryNutrition,
   ensureDefaultMealSlots,
   listMealSlots,
   createCustomFood,
@@ -57,3 +60,14 @@ export {
   type LogFoodResult,
   type QuantityParseResult,
 } from './food-detail';
+
+export {
+  scaleSnapshotForQuantity,
+  editDiaryEntryQuantity,
+  restoreDiaryEntryNutrition,
+  deleteDiaryEntry,
+  applyDiaryUndo,
+  type UndoAction,
+  type DiaryNutritionPrev,
+  type EditQuantityResult,
+} from './entry-edit';

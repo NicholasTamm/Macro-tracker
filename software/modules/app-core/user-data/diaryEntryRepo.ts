@@ -107,6 +107,19 @@ export function listDiaryEntriesForDay(db: SqlExecutor, localDayKey: string): Di
     .map(mapRow);
 }
 
+/** Fetch by id. When `includeDeleted`, soft-deleted rows are returned for undo restore. */
+export function getDiaryEntry(
+  db: SqlExecutor,
+  id: string,
+  opts: { includeDeleted?: boolean } = {},
+): DiaryEntry | null {
+  const row = opts.includeDeleted
+    ? db.get(`SELECT * FROM diary_entry WHERE id = ?`, [id])
+    : db.get(`SELECT * FROM diary_entry WHERE id = ? AND deleted_at IS NULL`, [id]);
+  if (!row) return null;
+  return mapRow(row);
+}
+
 export function tombstoneDiaryEntry(db: SqlExecutor, id: string): void {
   const ts = nowIso();
   db.run(
@@ -114,4 +127,46 @@ export function tombstoneDiaryEntry(db: SqlExecutor, id: string): void {
      WHERE id = ? AND deleted_at IS NULL`,
     [ts, ts, id],
   );
+}
+
+/** Clear soft-delete (undo delete). No-op if already live. */
+export function restoreDiaryEntry(db: SqlExecutor, id: string): DiaryEntry | null {
+  const ts = nowIso();
+  db.run(
+    `UPDATE diary_entry SET deleted_at = NULL, updated_at = ?, sync_revision = sync_revision + 1
+     WHERE id = ? AND deleted_at IS NOT NULL`,
+    [ts, id],
+  );
+  return getDiaryEntry(db, id);
+}
+
+export type DiaryEntryNutritionPatch = {
+  quantity: number;
+  grams: number | null;
+  nutritionSnapshot: NutrientMap;
+};
+
+/**
+ * Replace quantity / grams / immutable nutrition snapshot fields.
+ * Does not re-read seed or custom food — callers must supply the new snapshot.
+ */
+export function updateDiaryEntryNutrition(
+  db: SqlExecutor,
+  id: string,
+  patch: DiaryEntryNutritionPatch,
+): DiaryEntry {
+  const ts = nowIso();
+  db.run(
+    `UPDATE diary_entry SET
+       quantity = ?,
+       grams = ?,
+       nutrition_snapshot_json = ?,
+       updated_at = ?,
+       sync_revision = sync_revision + 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [patch.quantity, patch.grams, serializeNutrients(patch.nutritionSnapshot), ts, id],
+  );
+  const entry = getDiaryEntry(db, id);
+  if (!entry) throw new Error(`updateDiaryEntryNutrition: entry not found: ${id}`);
+  return entry;
 }
