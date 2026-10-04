@@ -30,11 +30,11 @@ rg -n "useFocusEffect" app/\(tabs\)/today.tsx >/dev/null \
 rg -n "logFoodToDiary|scaleNutrientsPer100g" modules/diary/index.ts >/dev/null \
   || fail "diary index missing food-detail exports"
 
-# Must NOT ship edit/delete/undo UI (M1-14)
-if rg -n "undoDiary|editDiaryEntry|deleteEntry\b|UndoSnackbar" "$DETAIL" app/\(tabs\)/food-entry.tsx app/\(tabs\)/today.tsx 2>/dev/null; then
-  fail "edit/delete/undo appears to be implemented (belongs to M1-14)"
+# Must NOT ship edit/delete/undo in M1-13 food-detail / Search (Today owns M1-14)
+if rg -n "editDiaryEntryQuantity|deleteDiaryEntry|applyDiaryUndo|DiaryEntryEditSheet" "$DETAIL" app/\(tabs\)/food-entry.tsx 2>/dev/null; then
+  fail "edit/delete/undo appears in M1-13 food-detail/Search scope"
 fi
-ok "no M1-14 edit/delete/undo in M1-13 scope"
+ok "no M1-14 edit/delete/undo in M1-13 food-detail/Search scope"
 
 if [[ ! -d node_modules/sql.js ]]; then npm ci; fi
 test -d node_modules/esbuild || fail "esbuild missing"

@@ -38,9 +38,13 @@ export {
 export {
   createDiaryEntry,
   listDiaryEntriesForDay,
+  getDiaryEntry,
   tombstoneDiaryEntry,
+  restoreDiaryEntry,
+  updateDiaryEntryNutrition,
   type DiaryEntry,
   type DiaryEntryCreate,
+  type DiaryEntryNutritionPatch,
 } from './diaryEntryRepo';
 export { ensureDefaultMealSlots, listMealSlots } from './mealSlots';
 export {

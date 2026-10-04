@@ -24,12 +24,25 @@ import {
   loadTodayDay,
   localDayKeyFromDate,
   shiftDayKey,
+  editDiaryEntryQuantity,
+  deleteDiaryEntry,
+  applyDiaryUndo,
   type DiaryEntry,
   type TodayDayView,
+  type UndoAction,
 } from '@/modules/diary';
+import { DiaryEntryEditSheet } from '@/modules/diary/entry-edit/DiaryEntryEditSheet';
 
-function EntryRow({ entry }: { entry: DiaryEntry }) {
-  const { colors, typography, spacing } = useTheme();
+function EntryRow({
+  entry,
+  onEdit,
+  onDelete,
+}: {
+  entry: DiaryEntry;
+  onEdit: (entry: DiaryEntry) => void;
+  onDelete: (entry: DiaryEntry) => void;
+}) {
+  const { colors, typography, spacing, radius } = useTheme();
   const kcal = entry.nutritionSnapshot.energy_kcal;
   const kcalLabel =
     typeof kcal === 'number' && !Number.isNaN(kcal) ? `${Math.round(kcal)} kcal` : '— kcal';
@@ -48,12 +61,46 @@ function EntryRow({ entry }: { entry: DiaryEntry }) {
         },
       ]}
     >
-      <Text numberOfLines={1} style={[typography.bodyStrong, { color: colors.ink, flex: 1 }]}>
-        {entry.foodDisplayName}
-      </Text>
-      <Text numberOfLines={1} style={[typography.micro, { color: colors.muted }]}>
-        {detail}
-      </Text>
+      <View style={{ flex: 1, minWidth: 0, gap: spacing.xs }}>
+        <Text numberOfLines={1} style={[typography.bodyStrong, { color: colors.ink }]}>
+          {entry.foodDisplayName}
+        </Text>
+        <Text numberOfLines={1} style={[typography.micro, { color: colors.muted }]}>
+          {detail}
+        </Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Edit ${entry.foodDisplayName}`}
+        hitSlop={8}
+        onPress={() => onEdit(entry)}
+        style={({ pressed }) => [
+          styles.rowAction,
+          {
+            backgroundColor: colors.control,
+            borderRadius: radius.pill,
+            opacity: pressed ? 0.7 : 1,
+          },
+        ]}
+      >
+        <Text style={[typography.caption, { color: colors.ink, fontWeight: '700' }]}>Edit</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Delete ${entry.foodDisplayName}`}
+        hitSlop={8}
+        onPress={() => onDelete(entry)}
+        style={({ pressed }) => [
+          styles.rowAction,
+          {
+            backgroundColor: colors.control,
+            borderRadius: radius.pill,
+            opacity: pressed ? 0.7 : 1,
+          },
+        ]}
+      >
+        <Text style={[typography.caption, { color: colors.danger, fontWeight: '700' }]}>Del</Text>
+      </Pressable>
     </View>
   );
 }
@@ -62,10 +109,14 @@ function MealSlotCard({
   title,
   entries,
   emptyHint,
+  onEdit,
+  onDelete,
 }: {
   title: string;
   entries: DiaryEntry[];
   emptyHint: string;
+  onEdit: (entry: DiaryEntry) => void;
+  onDelete: (entry: DiaryEntry) => void;
 }) {
   const { colors, typography, spacing } = useTheme();
   return (
@@ -95,7 +146,9 @@ function MealSlotCard({
           {emptyHint}
         </Text>
       ) : (
-        entries.map((e) => <EntryRow key={e.id} entry={e} />)
+        entries.map((e) => (
+          <EntryRow key={e.id} entry={e} onEdit={onEdit} onDelete={onDelete} />
+        ))
       )}
     </Card>
   );
@@ -157,6 +210,9 @@ export default function TodayScreen() {
   const { colors, spacing, typography } = useTheme();
   const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
   const [tick, setTick] = useState(0);
+  const [editing, setEditing] = useState<DiaryEntry | null>(null);
+  const [undo, setUndo] = useState<UndoAction | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     refresh();
@@ -175,6 +231,59 @@ export default function TodayScreen() {
     void tick;
     return loadTodayDay(db, dayKey);
   }, [db, dayKey, tick]);
+
+  const onEdit = useCallback((entry: DiaryEntry) => {
+    setActionError(null);
+    setEditing(entry);
+  }, []);
+
+  const onDelete = useCallback(
+    (entry: DiaryEntry) => {
+      if (!db) return;
+      setActionError(null);
+      const result = deleteDiaryEntry(db, entry.id);
+      if (!result.ok) {
+        setActionError(result.reason);
+        return;
+      }
+      setUndo(result.undo);
+      reload();
+    },
+    [db, reload],
+  );
+
+  const onSaveEdit = useCallback(
+    (newQuantity: number) => {
+      if (!db || !editing) return;
+      const result = editDiaryEntryQuantity(db, editing.id, newQuantity);
+      if (!result.ok) {
+        setActionError(result.reason);
+        return;
+      }
+      setUndo({
+        kind: 'edit',
+        entryId: editing.id,
+        foodDisplayName: editing.foodDisplayName,
+        previous: result.previous,
+      });
+      setEditing(null);
+      setActionError(null);
+      reload();
+    },
+    [db, editing, reload],
+  );
+
+  const onUndo = useCallback(() => {
+    if (!db || !undo) return;
+    const result = applyDiaryUndo(db, undo);
+    if (!result.ok) {
+      setActionError(result.reason);
+      return;
+    }
+    setUndo(null);
+    setActionError(null);
+    reload();
+  }, [db, undo, reload]);
 
   if (!ready) {
     return (
@@ -229,6 +338,34 @@ export default function TodayScreen() {
           />
         </View>
 
+        {actionError ? (
+          <View style={{ marginBottom: spacing.md }}>
+            <ErrorBanner
+              title="Action failed"
+              message={actionError}
+              tone="error"
+              onDismiss={() => setActionError(null)}
+            />
+          </View>
+        ) : null}
+
+        {undo ? (
+          <View style={{ marginBottom: spacing.md }}>
+            <ErrorBanner
+              title={
+                undo.kind === 'delete'
+                  ? `Deleted ${undo.foodDisplayName}`
+                  : `Edited ${undo.foodDisplayName}`
+              }
+              message="Tap Undo to revert."
+              tone="info"
+              actionLabel="Undo"
+              onAction={onUndo}
+              onDismiss={() => setUndo(null)}
+            />
+          </View>
+        ) : null}
+
         {view.entryCount === 0 ? (
           <EmptyState
             title="No foods logged"
@@ -242,6 +379,8 @@ export default function TodayScreen() {
             title={slot.name}
             entries={slot.entries}
             emptyHint="No entries in this slot yet."
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
 
@@ -250,9 +389,18 @@ export default function TodayScreen() {
             title="Unscheduled"
             entries={view.unscheduled}
             emptyHint="No unscheduled entries."
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         ) : null}
       </ScrollView>
+
+      <DiaryEntryEditSheet
+        visible={!!editing}
+        entry={editing}
+        onClose={() => setEditing(null)}
+        onSave={onSaveEdit}
+      />
     </SafeAreaView>
   );
 }
@@ -268,5 +416,15 @@ const styles = StyleSheet.create({
   },
   entryRow: {
     borderBottomWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rowAction: {
+    minWidth: 44,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
