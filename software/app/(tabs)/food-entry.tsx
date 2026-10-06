@@ -485,6 +485,7 @@ export default function SearchScreen() {
         visible={editorOpen}
         db={userDb}
         food={editorFood}
+        energyUnit={energyUnit}
         onClose={() => {
           setEditorOpen(false);
           setEditorFood(null);

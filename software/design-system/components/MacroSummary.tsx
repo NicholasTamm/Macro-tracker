@@ -2,7 +2,10 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
 import { Card } from './Card';
-import { formatEnergy } from '@/modules/app-core/settings/unitDisplay';
+import {
+  energyUnitForSpeech,
+  formatEnergy,
+} from '@/modules/app-core/settings/unitDisplay';
 import type { EnergyUnit } from '@/modules/app-core/user-data/profileTypes';
 
 export type MacroTotals = {
@@ -39,6 +42,7 @@ function formatMacroValue(value: number | null, unit: string): string {
 function a11yValue(label: string, value: number | null, unit: string): string {
   if (value == null) return `unknown ${label.toLowerCase()}`;
   if (unit === 'g') return `${value} grams ${label.toLowerCase()}`;
+  if (unit === 'kcal' || unit === 'kJ') return `${value} ${energyUnitForSpeech(unit)}`;
   return `${value} ${label.toLowerCase()}`;
 }
 

@@ -28,6 +28,10 @@ rg -n "weightKg|heightCm|energyKcal" "$SETTINGS/settings.test.mjs" >/dev/null \
 rg -n "formatEnergy" 'app/(tabs)/today.tsx' design-system/components/MacroSummary.tsx \
   modules/food-catalog/search/formatResultDetail.ts >/dev/null \
   || fail "energy display preference wiring missing"
+rg -n "energyUnit=\{energyUnit\}" 'app/(tabs)/food-entry.tsx' >/dev/null \
+  || fail "custom-food energy preference wiring missing"
+rg -n "energyUnitForSpeech" design-system/components/MacroSummary.tsx >/dev/null \
+  || fail "energy accessibility unit missing"
 rg -n "hydrated\.current" app/settings/units.tsx app/settings/profile.tsx >/dev/null \
   || fail "async settings draft hydration missing"
 ok "settings files and routes present"

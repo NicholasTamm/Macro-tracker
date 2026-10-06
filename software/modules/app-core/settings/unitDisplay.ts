@@ -53,6 +53,23 @@ export function kcalToKj(kcal: number): number {
   return kcal * 4.184;
 }
 
+export function formatEnergyInput(kcal: number | null, unit: EnergyUnit): string {
+  if (kcal == null) return '';
+  return String(unit === 'kJ' ? Number(kcalToKj(kcal).toFixed(6)) : kcal);
+}
+
+export function energyInputToKcalText(value: string, unit: EnergyUnit): string {
+  if (unit === 'kcal' || value.trim() === '') return value;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0
+    ? String(Number((parsed / 4.184).toFixed(6)))
+    : value;
+}
+
+export function energyUnitForSpeech(unit: EnergyUnit): string {
+  return unit === 'kJ' ? 'kilojoules' : 'kilocalories';
+}
+
 export function formatEnergy(kcal: number, unit: EnergyUnit): string {
   return String(Math.round(unit === 'kJ' ? kcalToKj(kcal) : kcal));
 }

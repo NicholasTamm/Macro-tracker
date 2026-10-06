@@ -95,6 +95,18 @@ test('profile display conversion validates positive finite values', () => {
   assert.equal(settings.formatEnergy(100, 'kJ'), '418');
 });
 
+test('energy input conversion preserves canonical kcal storage', () => {
+  assert.equal(settings.formatEnergyInput(100, 'kJ'), '418.4');
+  assert.equal(settings.energyInputToKcalText('418.4', 'kJ'), '100');
+  assert.equal(settings.energyInputToKcalText('100', 'kcal'), '100');
+  assert.equal(settings.energyInputToKcalText('invalid', 'kJ'), 'invalid');
+});
+
+test('energy accessibility units are spoken without abbreviations', () => {
+  assert.equal(settings.energyUnitForSpeech('kcal'), 'kilocalories');
+  assert.equal(settings.energyUnitForSpeech('kJ'), 'kilojoules');
+});
+
 test('settings routes hydrate drafts once persisted data is ready', () => {
   for (const route of ['units.tsx', 'profile.tsx']) {
     const source = readFileSync(join(softwareRoot, 'app/settings', route), 'utf8');
