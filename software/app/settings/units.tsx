@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { Card, PrimaryButton, useTheme } from '@/design-system';
 import { ChoiceRow } from '@/app/onboarding/ChoiceRow';
@@ -8,7 +8,7 @@ import { unitPreferencePatch, type ThemePreference } from '@/modules/app-core/se
 import { SettingsShell } from './SettingsShell';
 
 export default function UnitsScreen() {
-  const { db, snapshot, refresh, themePreference, setThemePreference } = useUserData();
+  const { ready, db, snapshot, refresh, themePreference, setThemePreference } = useUserData();
   const { colors, spacing, typography } = useTheme();
   const profile = snapshot?.profile;
   const [massUnit, setMassUnit] = useState<MassUnit>(profile?.massUnit ?? 'kg');
@@ -16,6 +16,16 @@ export default function UnitsScreen() {
   const [energyUnit, setEnergyUnit] = useState<EnergyUnit>(profile?.energyUnit ?? 'kcal');
   const [theme, setTheme] = useState<ThemePreference>(themePreference);
   const [saved, setSaved] = useState(false);
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    if (!ready || !profile || hydrated.current) return;
+    setMassUnit(profile.massUnit);
+    setHeightUnit(profile.heightUnit);
+    setEnergyUnit(profile.energyUnit);
+    setTheme(themePreference);
+    hydrated.current = true;
+  }, [ready, profile, themePreference]);
 
   return (
     <SettingsShell title="Units & appearance" intro="Units change how values are displayed. Stored measurements and calorie targets are not converted or rewritten.">

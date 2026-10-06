@@ -4,11 +4,13 @@ import {
   kgToLb,
   lbToKg,
   round1,
-  type EnergyUnit,
-  type HeightUnit,
-  type MassUnit,
-  type ProfilePatch,
-} from '../user-data';
+} from '../user-data/unitConvert';
+import type {
+  EnergyUnit,
+  HeightUnit,
+  MassUnit,
+} from '../user-data/profileTypes';
+import type { ProfilePatch } from '../user-data/profileRepo';
 
 export type UnitPreferences = {
   massUnit: MassUnit;

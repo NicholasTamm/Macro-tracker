@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { Card, PrimaryButton, useTheme } from '@/design-system';
 import { useUserData } from '@/components/UserDataProvider';
@@ -13,7 +13,7 @@ import { ChoiceRow } from '@/app/onboarding/ChoiceRow';
 import { SettingsShell } from './SettingsShell';
 
 export default function ProfileScreen() {
-  const { db, snapshot, refresh } = useUserData();
+  const { ready, db, snapshot, refresh } = useUserData();
   const { colors, spacing, radius, typography } = useTheme();
   const profile = snapshot?.profile;
   const massUnit = profile?.massUnit ?? 'kg';
@@ -23,6 +23,16 @@ export default function ProfileScreen() {
   const [height, setHeight] = useState(formatHeight(profile?.heightCm ?? null, heightUnit));
   const [weight, setWeight] = useState(formatMass(profile?.weightKg ?? null, massUnit));
   const [message, setMessage] = useState<string | null>(null);
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    if (!ready || !profile || hydrated.current) return;
+    setSex(profile.sex ?? 'unspecified');
+    setBirthYear(profile.birthYear == null ? '' : String(profile.birthYear));
+    setHeight(formatHeight(profile.heightCm, profile.heightUnit));
+    setWeight(formatMass(profile.weightKg, profile.massUnit));
+    hydrated.current = true;
+  }, [ready, profile]);
 
   const parsed = useMemo(() => {
     const year = Number(birthYear);

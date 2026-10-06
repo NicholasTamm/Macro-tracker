@@ -18,6 +18,8 @@ import {
   useTheme,
 } from '@/design-system';
 import { useUserData } from '@/components/UserDataProvider';
+import { formatEnergy } from '@/modules/app-core/settings';
+import type { EnergyUnit } from '@/modules/app-core/user-data';
 import {
   formatDayLabel,
   formatEntryTime,
@@ -35,17 +37,21 @@ import { DiaryEntryEditSheet } from '@/modules/diary/entry-edit/DiaryEntryEditSh
 
 function EntryRow({
   entry,
+  energyUnit,
   onEdit,
   onDelete,
 }: {
   entry: DiaryEntry;
+  energyUnit: EnergyUnit;
   onEdit: (entry: DiaryEntry) => void;
   onDelete: (entry: DiaryEntry) => void;
 }) {
   const { colors, typography, spacing, radius } = useTheme();
   const kcal = entry.nutritionSnapshot.energy_kcal;
   const kcalLabel =
-    typeof kcal === 'number' && !Number.isNaN(kcal) ? `${Math.round(kcal)} kcal` : '— kcal';
+    typeof kcal === 'number' && !Number.isNaN(kcal)
+      ? `${formatEnergy(kcal, energyUnit)} ${energyUnit}`
+      : `— ${energyUnit}`;
   const detail = `${entry.quantity} ${entry.unitLabel} · ${kcalLabel} · ${formatEntryTime(entry.timestamp)}`;
 
   return (
@@ -108,12 +114,14 @@ function EntryRow({
 function MealSlotCard({
   title,
   entries,
+  energyUnit,
   emptyHint,
   onEdit,
   onDelete,
 }: {
   title: string;
   entries: DiaryEntry[];
+  energyUnit: EnergyUnit;
   emptyHint: string;
   onEdit: (entry: DiaryEntry) => void;
   onDelete: (entry: DiaryEntry) => void;
@@ -147,7 +155,13 @@ function MealSlotCard({
         </Text>
       ) : (
         entries.map((e) => (
-          <EntryRow key={e.id} entry={e} onEdit={onEdit} onDelete={onDelete} />
+          <EntryRow
+            key={e.id}
+            entry={e}
+            energyUnit={energyUnit}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))
       )}
     </Card>
@@ -206,13 +220,14 @@ function DateSelector({
 }
 
 export default function TodayScreen() {
-  const { ready, error, db, refresh } = useUserData();
+  const { ready, error, db, snapshot, refresh } = useUserData();
   const { colors, spacing, typography } = useTheme();
   const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<DiaryEntry | null>(null);
   const [undo, setUndo] = useState<UndoAction | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const energyUnit = snapshot?.profile.energyUnit ?? 'kcal';
 
   const reload = useCallback(() => {
     refresh();
@@ -328,6 +343,7 @@ export default function TodayScreen() {
 
         <View style={{ marginBottom: spacing.md }}>
           <MacroSummary
+            energyUnit={energyUnit}
             totals={{
               calories: view.totals.calories,
               protein: view.totals.protein,
@@ -378,6 +394,7 @@ export default function TodayScreen() {
             key={slot.id}
             title={slot.name}
             entries={slot.entries}
+            energyUnit={energyUnit}
             emptyHint="No entries in this slot yet."
             onEdit={onEdit}
             onDelete={onDelete}
@@ -388,6 +405,7 @@ export default function TodayScreen() {
           <MealSlotCard
             title="Unscheduled"
             entries={view.unscheduled}
+            energyUnit={energyUnit}
             emptyHint="No unscheduled entries."
             onEdit={onEdit}
             onDelete={onDelete}
@@ -398,6 +416,7 @@ export default function TodayScreen() {
       <DiaryEntryEditSheet
         visible={!!editing}
         entry={editing}
+        energyUnit={energyUnit}
         onClose={() => setEditing(null)}
         onSave={onSaveEdit}
       />

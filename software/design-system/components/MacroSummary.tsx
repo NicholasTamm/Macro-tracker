@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
 import { Card } from './Card';
+import { formatEnergy } from '@/modules/app-core/settings/unitDisplay';
+import type { EnergyUnit } from '@/modules/app-core/user-data/profileTypes';
 
 export type MacroTotals = {
   /** Null means unknown / unavailable — never display as zero. */
@@ -44,11 +46,18 @@ function a11yValue(label: string, value: number | null, unit: string): string {
  * Matches HTML `.summary-chips` / `.timeline-summary` macro strip.
  * Null nutrients render as an em dash — never coerce missing to zero.
  */
-export function MacroSummary({ totals }: { totals: MacroTotals }) {
+export function MacroSummary({
+  totals,
+  energyUnit = 'kcal',
+}: {
+  totals: MacroTotals;
+  energyUnit?: EnergyUnit;
+}) {
   const { colors, spacing, typography } = useTheme();
+  const energyValue = totals.calories == null ? null : Number(formatEnergy(totals.calories, energyUnit));
 
   const a11y = [
-    a11yValue('Calories', totals.calories, ''),
+    a11yValue('Energy', energyValue, energyUnit),
     a11yValue('Protein', totals.protein, 'g'),
     a11yValue('Fat', totals.fat, 'g'),
     a11yValue('Carbs', totals.carbs, 'g'),
@@ -70,6 +79,15 @@ export function MacroSummary({ totals }: { totals: MacroTotals }) {
             | 'carbsGoal';
           const goal = totals[goalKey];
           const accent = colors[row.colorKey];
+          const isEnergy = row.key === 'calories';
+          const label = isEnergy && energyUnit === 'kJ' ? 'Energy' : row.label;
+          const unit = isEnergy ? ` ${energyUnit}` : row.unit;
+          const displayValue = isEnergy && value != null
+            ? Number(formatEnergy(value, energyUnit))
+            : value;
+          const displayGoal = isEnergy && goal != null
+            ? Number(formatEnergy(goal, energyUnit))
+            : goal;
           return (
             <View
               key={row.key}
@@ -87,15 +105,21 @@ export function MacroSummary({ totals }: { totals: MacroTotals }) {
             >
               <View style={styles.labelRow}>
                 <View style={[styles.dot, { backgroundColor: accent }]} />
-                <Text style={[typography.micro, { color: colors.muted }]}>
-                  {row.label}
+                <Text
+                  style={[typography.micro, { color: colors.muted }]}
+                >
+                  {label}
                 </Text>
               </View>
-              <Text style={[typography.bodyStrong, { color: colors.ink }]}>
-                {formatMacroValue(value, row.unit)}
-                {goal != null ? (
-                  <Text style={{ color: colors.muted, fontWeight: '500' }}>
-                    {` / ${goal}${row.unit}`}
+              <Text
+                style={[typography.bodyStrong, { color: colors.ink }]}
+              >
+                {formatMacroValue(displayValue, unit)}
+                {displayGoal != null ? (
+                  <Text
+                    style={{ color: colors.muted, fontWeight: '500' }}
+                  >
+                    {` / ${displayGoal}${unit}`}
                   </Text>
                 ) : null}
               </Text>

@@ -25,6 +25,7 @@ import { useFoodCatalog } from '@/components/FoodCatalogProvider';
 import {
   buildBrowseSections,
   createSearchController,
+  formatResultDetail,
   formatSearchA11ySummary,
   type BrowseSection,
   type EnrichedSearchResult,
@@ -60,7 +61,7 @@ type ListSection = { title: string; id: string; data: ListRow[] };
 
 export default function SearchScreen() {
   const { colors, spacing, typography, radius } = useTheme();
-  const { db: userDb, ready: userReady, refresh } = useUserData();
+  const { db: userDb, ready: userReady, snapshot, refresh } = useUserData();
   const { repo, ready: catalogReady, error: catalogError } = useFoodCatalog();
   const router = useRouter();
 
@@ -75,11 +76,12 @@ export default function SearchScreen() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorFood, setEditorFood] = useState<CustomFood | null>(null);
   const controllerRef = useRef<SearchController | null>(null);
+  const energyUnit = snapshot?.profile.energyUnit ?? 'kcal';
 
   const browseSections: BrowseSection[] = useMemo(() => {
     void browseTick;
     if (!userDb) {
-      return buildBrowseSections({ seedRepo: repo });
+      return buildBrowseSections({ seedRepo: repo, energyUnit });
     }
     return buildBrowseSections({
       recent: listRecentFoods(userDb).map((r) => ({
@@ -103,8 +105,9 @@ export default function SearchScreen() {
         nutrients: c.nutrients,
       })),
       seedRepo: repo,
+      energyUnit,
     });
-  }, [userDb, repo, browseTick]);
+  }, [userDb, repo, browseTick, energyUnit]);
 
   useEffect(() => {
     if (!repo) {
@@ -252,7 +255,7 @@ export default function SearchScreen() {
           data: results.map((r) => ({
             key: r.foodId,
             name: r.name,
-            detail: r.detail,
+            detail: formatResultDetail(r.sourceLabel, r.macros, energyUnit),
             foodKind: 'seed' as const,
             foodStableId: r.foodId,
             sectionId: 'results',
@@ -464,6 +467,7 @@ export default function SearchScreen() {
         visible={detailOpen}
         model={detailModel}
         db={userDb}
+        energyUnit={energyUnit}
         onClose={() => {
           setDetailOpen(false);
           setDetailModel(null);

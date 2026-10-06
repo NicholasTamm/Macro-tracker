@@ -2,6 +2,8 @@
  * Format Search result detail line: source + per-100 g macros (M1-12).
  * Example: "USDA SR Legacy · 89 Cal · 1P · 0F · 23C · per 100 g"
  */
+import { formatEnergy } from '../../app-core/settings/unitDisplay';
+import type { EnergyUnit } from '../../app-core/user-data/profileTypes';
 
 export type MacroPer100g = {
   energyKcal: number | null;
@@ -18,13 +20,23 @@ function fmtNum(n: number | null, digits = 0): string {
 }
 
 /** Compact macro fragment used in FoodRow detail. */
-export function formatMacrosPer100g(m: MacroPer100g): string {
-  return `${fmtNum(m.energyKcal)} Cal · ${fmtNum(m.proteinG)}P · ${fmtNum(m.fatG)}F · ${fmtNum(m.carbG)}C · per 100 g`;
+export function formatMacrosPer100g(
+  m: MacroPer100g,
+  energyUnit: EnergyUnit = 'kcal',
+): string {
+  const energy = m.energyKcal == null || Number.isNaN(m.energyKcal)
+    ? '—'
+    : formatEnergy(m.energyKcal, energyUnit);
+  return `${energy} ${energyUnit} · ${fmtNum(m.proteinG)}P · ${fmtNum(m.fatG)}F · ${fmtNum(m.carbG)}C · per 100 g`;
 }
 
-export function formatResultDetail(sourceLabel: string, m: MacroPer100g): string {
+export function formatResultDetail(
+  sourceLabel: string,
+  m: MacroPer100g,
+  energyUnit: EnergyUnit = 'kcal',
+): string {
   const src = sourceLabel.trim() || 'Unknown source';
-  return `${src} · ${formatMacrosPer100g(m)}`;
+  return `${src} · ${formatMacrosPer100g(m, energyUnit)}`;
 }
 
 export function macrosFromNutrientRows(

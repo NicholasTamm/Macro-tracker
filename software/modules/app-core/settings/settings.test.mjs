@@ -1,6 +1,6 @@
 import { before, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -93,6 +93,15 @@ test('profile display conversion validates positive finite values', () => {
   assert.equal(settings.displayMassToKg('-1', 'kg'), null);
   assert.equal(settings.displayHeightToCm('not-a-number', 'cm'), null);
   assert.equal(settings.formatEnergy(100, 'kJ'), '418');
+});
+
+test('settings routes hydrate drafts once persisted data is ready', () => {
+  for (const route of ['units.tsx', 'profile.tsx']) {
+    const source = readFileSync(join(softwareRoot, 'app/settings', route), 'utf8');
+    assert.match(source, /useEffect\(\(\) =>/);
+    assert.match(source, /!ready \|\| !profile \|\| hydrated\.current/);
+    assert.match(source, /hydrated\.current = true/);
+  }
 });
 
 test('USDA citation uses manifest dataset releases and has a static fallback', () => {

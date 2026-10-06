@@ -25,6 +25,11 @@ rg -n "forcedScheme|themePreference" app/_layout.tsx components/UserDataProvider
   || fail "persisted theme wiring missing"
 rg -n "weightKg|heightCm|energyKcal" "$SETTINGS/settings.test.mjs" >/dev/null \
   || fail "canonical unit invariance test missing"
+rg -n "formatEnergy" 'app/(tabs)/today.tsx' design-system/components/MacroSummary.tsx \
+  modules/food-catalog/search/formatResultDetail.ts >/dev/null \
+  || fail "energy display preference wiring missing"
+rg -n "hydrated\.current" app/settings/units.tsx app/settings/profile.tsx >/dev/null \
+  || fail "async settings draft hydration missing"
 ok "settings files and routes present"
 
 if [[ ! -d node_modules/sql.js ]]; then npm ci; fi
