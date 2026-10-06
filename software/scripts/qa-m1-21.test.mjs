@@ -45,6 +45,26 @@ const tsxFiles = () =>
   UI_DIRS.flatMap((d) => walk(join(softwareRoot, d))).filter((p) => p.endsWith('.tsx'));
 const rel = (p) => relative(softwareRoot, p);
 
+const BUNDLED_ASSET_FETCH = {
+  path: 'components/FoodCatalogProvider.tsx',
+  line: 'const response = await fetch(uri);',
+};
+
+function networkCallOffenders(path, source) {
+  const offenders = [];
+  for (const match of source.matchAll(/\bfetch\s*\(/g)) {
+    const lineNumber = source.slice(0, match.index).split('\n').length;
+    const line = source.split('\n')[lineNumber - 1].trim();
+    if (path !== BUNDLED_ASSET_FETCH.path || line !== BUNDLED_ASSET_FETCH.line) {
+      offenders.push(`${path}:${lineNumber} fetch`);
+    }
+  }
+  if (/XMLHttpRequest|axios|navigator\.sendBeacon/.test(source)) {
+    offenders.push(`${path} disallowed network client`);
+  }
+  return offenders;
+}
+
 function luminance(hex) {
   const h = hex.replace('#', '');
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
@@ -108,12 +128,27 @@ test('no network calls to remote hosts from app/runtime code', () => {
   );
   for (const p of src) {
     const s = readFileSync(p, 'utf8');
-    if (/https?:\/\/(?!fdc\.nal\.usda\.gov|www\.usda\.gov|creativecommons\.org)[^\s'"`]+/.test(s) && /fetch\(|XMLHttpRequest|axios/.test(s)) {
-      offenders.push(rel(p));
-    }
-    if (/XMLHttpRequest|axios|navigator\.sendBeacon/.test(s)) offenders.push(rel(p));
+    offenders.push(...networkCallOffenders(rel(p), s));
   }
   assert.deepEqual([...new Set(offenders)], []);
+});
+
+test('network gate rejects computed fetches and only allows the bundled asset fetch', () => {
+  assert.deepEqual(
+    networkCallOffenders('modules/example.ts', 'fetch(config.apiUrl);'),
+    ['modules/example.ts:1 fetch'],
+  );
+  assert.deepEqual(
+    networkCallOffenders(BUNDLED_ASSET_FETCH.path, BUNDLED_ASSET_FETCH.line),
+    [],
+  );
+  assert.deepEqual(
+    networkCallOffenders(
+      BUNDLED_ASSET_FETCH.path,
+      `${BUNDLED_ASSET_FETCH.line}\nfetch(config.apiUrl);`,
+    ),
+    [`${BUNDLED_ASSET_FETCH.path}:2 fetch`],
+  );
 });
 
 test('RTL: layout uses start/end, not hard-coded left/right', () => {
@@ -143,6 +178,8 @@ test('Reduce Motion: modals do not force slide animation', () => {
   const hook = readFileSync(join(softwareRoot, 'design-system/theme/useReduceMotion.ts'), 'utf8');
   assert.match(hook, /isReduceMotionEnabled/);
   assert.match(hook, /reduceMotionChanged/);
+  assert.match(hook, /useState<boolean \| null>\(null\)/);
+  assert.match(hook, /reduceMotion === false \? 'slide' : 'none'/);
 });
 
 /** Opening-tag scan: every interactive control needs a spoken name (+ role for pressables). */
