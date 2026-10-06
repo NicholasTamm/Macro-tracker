@@ -76,8 +76,8 @@ export function MacroSummary({ totals }: { totals: MacroTotals }) {
               style={[
                 styles.cell,
                 {
-                  borderRightWidth: index < ROWS.length - 1 ? StyleSheet.hairlineWidth : 0,
-                  borderRightColor: colors.divider,
+                  borderEndWidth: index < ROWS.length - 1 ? StyleSheet.hairlineWidth : 0,
+                  borderEndColor: colors.divider,
                   borderBottomColor: accent,
                   borderBottomWidth: 3,
                   paddingBottom: spacing.xs,

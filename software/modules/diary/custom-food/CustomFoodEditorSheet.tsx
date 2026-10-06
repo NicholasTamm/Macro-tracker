@@ -14,7 +14,13 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PrimaryButton, ErrorBanner, useTheme } from '@/design-system';
+import {
+  PrimaryButton,
+  ErrorBanner,
+  useTheme,
+  useReduceMotion,
+  modalAnimationFor,
+} from '@/design-system';
 import type { CustomFood, SqlExecutor } from '../../app-core/user-data';
 import {
   archiveCustomFoodSafe,
@@ -128,6 +134,7 @@ export function CustomFoodEditorSheet({
   onSaved,
 }: CustomFoodEditorSheetProps) {
   const { colors, spacing, typography, radius } = useTheme();
+  const reduceMotion = useReduceMotion();
   const isEdit = food != null;
   const [draft, setDraft] = useState<CustomFoodDraft>(() => draftFromFood(food));
   const [error, setError] = useState<string | null>(null);
@@ -175,7 +182,7 @@ export function CustomFoodEditorSheet({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={modalAnimationFor(reduceMotion)} onRequestClose={onClose}>
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}>
         <View
           style={[

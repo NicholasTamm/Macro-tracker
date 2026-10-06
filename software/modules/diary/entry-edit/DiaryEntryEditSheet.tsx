@@ -18,6 +18,8 @@ import {
   PrimaryButton,
   ErrorBanner,
   useTheme,
+  useReduceMotion,
+  modalAnimationFor,
 } from '@/design-system';
 import type { DiaryEntry } from '../../app-core/user-data';
 import {
@@ -46,6 +48,7 @@ export function DiaryEntryEditSheet({
   onSave,
 }: DiaryEntryEditSheetProps) {
   const { colors, spacing, typography, radius } = useTheme();
+  const reduceMotion = useReduceMotion();
   const [qtyText, setQtyText] = useState('1');
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export function DiaryEntryEditSheet({
   return (
     <Modal
       visible={visible && !!entry}
-      animationType="slide"
+      animationType={modalAnimationFor(reduceMotion)}
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
       onRequestClose={onClose}
       accessibilityViewIsModal

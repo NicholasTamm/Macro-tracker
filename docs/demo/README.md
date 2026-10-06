@@ -76,3 +76,14 @@ bash docs/demo/smoke-a11y-l10n.sh
 ```
 
 Writes `out/issue-24-smoke-result.txt` on success/failure.
+
+## Issue #66 — M1-21 Accessibility / localization / privacy QA
+
+Static QA gates (token contrast WCAG AA light/dark, no camera/mic/location permissions or analytics deps, no remote network, RTL start/end, Reduce Motion modals, labels/roles on every control) + report `docs/m1-21-a11y-l10n-privacy-qa.md`.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-21-qa.sh
+```
+
+Writes `out/issue-66-smoke-result.txt` on success.

@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: '#222',
-    marginLeft: 16,
+    marginStart: 16,
   },
   destructive: {
     color: '#d00',
