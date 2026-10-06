@@ -1,5 +1,16 @@
 # Docs demos
 
+## Issue #63 — Settings smoke
+
+Validates persisted display units and theme, profile editing, USDA attribution, licenses, privacy placeholder, routes, typecheck, and tests.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-18-settings.sh
+```
+
+Writes `out/issue-63-smoke-result.txt` on success.
+
 ## Issue #13 — MVP backlog smoke
 
 Validates the Expo-reconciled backlog markdown (headings, task IDs, supersession keywords).

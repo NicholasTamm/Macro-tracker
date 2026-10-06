@@ -7,9 +7,11 @@ export {
   userStoreSchemaPath,
   USER_STORE_SCHEMA_VERSION,
   USER_STORE_V1_VERSION,
+  USER_STORE_V2_VERSION,
 } from './migrate';
 export { USER_STORE_V1_SQL } from './schemaV1';
 export { USER_STORE_V2_PROFILE_SQL } from './schemaV2';
+export { USER_STORE_V3_SETTINGS_SQL } from './schemaV3';
 export {
   serializeNutrients,
   parseNutrients,
