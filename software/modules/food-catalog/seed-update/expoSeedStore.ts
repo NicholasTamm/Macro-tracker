@@ -20,10 +20,26 @@ function toBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
+const markerLocks = new Map<string, Promise<void>>();
+
+async function withMarkerLock<T>(root: string, operation: () => Promise<T>): Promise<T> {
+  const previous = markerLocks.get(root) ?? Promise.resolve();
+  let release!: () => void;
+  const current = new Promise<void>((resolve) => { release = resolve; });
+  markerLocks.set(root, current);
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release();
+    if (markerLocks.get(root) === current) markerLocks.delete(root);
+  }
+}
+
 /**
  * Unwired Expo adapter sketch. Staged bytes and the active pointer are written
- * to temporary paths first, then moved into place. Replacing the fixed pointer
- * path makes activation independent of the device wall clock.
+ * to temporary paths first, then moved into place. A backup marker makes the
+ * prior pointer readable if replacement removes active.json before failing.
  */
 export function createExpoFileSystemSeedStore(
   rootDirectory?: string,
@@ -35,19 +51,38 @@ export function createExpoFileSystemSeedStore(
   const root = rootDirectory ?? `${fileSystem.documentDirectory ?? ''}food-seeds`;
   let sequence = 0;
   const activePointerName = 'active.json';
+  const backupPointerName = 'active.backup.json';
 
   const ensureRoot = () => fileSystem.makeDirectoryAsync(root, { intermediates: true });
   const pathFor = (name: string) => `${root}/${name}`;
 
-  async function readActivePointer(): Promise<string | null> {
-    await ensureRoot();
-    if (!(await fileSystem.readDirectoryAsync(root)).includes(activePointerName)) return null;
-    const marker = JSON.parse(await fileSystem.readAsStringAsync(pathFor(activePointerName))) as {
-      id?: unknown;
-    };
+  function parsePointer(contents: string): string {
+    const marker = JSON.parse(contents) as { id?: unknown };
     if (typeof marker.id !== 'string') throw new Error('invalid active seed marker');
     return marker.id;
   }
+
+  async function readPointerContentsUnlocked(): Promise<string | null> {
+    await ensureRoot();
+    const names = await fileSystem.readDirectoryAsync(root);
+    if (names.includes(activePointerName)) {
+      return fileSystem.readAsStringAsync(pathFor(activePointerName));
+    }
+    if (!names.includes(backupPointerName)) return null;
+    const backup = JSON.parse(await fileSystem.readAsStringAsync(pathFor(backupPointerName))) as {
+      previous?: unknown;
+    };
+    if (backup.previous === null) return null;
+    if (typeof backup.previous !== 'string') throw new Error('invalid active seed backup');
+    return backup.previous;
+  }
+
+  async function readActivePointerUnlocked(): Promise<string | null> {
+    const contents = await readPointerContentsUnlocked();
+    return contents === null ? null : parsePointer(contents);
+  }
+
+  const readActivePointer = () => withMarkerLock(root, readActivePointerUnlocked);
 
   return {
     async stageBytes(bytes, seedVersion) {
@@ -71,19 +106,40 @@ export function createExpoFileSystemSeedStore(
     },
     readActivePointer,
     async atomicSwapActivePointer(staged, expectedPrevious) {
-      if ((await readActivePointer()) !== expectedPrevious) throw new Error('active seed changed');
-      const temporary = pathFor(`active-${Date.now()}-${sequence++}.tmp`);
-      try {
-        await fileSystem.writeAsStringAsync(temporary, JSON.stringify(staged));
-        await fileSystem.moveAsync({ from: temporary, to: pathFor(activePointerName) });
-      } catch (error) {
-        await fileSystem.deleteAsync(temporary, { idempotent: true }).catch(() => undefined);
-        throw error;
-      }
+      await withMarkerLock(root, async () => {
+        if ((await readActivePointerUnlocked()) !== expectedPrevious) {
+          throw new Error('active seed changed');
+        }
+        const temporary = pathFor(`active-${Date.now()}-${sequence++}.tmp`);
+        const activePath = pathFor(activePointerName);
+        const backupPath = pathFor(backupPointerName);
+        let backupReady = false;
+        try {
+          const previous = await readPointerContentsUnlocked();
+          const names = await fileSystem.readDirectoryAsync(root);
+          const recoveryBackupExists = !names.includes(activePointerName)
+            && names.includes(backupPointerName);
+          await fileSystem.writeAsStringAsync(temporary, JSON.stringify(staged));
+          if (!recoveryBackupExists) {
+            await fileSystem.writeAsStringAsync(backupPath, JSON.stringify({ previous }));
+          }
+          backupReady = true;
+          await fileSystem.moveAsync({ from: temporary, to: activePath });
+        } catch (error) {
+          await fileSystem.deleteAsync(temporary, { idempotent: true }).catch(() => undefined);
+          if (backupReady) {
+            await fileSystem.deleteAsync(activePath, { idempotent: true }).catch(() => undefined);
+          }
+          throw error;
+        }
+        await fileSystem.deleteAsync(backupPath, { idempotent: true }).catch(() => undefined);
+      });
     },
     async deleteStaged(staged) {
-      if ((await readActivePointer()) === staged.id) return;
-      await fileSystem.deleteAsync(pathFor(staged.id), { idempotent: true });
+      await withMarkerLock(root, async () => {
+        if ((await readActivePointerUnlocked()) === staged.id) return;
+        await fileSystem.deleteAsync(pathFor(staged.id), { idempotent: true });
+      });
     },
   };
 }

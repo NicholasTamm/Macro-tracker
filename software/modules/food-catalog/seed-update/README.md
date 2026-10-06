@@ -14,7 +14,8 @@ the old pointer and seed intact on failure.
 
 `InMemorySeedStore` is the test/reference implementation. `expoSeedStore.ts` is
 an unwired adapter sketch kept behind `require('expo-file-system')`. It writes
-staged artifacts through temporary files and activates them by renaming a
-complete temporary JSON pointer over a fixed pointer path. Seed artifacts are
-retained for rollback. A CDN integration must also add the matching zstd
+staged artifacts through temporary files and serializes pointer compare/swap
+operations. A durable backup marker preserves the prior pointer if iOS removes
+the destination before a pointer rename fails. Seed artifacts are retained for
+rollback. A CDN integration must also add the matching zstd
 decompression/opening path before enabling the flag.

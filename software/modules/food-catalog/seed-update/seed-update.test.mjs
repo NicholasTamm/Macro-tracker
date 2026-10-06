@@ -228,13 +228,15 @@ function fakeExpoFileSystem() {
   const files = new Map();
   let failNextWrite = false;
   let failNextMove = false;
+  let deleteDestinationBeforeMoveFailure = false;
   return {
     files,
     failWriteAfterCreatingFile() {
       failNextWrite = true;
     },
-    failMove() {
+    failMove({ afterDeletingDestination = false } = {}) {
       failNextMove = true;
+      deleteDestinationBeforeMoveFailure = afterDeletingDestination;
     },
     api: {
       EncodingType: { Base64: 'base64' },
@@ -260,6 +262,8 @@ function fakeExpoFileSystem() {
       async moveAsync({ from, to }) {
         if (failNextMove) {
           failNextMove = false;
+          if (deleteDestinationBeforeMoveFailure) files.delete(to);
+          deleteDestinationBeforeMoveFailure = false;
           throw new Error('interrupted move');
         }
         if (!files.has(from)) throw new Error('file not found');
@@ -302,17 +306,39 @@ test('Expo adapter fixed pointer activates the newest seed when the clock moves 
   }
 });
 
-test('Expo adapter preserves the prior pointer and removes pointer temp on activation failure', async () => {
+test('Expo adapter preserves the prior pointer when iOS deletes the destination before move fails', async () => {
   const fileSystem = fakeExpoFileSystem();
   const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
   const first = await store.stageBytes(new Uint8Array([1]), 'fixture.2');
   await store.atomicSwapActivePointer(first, null);
   const second = await store.stageBytes(new Uint8Array([2]), 'fixture.3');
-  fileSystem.failMove();
+  fileSystem.failMove({ afterDeletingDestination: true });
 
   await assert.rejects(store.atomicSwapActivePointer(second, first.id));
   assert.equal(await store.readActivePointer(), first.id);
   assert.equal([...fileSystem.files.keys()].some((path) => path.endsWith('.tmp')), false);
+
+  const restartedStore = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  fileSystem.failMove({ afterDeletingDestination: true });
+  await assert.rejects(restartedStore.atomicSwapActivePointer(second, first.id));
+  assert.equal(await restartedStore.readActivePointer(), first.id);
+});
+
+test('Expo adapter serializes concurrent compare-and-swap operations', async () => {
+  const fileSystem = fakeExpoFileSystem();
+  const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  const first = await store.stageBytes(new Uint8Array([1]), 'fixture.1');
+  await store.atomicSwapActivePointer(first, null);
+  const second = await store.stageBytes(new Uint8Array([2]), 'fixture.2');
+  const third = await store.stageBytes(new Uint8Array([3]), 'fixture.3');
+
+  const results = await Promise.allSettled([
+    store.atomicSwapActivePointer(second, first.id),
+    store.atomicSwapActivePointer(third, first.id),
+  ]);
+
+  assert.deepEqual(results.map(({ status }) => status), ['fulfilled', 'rejected']);
+  assert.equal(await store.readActivePointer(), second.id);
 });
 
 test('committed signing key verifies the fixture signature or dev-key roundtrip', () => {
