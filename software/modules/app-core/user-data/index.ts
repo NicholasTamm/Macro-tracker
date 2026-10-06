@@ -130,6 +130,7 @@ export {
   createWeightSample,
   getWeightSample,
   listWeightSamples,
+  restoreWeightSample,
   tombstoneWeightSample,
   updateWeightSample,
   type WeightSample,

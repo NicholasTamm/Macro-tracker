@@ -101,6 +101,15 @@ test('create / edit / tombstone; deleted excluded from chart and summary', async
   const live = userData.listWeightSamples(db);
   assert.deepEqual(live.map((s) => s.id), [b.id, c.id]);
 
+  // Undo restores; restoring a live sample is a no-op.
+  const restored = userData.restoreWeightSample(db, a.id);
+  assert.equal(restored.deletedAt, null);
+  assert.equal(userData.listWeightSamples(db).length, 3);
+  const rev = userData.getWeightSample(db, a.id).syncRevision;
+  userData.restoreWeightSample(db, a.id);
+  assert.equal(userData.getWeightSample(db, a.id).syncRevision, rev);
+  userData.tombstoneWeightSample(db, a.id);
+
   // Even if tombstones are passed in, helpers exclude them.
   const all = userData.listWeightSamples(db, { includeDeleted: true });
   const w = weight.windowSamples(all, NOW);
@@ -170,7 +179,7 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   assert.match(chart, /accessibilityRole="image"/);
   assert.match(chart, /accessibilityLabel=\{`Weight chart, last 30 days\. \$\{summaryText\}`\}/);
   const screen = readFileSync(join(softwareRoot, 'app/(tabs)/analytics.tsx'), 'utf8');
-  for (const sym of ['createWeightSample', 'updateWeightSample', 'tombstoneWeightSample', 'weightSummaryText']) {
+  for (const sym of ['createWeightSample', 'updateWeightSample', 'tombstoneWeightSample', 'restoreWeightSample', 'weightSummaryText']) {
     assert.ok(screen.includes(sym), `analytics.tsx missing ${sym}`);
   }
 });

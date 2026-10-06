@@ -14,6 +14,7 @@ import { useUserData } from '@/components/UserDataProvider';
 import {
   createWeightSample,
   listWeightSamples,
+  restoreWeightSample,
   tombstoneWeightSample,
   updateWeightSample,
   type WeightSample,
@@ -46,6 +47,7 @@ export default function Analytics() {
   const [editing, setEditing] = useState<WeightSample | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [undoId, setUndoId] = useState<string | null>(null);
 
   const reload = useCallback(() => {
     if (!db) return;
@@ -88,6 +90,7 @@ export default function Analytics() {
         setStatus(`Logged ${formatWeight(parsed.kilograms, unit)}.`);
       }
       setError(null);
+      setUndoId(null);
       resetForm();
       refresh();
       reload();
@@ -96,17 +99,28 @@ export default function Analytics() {
     }
   };
 
+  const onUndo = () => {
+    if (!db || !undoId) return;
+    const restored = restoreWeightSample(db, undoId);
+    setUndoId(null);
+    setStatus(restored ? `Restored ${formatWeight(restored.kilograms, unit)}.` : null);
+    refresh();
+    reload();
+  };
+
   const onEdit = (s: WeightSample) => {
     setEditing(s);
     setInput(String(toDisplayWeight(s.kilograms, unit)));
     setError(null);
     setStatus(null);
+    setUndoId(null);
   };
 
   const onDelete = (s: WeightSample) => {
     if (!db) return;
     tombstoneWeightSample(db, s.id);
     if (editing?.id === s.id) resetForm();
+    setUndoId(s.id);
     setStatus(`Deleted ${formatWeight(s.kilograms, unit)} from ${formatSampleDate(s.timestamp)}.`);
     refresh();
     reload();
@@ -123,9 +137,17 @@ export default function Analytics() {
         {dbError ? <ErrorBanner title="Storage unavailable" message={dbError} /> : null}
         {error ? <ErrorBanner title="Check weight" message={error} /> : null}
         {status ? (
-          <Text accessibilityLiveRegion="polite" style={[typography.body, { color: colors.muted }]}>
-            {status}
-          </Text>
+          <View style={[styles.row, { gap: spacing.sm }]}>
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[typography.body, { color: colors.muted, flex: 1 }]}
+            >
+              {status}
+            </Text>
+            {undoId ? (
+              <PrimaryButton compact variant="secondary" label="Undo delete" onPress={onUndo} />
+            ) : null}
+          </View>
         ) : null}
 
         <Card elevated>

@@ -118,3 +118,13 @@ export function tombstoneWeightSample(db: SqlExecutor, id: string): void {
     [ts, ts, id],
   );
 }
+
+/** Undo a tombstone. Returns the restored sample, or null if it was not deleted. */
+export function restoreWeightSample(db: SqlExecutor, id: string): WeightSample | null {
+  db.run(
+    `UPDATE weight_sample SET deleted_at = NULL, updated_at = ?, sync_revision = sync_revision + 1
+     WHERE id = ? AND deleted_at IS NOT NULL`,
+    [nowIso(), id],
+  );
+  return getWeightSample(db, id);
+}
