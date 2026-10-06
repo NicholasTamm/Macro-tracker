@@ -13,9 +13,8 @@ atomically activate the bytes. The `SeedStore` compare-and-swap contract keeps
 the old pointer and seed intact on failure.
 
 `InMemorySeedStore` is the test/reference implementation. `expoSeedStore.ts` is
-an unwired adapter sketch kept behind `require('expo-file-system')`. It writes a
-staged artifact first and activates it by renaming a complete temporary JSON
-pointer to a unique immutable marker. Reading the newest marker gives the
-active pointer; earlier markers and artifacts are retained for rollback. A CDN
-integration must also add the matching zstd decompression/opening path before
-enabling the flag.
+an unwired adapter sketch kept behind `require('expo-file-system')`. It writes
+staged artifacts through temporary files and activates them by renaming a
+complete temporary JSON pointer over a fixed pointer path. Seed artifacts are
+retained for rollback. A CDN integration must also add the matching zstd
+decompression/opening path before enabling the flag.

@@ -1,6 +1,6 @@
 import type { SeedStore, StagedSeed } from './types';
 
-type ExpoFileSystem = {
+export type ExpoFileSystem = {
   documentDirectory?: string | null;
   EncodingType?: { Base64?: string };
   makeDirectoryAsync(path: string, options?: { intermediates?: boolean }): Promise<void>;
@@ -21,27 +21,28 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 /**
- * Unwired Expo adapter sketch. It uses append-only activation marker files:
- * renaming a complete temporary marker to a unique final name is the atomic
- * pointer swap, while older markers and seed files remain available.
+ * Unwired Expo adapter sketch. Staged bytes and the active pointer are written
+ * to temporary paths first, then moved into place. Replacing the fixed pointer
+ * path makes activation independent of the device wall clock.
  */
-export function createExpoFileSystemSeedStore(rootDirectory?: string): SeedStore {
+export function createExpoFileSystemSeedStore(
+  rootDirectory?: string,
+  fileSystemOverride?: ExpoFileSystem,
+): SeedStore {
   // Kept behind require so Expo FileSystem types/native code are not required by tests.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const fileSystem = require('expo-file-system') as ExpoFileSystem;
+  const fileSystem = fileSystemOverride ?? (require('expo-file-system') as ExpoFileSystem);
   const root = rootDirectory ?? `${fileSystem.documentDirectory ?? ''}food-seeds`;
   let sequence = 0;
+  const activePointerName = 'active.json';
 
   const ensureRoot = () => fileSystem.makeDirectoryAsync(root, { intermediates: true });
   const pathFor = (name: string) => `${root}/${name}`;
 
   async function readActivePointer(): Promise<string | null> {
     await ensureRoot();
-    const markers = (await fileSystem.readDirectoryAsync(root))
-      .filter((name) => /^active-\d{13}-\d+\.json$/.test(name))
-      .sort();
-    if (markers.length === 0) return null;
-    const marker = JSON.parse(await fileSystem.readAsStringAsync(pathFor(markers.at(-1)!))) as {
+    if (!(await fileSystem.readDirectoryAsync(root)).includes(activePointerName)) return null;
+    const marker = JSON.parse(await fileSystem.readAsStringAsync(pathFor(activePointerName))) as {
       id?: unknown;
     };
     if (typeof marker.id !== 'string') throw new Error('invalid active seed marker');
@@ -52,20 +53,33 @@ export function createExpoFileSystemSeedStore(rootDirectory?: string): SeedStore
     async stageBytes(bytes, seedVersion) {
       await ensureRoot();
       const id = `seed-${Date.now()}-${sequence++}.sqlite.zst`;
-      await fileSystem.writeAsStringAsync(pathFor(id), toBase64(bytes), {
-        encoding: fileSystem.EncodingType?.Base64 ?? 'base64',
-      });
+      const temporary = pathFor(`${id}.tmp`);
+      const final = pathFor(id);
+      try {
+        await fileSystem.writeAsStringAsync(temporary, toBase64(bytes), {
+          encoding: fileSystem.EncodingType?.Base64 ?? 'base64',
+        });
+        await fileSystem.moveAsync({ from: temporary, to: final });
+      } catch (error) {
+        await Promise.all([
+          fileSystem.deleteAsync(temporary, { idempotent: true }).catch(() => undefined),
+          fileSystem.deleteAsync(final, { idempotent: true }).catch(() => undefined),
+        ]);
+        throw error;
+      }
       return { id, seedVersion };
     },
     readActivePointer,
     async atomicSwapActivePointer(staged, expectedPrevious) {
       if ((await readActivePointer()) !== expectedPrevious) throw new Error('active seed changed');
-      const order = `${Date.now()}`.padStart(13, '0');
-      const suffix = sequence++;
-      const temporary = pathFor(`pointer-${order}-${suffix}.tmp`);
-      const final = pathFor(`active-${order}-${suffix}.json`);
-      await fileSystem.writeAsStringAsync(temporary, JSON.stringify(staged));
-      await fileSystem.moveAsync({ from: temporary, to: final });
+      const temporary = pathFor(`active-${Date.now()}-${sequence++}.tmp`);
+      try {
+        await fileSystem.writeAsStringAsync(temporary, JSON.stringify(staged));
+        await fileSystem.moveAsync({ from: temporary, to: pathFor(activePointerName) });
+      } catch (error) {
+        await fileSystem.deleteAsync(temporary, { idempotent: true }).catch(() => undefined);
+        throw error;
+      }
     },
     async deleteStaged(staged) {
       if ((await readActivePointer()) === staged.id) return;

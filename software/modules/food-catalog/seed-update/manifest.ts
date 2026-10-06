@@ -16,7 +16,7 @@ export function parseSeedManifest(value: unknown): SeedUpdateManifest | null {
   const artifact = value.artifact;
 
   if (
-    !isPositiveInteger(value.manifestVersion) ||
+    value.manifestVersion !== 1 ||
     !isPositiveInteger(value.catalogSchemaVersion) ||
     typeof value.seedVersion !== 'string' ||
     value.seedVersion.trim().length === 0 ||

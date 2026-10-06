@@ -31,7 +31,12 @@ execFileSync(
   { cwd: softwareRoot, stdio: 'pipe' },
 );
 
-const { InMemorySeedStore, PINNED_SEED_PUBLIC_KEYS, runSeedUpdate } = await import(
+const {
+  createExpoFileSystemSeedStore,
+  InMemorySeedStore,
+  PINNED_SEED_PUBLIC_KEYS,
+  runSeedUpdate,
+} = await import(
   pathToFileURL(join(bundleDir, 'seed-update.js')).href
 );
 
@@ -151,6 +156,15 @@ test('unsupported schema is rejected', async () => {
   assert.deepEqual(await runSeedUpdate(f.deps, f.options), { status: 'rejected', reason: 'schema' });
 });
 
+test('unsupported manifest version is rejected before artifact download', async () => {
+  const bytes = new Uint8Array([1, 3, 3, 7]);
+  const f = fixture({ manifest: signedManifest(bytes, { manifestVersion: 2 }) });
+  assert.deepEqual(await runSeedUpdate(f.deps, f.options), {
+    status: 'rejected', reason: 'manifest-invalid',
+  });
+  assert.equal(f.calls().artifactFetches, 0);
+});
+
 test('minimum app build is enforced', async () => {
   const bytes = new Uint8Array([1, 3, 3, 7]);
   const f = fixture({ manifest: signedManifest(bytes, { minimumAppBuild: 11 }) });
@@ -208,6 +222,97 @@ test('invalid manifest, fetch error, and size mismatch are typed rejections', as
   assert.deepEqual(await runSeedUpdate(wrongSize.deps, wrongSize.options), {
     status: 'rejected', reason: 'size-mismatch',
   });
+});
+
+function fakeExpoFileSystem() {
+  const files = new Map();
+  let failNextWrite = false;
+  let failNextMove = false;
+  return {
+    files,
+    failWriteAfterCreatingFile() {
+      failNextWrite = true;
+    },
+    failMove() {
+      failNextMove = true;
+    },
+    api: {
+      EncodingType: { Base64: 'base64' },
+      async makeDirectoryAsync() {},
+      async writeAsStringAsync(path, contents) {
+        files.set(path, contents);
+        if (failNextWrite) {
+          failNextWrite = false;
+          throw new Error('interrupted write');
+        }
+      },
+      async readAsStringAsync(path) {
+        if (!files.has(path)) throw new Error('file not found');
+        return files.get(path);
+      },
+      async readDirectoryAsync(path) {
+        const prefix = `${path}/`;
+        return [...files.keys()]
+          .filter((file) => file.startsWith(prefix))
+          .map((file) => file.slice(prefix.length))
+          .filter((file) => !file.includes('/'));
+      },
+      async moveAsync({ from, to }) {
+        if (failNextMove) {
+          failNextMove = false;
+          throw new Error('interrupted move');
+        }
+        if (!files.has(from)) throw new Error('file not found');
+        files.set(to, files.get(from));
+        files.delete(from);
+      },
+      async deleteAsync(path) {
+        files.delete(path);
+      },
+    },
+  };
+}
+
+test('Expo adapter removes partial temporary seed when staging fails', async () => {
+  const fileSystem = fakeExpoFileSystem();
+  fileSystem.failWriteAfterCreatingFile();
+  const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+
+  await assert.rejects(store.stageBytes(new Uint8Array([1, 2, 3]), 'fixture.2'));
+  assert.deepEqual([...fileSystem.files.keys()], []);
+});
+
+test('Expo adapter fixed pointer activates the newest seed when the clock moves backward', async () => {
+  const fileSystem = fakeExpoFileSystem();
+  const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  const originalNow = Date.now;
+  try {
+    Date.now = () => 2_000;
+    const first = await store.stageBytes(new Uint8Array([1]), 'fixture.2');
+    await store.atomicSwapActivePointer(first, null);
+
+    Date.now = () => 1_000;
+    const second = await store.stageBytes(new Uint8Array([2]), 'fixture.3');
+    await store.atomicSwapActivePointer(second, first.id);
+
+    assert.equal(await store.readActivePointer(), second.id);
+    assert.equal(fileSystem.files.has('/seed-root/active.json'), true);
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test('Expo adapter preserves the prior pointer and removes pointer temp on activation failure', async () => {
+  const fileSystem = fakeExpoFileSystem();
+  const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  const first = await store.stageBytes(new Uint8Array([1]), 'fixture.2');
+  await store.atomicSwapActivePointer(first, null);
+  const second = await store.stageBytes(new Uint8Array([2]), 'fixture.3');
+  fileSystem.failMove();
+
+  await assert.rejects(store.atomicSwapActivePointer(second, first.id));
+  assert.equal(await store.readActivePointer(), first.id);
+  assert.equal([...fileSystem.files.keys()].some((path) => path.endsWith('.tmp')), false);
 });
 
 test('committed signing key verifies the fixture signature or dev-key roundtrip', () => {
