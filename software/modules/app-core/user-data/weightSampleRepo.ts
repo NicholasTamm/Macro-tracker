@@ -75,3 +75,46 @@ export function listWeightSamples(
       );
   return rows.map(mapRow);
 }
+
+export function getWeightSample(
+  db: SqlExecutor,
+  id: string,
+  opts: { includeDeleted?: boolean } = {},
+): WeightSample | null {
+  const row = opts.includeDeleted
+    ? db.get(`SELECT * FROM weight_sample WHERE id = ?`, [id])
+    : db.get(`SELECT * FROM weight_sample WHERE id = ? AND deleted_at IS NULL`, [id]);
+  return row ? mapRow(row) : null;
+}
+
+/** Edit a live sample's weight and/or timestamp. Returns null if missing or tombstoned. */
+export function updateWeightSample(
+  db: SqlExecutor,
+  id: string,
+  patch: { kilograms?: number; timestamp?: string },
+): WeightSample | null {
+  const cur = getWeightSample(db, id);
+  if (!cur) return null;
+  const kilograms = patch.kilograms ?? cur.kilograms;
+  if (!(kilograms > 0) || !Number.isFinite(kilograms)) {
+    throw new Error('Weight must be greater than zero.');
+  }
+  const timestamp = patch.timestamp ?? cur.timestamp;
+  db.run(
+    `UPDATE weight_sample SET kilograms = ?, timestamp = ?, updated_at = ?,
+       sync_revision = sync_revision + 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [kilograms, timestamp, nowIso(), id],
+  );
+  return getWeightSample(db, id);
+}
+
+/** Soft-delete (tombstone). Tombstoned samples are excluded from list/chart/summary. */
+export function tombstoneWeightSample(db: SqlExecutor, id: string): void {
+  const ts = nowIso();
+  db.run(
+    `UPDATE weight_sample SET deleted_at = ?, updated_at = ?, sync_revision = sync_revision + 1
+     WHERE id = ? AND deleted_at IS NULL`,
+    [ts, ts, id],
+  );
+}
