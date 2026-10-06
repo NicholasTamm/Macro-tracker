@@ -124,10 +124,12 @@ test('create / edit / tombstone; deleted excluded from chart and summary', async
 
 test('30-day window excludes older and future samples', async () => {
   const db = await freshDb();
-  userData.createWeightSample(db, { timestamp: daysAgo(31), kilograms: 90 });
+  const older = userData.createWeightSample(db, { timestamp: daysAgo(31), kilograms: 90 });
   const inside = userData.createWeightSample(db, { timestamp: daysAgo(29), kilograms: 85 });
-  userData.createWeightSample(db, { timestamp: daysAgo(-1), kilograms: 84 });
-  const w = weight.windowSamples(userData.listWeightSamples(db), NOW);
+  const future = userData.createWeightSample(db, { timestamp: daysAgo(-1), kilograms: 84 });
+  const live = userData.listWeightSamples(db);
+  assert.deepEqual(live.map((s) => s.id), [older.id, inside.id, future.id]);
+  const w = weight.windowSamples(live, NOW);
   assert.deepEqual(w.map((s) => s.id), [inside.id]);
   db.close();
 });
@@ -182,4 +184,9 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   for (const sym of ['createWeightSample', 'updateWeightSample', 'tombstoneWeightSample', 'restoreWeightSample', 'weightSummaryText']) {
     assert.ok(screen.includes(sym), `analytics.tsx missing ${sym}`);
   }
+  assert.match(
+    screen,
+    /const newestFirst = useMemo\(\(\) => samples\.slice\(\)\.reverse\(\), \[samples\]\);/,
+    'Entries must use all live samples, not only the 30-day chart window',
+  );
 });

@@ -65,7 +65,7 @@ export default function Analytics() {
   const summary = useMemo(() => summarizeWeights(windowed), [windowed]);
   const summaryText = useMemo(() => weightSummaryText(summary, unit), [summary, unit]);
   const points = useMemo(() => chartPoints(windowed, now), [windowed, now]);
-  const newestFirst = useMemo(() => windowed.slice().reverse(), [windowed]);
+  const newestFirst = useMemo(() => samples.slice().reverse(), [samples]);
 
   const resetForm = () => {
     setEditing(null);
