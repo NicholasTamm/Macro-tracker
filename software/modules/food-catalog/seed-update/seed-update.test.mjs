@@ -286,6 +286,43 @@ test('Expo adapter removes partial temporary seed when staging fails', async () 
   assert.deepEqual([...fileSystem.files.keys()], []);
 });
 
+test('Expo adapter instances use distinct staged paths when clocks and sequences match', async () => {
+  const fileSystem = fakeExpoFileSystem();
+  const firstStore = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  const secondStore = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+  const originalNow = Date.now;
+  try {
+    Date.now = () => 2_000;
+    const [first, second] = await Promise.all([
+      firstStore.stageBytes(new Uint8Array([1]), 'fixture.2'),
+      secondStore.stageBytes(new Uint8Array([2]), 'fixture.3'),
+    ]);
+
+    assert.notEqual(first.id, second.id);
+    assert.equal(fileSystem.files.get(`/seed-root/${first.id}`), 'AQ==');
+    assert.equal(fileSystem.files.get(`/seed-root/${second.id}`), 'Ag==');
+
+    const failedStore = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+    fileSystem.failMove();
+    await assert.rejects(failedStore.stageBytes(new Uint8Array([9]), 'fixture.failed'));
+    assert.equal(fileSystem.files.get(`/seed-root/${first.id}`), 'AQ==');
+    assert.equal(fileSystem.files.get(`/seed-root/${second.id}`), 'Ag==');
+
+    await firstStore.deleteStaged(first);
+    assert.equal(fileSystem.files.has(`/seed-root/${first.id}`), false);
+    assert.equal(fileSystem.files.get(`/seed-root/${second.id}`), 'Ag==');
+
+    Date.now = () => 1_000;
+    const restartedStore = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);
+    const third = await restartedStore.stageBytes(new Uint8Array([3]), 'fixture.4');
+    assert.notEqual(third.id, first.id);
+    assert.notEqual(third.id, second.id);
+    assert.equal(fileSystem.files.get(`/seed-root/${third.id}`), 'Aw==');
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
 test('Expo adapter fixed pointer activates the newest seed when the clock moves backward', async () => {
   const fileSystem = fakeExpoFileSystem();
   const store = createExpoFileSystemSeedStore('/seed-root', fileSystem.api);

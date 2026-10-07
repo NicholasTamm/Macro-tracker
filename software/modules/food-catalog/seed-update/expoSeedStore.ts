@@ -22,6 +22,21 @@ function toBase64(bytes: Uint8Array): string {
 
 const markerLocks = new Map<string, Promise<void>>();
 
+function randomNonce(): string {
+  const crypto = (globalThis as {
+    crypto?: { getRandomValues?: (bytes: Uint8Array) => Uint8Array };
+  }).crypto;
+  const bytes = new Uint8Array(16);
+  if (crypto?.getRandomValues) {
+    crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 async function withMarkerLock<T>(root: string, operation: () => Promise<T>): Promise<T> {
   const previous = markerLocks.get(root) ?? Promise.resolve();
   let release!: () => void;
@@ -49,6 +64,7 @@ export function createExpoFileSystemSeedStore(
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const fileSystem = fileSystemOverride ?? (require('expo-file-system') as ExpoFileSystem);
   const root = rootDirectory ?? `${fileSystem.documentDirectory ?? ''}food-seeds`;
+  const instanceNonce = randomNonce();
   let sequence = 0;
   const activePointerName = 'active.json';
   const backupPointerName = 'active.backup.json';
@@ -87,7 +103,7 @@ export function createExpoFileSystemSeedStore(
   return {
     async stageBytes(bytes, seedVersion) {
       await ensureRoot();
-      const id = `seed-${Date.now()}-${sequence++}.sqlite.zst`;
+      const id = `seed-${Date.now()}-${instanceNonce}-${sequence++}.sqlite.zst`;
       const temporary = pathFor(`${id}.tmp`);
       const final = pathFor(id);
       try {
@@ -110,7 +126,7 @@ export function createExpoFileSystemSeedStore(
         if ((await readActivePointerUnlocked()) !== expectedPrevious) {
           throw new Error('active seed changed');
         }
-        const temporary = pathFor(`active-${Date.now()}-${sequence++}.tmp`);
+        const temporary = pathFor(`active-${Date.now()}-${instanceNonce}-${sequence++}.tmp`);
         const activePath = pathFor(activePointerName);
         const backupPath = pathFor(backupPointerName);
         let backupReady = false;
