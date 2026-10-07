@@ -15,6 +15,11 @@ import {
   type SqlExecutor,
   wrapExpoSqlite,
 } from '@/modules/app-core/user-data';
+import {
+  getThemePreference,
+  saveThemePreference,
+  type ThemePreference,
+} from '@/modules/app-core/settings';
 
 const SQLJS_STORAGE_KEY = 'macro-tracker:UserData.sqljs.b64';
 
@@ -23,6 +28,8 @@ type UserDataContextValue = {
   error: string | null;
   db: SqlExecutor | null;
   snapshot: OnboardingSnapshot | null;
+  themePreference: ThemePreference;
+  setThemePreference: (preference: ThemePreference) => void;
   refresh: () => void;
 };
 
@@ -36,7 +43,6 @@ function bytesToBase64(bytes: Uint8Array): string {
   }
   // btoa is available in browsers / RN web; Buffer for Node if ever used here.
   if (typeof btoa === 'function') return btoa(binary);
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return Buffer.from(bytes).toString('base64');
 }
 
@@ -47,7 +53,6 @@ function base64ToBytes(b64: string): Uint8Array {
     for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
     return out;
   }
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return new Uint8Array(Buffer.from(b64, 'base64'));
 }
 
@@ -103,6 +108,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const [snapshot, setSnapshot] = useState<OnboardingSnapshot | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [themePreference, setThemePreferenceState] =
+    useState<ThemePreference>('system');
   const persistSqlJsRef = useRef(false);
 
   useEffect(() => {
@@ -119,6 +126,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         if (opened.persistSqlJs) writePersistedSqlJs(opened.db);
         setDb(opened.db);
         setSnapshot(loadOnboardingSnapshot(opened.db));
+        setThemePreferenceState(getThemePreference(opened.db));
         setReady(true);
       } catch (e) {
         if (!cancelled) {
@@ -135,12 +143,23 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(() => {
     if (!db) return;
     setSnapshot(loadOnboardingSnapshot(db));
+    setThemePreferenceState(getThemePreference(db));
     if (persistSqlJsRef.current) writePersistedSqlJs(db);
   }, [db]);
 
+  const setThemePreference = useCallback(
+    (preference: ThemePreference) => {
+      if (!db) return;
+      const saved = saveThemePreference(db, preference);
+      setThemePreferenceState(saved);
+      if (persistSqlJsRef.current) writePersistedSqlJs(db);
+    },
+    [db],
+  );
+
   const value = useMemo(
-    () => ({ ready, error, db, snapshot, refresh }),
-    [ready, error, db, snapshot, refresh],
+    () => ({ ready, error, db, snapshot, themePreference, setThemePreference, refresh }),
+    [ready, error, db, snapshot, themePreference, setThemePreference, refresh],
   );
 
   return <UserDataContext.Provider value={value}>{children}</UserDataContext.Provider>;

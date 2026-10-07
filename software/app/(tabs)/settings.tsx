@@ -1,24 +1,18 @@
-import { useState, type ReactNode } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { MaterialIcons, Feather, Ionicons } from '@expo/vector-icons';
-import userIcon from '../../assets/images/userIcon.jpg';
-import ThemedView from '../../components/ThemedView';
+import { useState, type ComponentProps } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserData } from '@/components/UserDataProvider';
 import { buildUserDataExportFiles } from '@/modules/app-core/export';
 import { shareExportViaPlatform } from '@/modules/app-core/export/shareExport';
-import { isCoachingShellEntryEnabled } from '@/modules/coaching';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/design-system';
+
+type FeatherName = ComponentProps<typeof Feather>['name'];
 
 export default function Settings() {
-  const { db, ready } = useUserData();
+  const { db, ready, snapshot } = useUserData();
+  const { colors, spacing, typography } = useTheme();
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
 
@@ -32,168 +26,75 @@ export default function Settings() {
     try {
       const files = buildUserDataExportFiles(db);
       const result = await shareExportViaPlatform(files);
-      if (!result.ok) {
-        setExportMessage(result.reason);
-      } else {
-        setExportMessage(
-          `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`,
-        );
-      }
-    } catch (e) {
-      setExportMessage(e instanceof Error ? e.message : String(e));
+      setExportMessage(result.ok
+        ? `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`
+        : result.reason);
+    } catch (error) {
+      setExportMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setExporting(false);
     }
   };
 
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          <View style={styles.profileSection}>
-            <Image source={userIcon} style={styles.avatar} />
-            <Text style={styles.name}>User Name</Text>
-            <CoachingShellStatus />
-          </View>
+  const profile = snapshot?.profile;
+  const profileSummary = profile
+    ? [profile.sex, profile.birthYear].filter(Boolean).join(' · ') || 'Local profile'
+    : 'Local profile';
 
-          <View style={styles.optionsSection}>
-            <SettingsOption
-              label="Profile"
-              icon={<Feather name="user" size={22} color="#222" />}
-            />
-            <SettingsOption
-              label="Goals"
-              icon={<Feather name="target" size={22} color="#222" />}
-            />
-            <SettingsOption
-              label={exporting ? 'Exporting…' : 'Export data (CSV + JSON)'}
-              icon={<Feather name="download" size={22} color="#222" />}
-              onPress={ready && !exporting ? onExport : undefined}
-            />
-            {exporting ? (
-              <ActivityIndicator style={{ marginVertical: 8 }} />
-            ) : null}
-            {exportMessage ? (
-              <Text style={{ paddingHorizontal: 24, color: '#666', fontSize: 13, marginBottom: 8 }}>
-                {exportMessage}
-              </Text>
-            ) : null}
-            <SettingsOption
-              label="Notifications"
-              icon={
-                <Ionicons name="notifications-outline" size={22} color="#222" />
-              }
-            />
-            <SettingsOption
-              label="Help"
-              icon={<Feather name="help-circle" size={22} color="#222" />}
-            />
-            <SettingsOption
-              label="About"
-              icon={<Feather name="info" size={22} color="#222" />}
-            />
-            <SettingsOption
-              label="Log out"
-              icon={<MaterialIcons name="logout" size={22} color="#d00" />}
-              isDestructive
-            />
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.canvas }}>
+      <ScrollView contentContainerStyle={{ paddingVertical: spacing.xl }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.lg }}>
+          <Text accessibilityRole="header" style={[typography.section, { color: colors.ink }]}>Settings</Text>
+          <Text style={[typography.body, { color: colors.muted, marginTop: spacing.xs }]}>{profileSummary}</Text>
+        </View>
+        <SettingsRow label="Profile" icon="user" onPress={() => router.push('/settings/profile')} />
+        <SettingsRow label="Units & appearance" icon="sliders" onPress={() => router.push('/settings/units')} />
+        <SettingsRow label="About & data sources" icon="info" onPress={() => router.push('/settings/about')} />
+        <SettingsRow label="Open-source licenses" icon="file-text" onPress={() => router.push('/settings/licenses')} />
+        <SettingsRow label="Privacy" icon="shield" onPress={() => router.push('/settings/privacy')} />
+        <SettingsRow
+          label={exporting ? 'Exporting…' : 'Export data (CSV + JSON)'}
+          icon="download"
+          onPress={ready && !exporting ? onExport : undefined}
+          disabled={!ready || exporting}
+        />
+        {exporting ? <ActivityIndicator style={{ marginVertical: spacing.sm }} color={colors.ink} /> : null}
+        {exportMessage ? (
+          <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.muted, paddingHorizontal: spacing.xl, marginTop: spacing.sm }]}>
+            {exportMessage}
+          </Text>
+        ) : null}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-function SettingsOption({
-  label,
-  icon,
-  isDestructive = false,
-  onPress,
-}: {
-  label: string;
-  icon: ReactNode;
-  isDestructive?: boolean;
-  onPress?: () => void;
-}) {
+function SettingsRow({ label, icon, onPress, disabled = false }: { label: string; icon: FeatherName; onPress?: () => void; disabled?: boolean }) {
+  const { colors, spacing, typography } = useTheme();
   return (
-    <TouchableOpacity
-      style={styles.option}
+    <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
+      style={({ pressed }) => ({
+        minHeight: 56,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.divider,
+        backgroundColor: pressed ? colors.band : colors.raised,
+        opacity: disabled ? 0.5 : 1,
+      })}
     >
-      <View style={styles.optionContent}>
-        {icon}
-        <Text style={[styles.optionText, isDestructive && styles.destructive]}>
-          {label}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  contentContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 12,
-  },
-  name: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  optionsSection: {
-    width: '100%',
-    maxWidth: 400,
-  },
-  option: {
-    paddingVertical: 18,
-    paddingHorizontal: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
-    minHeight: 44,
-  },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#222',
-    marginStart: 16,
-  },
-  destructive: {
-    color: '#d00',
-    fontWeight: 'bold',
-  },
-});
-
-
-function CoachingShellStatus() {
-  const { snapshot } = useUserData();
-  if (!snapshot) return null;
-  const on = isCoachingShellEntryEnabled({
-    isAdultConfirmed: snapshot.profile.isAdultConfirmed,
-    exclusions: snapshot.profile.exclusions,
-  });
-  return (
-    <Text style={{ marginTop: 8, color: '#666', fontSize: 13 }}>
-      Coaching shell: {on ? 'eligible (stub)' : 'disabled'}
-    </Text>
+      <Feather name={icon} size={22} color={colors.ink} />
+      <Text style={[typography.body, { color: colors.ink, flex: 1 }]}>{label}</Text>
+      <Feather name="chevron-right" size={20} color={colors.muted} />
+    </Pressable>
   );
 }

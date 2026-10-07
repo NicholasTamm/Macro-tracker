@@ -21,7 +21,8 @@ import {
   useReduceMotion,
   modalAnimationFor,
 } from '@/design-system';
-import type { CustomFood, SqlExecutor } from '../../app-core/user-data';
+import type { CustomFood, EnergyUnit, SqlExecutor } from '../../app-core/user-data';
+import { formatEnergyInput } from '../../app-core/settings/unitDisplay';
 import {
   archiveCustomFoodSafe,
   saveCustomFoodCreate,
@@ -34,11 +35,12 @@ export type CustomFoodEditorSheetProps = {
   db: SqlExecutor | null;
   /** null → create mode; set → edit/archive */
   food: CustomFood | null;
+  energyUnit: EnergyUnit;
   onClose: () => void;
   onSaved: (foodId: string) => void;
 };
 
-function draftFromFood(food: CustomFood | null): CustomFoodDraft {
+function draftFromFood(food: CustomFood | null, energyUnit: EnergyUnit): CustomFoodDraft {
   if (!food) {
     return {
       name: '',
@@ -73,7 +75,7 @@ function draftFromFood(food: CustomFood | null): CustomFoodDraft {
     basisUnit: food.basisUnit,
     gramWeightText:
       food.gramWeightForBasis != null ? String(food.gramWeightForBasis) : '',
-    energyKcalText: n.energy_kcal != null ? String(n.energy_kcal) : '',
+    energyKcalText: formatEnergyInput(n.energy_kcal, energyUnit),
     proteinText: n.protein != null ? String(n.protein) : '',
     carbohydrateText: n.carbohydrate != null ? String(n.carbohydrate) : '',
     fatTotalText: n.fat_total != null ? String(n.fat_total) : '',
@@ -130,22 +132,23 @@ export function CustomFoodEditorSheet({
   visible,
   db,
   food,
+  energyUnit,
   onClose,
   onSaved,
 }: CustomFoodEditorSheetProps) {
   const { colors, spacing, typography, radius } = useTheme();
   const reduceMotion = useReduceMotion();
   const isEdit = food != null;
-  const [draft, setDraft] = useState<CustomFoodDraft>(() => draftFromFood(food));
+  const [draft, setDraft] = useState<CustomFoodDraft>(() => draftFromFood(food, energyUnit));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    setDraft(draftFromFood(food));
+    setDraft(draftFromFood(food, energyUnit));
     setError(null);
     setSubmitting(false);
-  }, [visible, food]);
+  }, [visible, food, energyUnit]);
 
   const patch = (partial: Partial<CustomFoodDraft>) =>
     setDraft((d) => ({ ...d, ...partial }));
@@ -158,8 +161,8 @@ export function CustomFoodEditorSheet({
     setSubmitting(true);
     setError(null);
     const result = isEdit
-      ? saveCustomFoodEdit(db, food.id, draft)
-      : saveCustomFoodCreate(db, draft);
+      ? saveCustomFoodEdit(db, food.id, draft, energyUnit)
+      : saveCustomFoodCreate(db, draft, energyUnit);
     setSubmitting(false);
     if (!result.ok) {
       setError(result.reason);
@@ -280,7 +283,7 @@ export function CustomFoodEditorSheet({
             Macros (per basis)
           </Text>
           <Field
-            label="Energy (kcal) *"
+            label={`Energy (${energyUnit}) *`}
             value={draft.energyKcalText}
             onChangeText={(t) => patch({ energyKcalText: t })}
             keyboardType="decimal-pad"

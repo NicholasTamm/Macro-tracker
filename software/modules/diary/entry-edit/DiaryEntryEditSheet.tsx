@@ -21,7 +21,7 @@ import {
   useReduceMotion,
   modalAnimationFor,
 } from '@/design-system';
-import type { DiaryEntry } from '../../app-core/user-data';
+import type { DiaryEntry, EnergyUnit } from '../../app-core/user-data';
 import {
   parseQuantityInput,
   quantityErrorMessage,
@@ -31,6 +31,7 @@ import { scaleSnapshotForQuantity } from './scaleSnapshotForQuantity';
 export type DiaryEntryEditSheetProps = {
   visible: boolean;
   entry: DiaryEntry | null;
+  energyUnit: EnergyUnit;
   onClose: () => void;
   onSave: (newQuantity: number) => void;
 };
@@ -44,6 +45,7 @@ function nutrientOrNull(raw: number | null | undefined, round: 'kcal' | 'g'): nu
 export function DiaryEntryEditSheet({
   visible,
   entry,
+  energyUnit,
   onClose,
   onSave,
 }: DiaryEntryEditSheetProps) {
@@ -168,7 +170,7 @@ export function DiaryEntryEditSheet({
               {preview == null && qtyParsed.ok ? (
                 <ErrorBanner title="Cannot recalculate" message="Invalid snapshot scale." tone="error" />
               ) : (
-                <MacroSummary totals={macros} />
+                <MacroSummary totals={macros} energyUnit={energyUnit} />
               )}
               {preview?.grams != null ? (
                 <Text style={[typography.micro, { color: colors.muted }]}>
