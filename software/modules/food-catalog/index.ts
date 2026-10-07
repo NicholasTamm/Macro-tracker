@@ -4,3 +4,4 @@ export * from './types';
 export * from './nutrients';
 export * from './local-food-repo';
 export * from './search';
+export * from './seed-update';

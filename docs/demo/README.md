@@ -87,3 +87,15 @@ bash docs/demo/smoke-a11y-l10n.sh
 ```
 
 Writes `out/issue-24-smoke-result.txt` on success/failure.
+
+## Issue #65 — Seed update client smoke
+
+Validates the disabled-by-default seed updater, signed-manifest tests, atomic
+rollback behavior, typecheck, and the complete serialized test suite.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-20-seed-update.sh
+```
+
+Writes `out/issue-65-smoke-result.txt` on success.
