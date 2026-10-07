@@ -189,4 +189,8 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
     /const newestFirst = useMemo\(\(\) => samples\.slice\(\)\.reverse\(\), \[samples\]\);/,
     'Entries must use all live samples, not only the 30-day chart window',
   );
+  assert.match(screen, /const \[editUnit, setEditUnit\] = useState<MassUnit>\(unit\);/);
+  assert.match(screen, /if \(!editing \|\| editUnit === unit\) return;/);
+  assert.match(screen, /setInput\(String\(toDisplayWeight\(editing\.kilograms, unit\)\)\);/);
+  assert.match(screen, /const inputUnit = editing \? editUnit : unit;/);
 });

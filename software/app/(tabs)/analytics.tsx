@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,7 @@ import {
   restoreWeightSample,
   tombstoneWeightSample,
   updateWeightSample,
+  type MassUnit,
   type WeightSample,
 } from '@/modules/app-core/user-data';
 import {
@@ -45,6 +46,7 @@ export default function Analytics() {
   const [now, setNow] = useState(() => new Date());
   const [input, setInput] = useState('');
   const [editing, setEditing] = useState<WeightSample | null>(null);
+  const [editUnit, setEditUnit] = useState<MassUnit>(unit);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
@@ -61,6 +63,13 @@ export default function Analytics() {
     }, [reload]),
   );
 
+  useEffect(() => {
+    if (!editing || editUnit === unit) return;
+    setInput(String(toDisplayWeight(editing.kilograms, unit)));
+    setEditUnit(unit);
+    setError(null);
+  }, [editUnit, editing, unit]);
+
   const windowed = useMemo(() => windowSamples(samples, now), [samples, now]);
   const summary = useMemo(() => summarizeWeights(windowed), [windowed]);
   const summaryText = useMemo(() => weightSummaryText(summary, unit), [summary, unit]);
@@ -69,12 +78,14 @@ export default function Analytics() {
 
   const resetForm = () => {
     setEditing(null);
+    setEditUnit(unit);
     setInput('');
   };
 
   const onSubmit = () => {
     if (!db) return;
-    const parsed = parseWeightInput(input, unit);
+    const inputUnit = editing ? editUnit : unit;
+    const parsed = parseWeightInput(input, inputUnit);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -82,7 +93,9 @@ export default function Analytics() {
     try {
       if (editing) {
         // Unchanged display text → keep canonical kg as-is (no unit round-trip drift).
-        const unchanged = toDisplayWeight(parsed.kilograms, unit) === toDisplayWeight(editing.kilograms, unit);
+        const unchanged =
+          toDisplayWeight(parsed.kilograms, inputUnit) ===
+          toDisplayWeight(editing.kilograms, inputUnit);
         if (!unchanged) updateWeightSample(db, editing.id, { kilograms: parsed.kilograms });
         setStatus(`Updated weight to ${formatWeight(parsed.kilograms, unit)}.`);
       } else {
@@ -110,6 +123,7 @@ export default function Analytics() {
 
   const onEdit = (s: WeightSample) => {
     setEditing(s);
+    setEditUnit(unit);
     setInput(String(toDisplayWeight(s.kilograms, unit)));
     setError(null);
     setStatus(null);
