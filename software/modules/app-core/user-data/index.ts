@@ -130,7 +130,11 @@ export {
 
 export {
   createWeightSample,
+  getWeightSample,
   listWeightSamples,
+  restoreWeightSample,
+  tombstoneWeightSample,
+  updateWeightSample,
   type WeightSample,
   type WeightSource,
 } from './weightSampleRepo';
