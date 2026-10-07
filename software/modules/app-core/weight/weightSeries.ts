@@ -42,6 +42,16 @@ export function parseWeightInput(text: string, unit: MassUnit): ParsedWeight {
   return { ok: true, kilograms };
 }
 
+/** Convert a valid draft between display units; invalid drafts cannot be preserved safely. */
+export function convertWeightInput(
+  text: string,
+  fromUnit: MassUnit,
+  toUnit: MassUnit,
+): string | null {
+  const parsed = parseWeightInput(text, fromUnit);
+  return parsed.ok ? String(toDisplayWeight(parsed.kilograms, toUnit)) : null;
+}
+
 /** Live samples within [now - days, now], ascending by timestamp. Tombstones excluded. */
 export function windowSamples(
   samples: readonly WeightSample[],

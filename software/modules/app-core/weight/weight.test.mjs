@@ -82,6 +82,12 @@ test('parseWeightInput rejects empty, non-numeric, implausible; accepts comma de
   assert.equal(c.kilograms, 72.4);
 });
 
+test('convertWeightInput preserves a new-entry draft across unit changes', () => {
+  assert.equal(weight.convertWeightInput('72.4', 'kg', 'lb'), '159.6');
+  assert.equal(weight.convertWeightInput('159.6', 'lb', 'kg'), '72.4');
+  assert.equal(weight.convertWeightInput('not-a-weight', 'kg', 'lb'), null);
+});
+
 test('create / edit / tombstone; deleted excluded from chart and summary', async () => {
   const db = await freshDb();
   const a = userData.createWeightSample(db, { timestamp: daysAgo(10), kilograms: 80 });
@@ -189,8 +195,8 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
     /const newestFirst = useMemo\(\(\) => samples\.slice\(\)\.reverse\(\), \[samples\]\);/,
     'Entries must use all live samples, not only the 30-day chart window',
   );
-  assert.match(screen, /const \[editUnit, setEditUnit\] = useState<MassUnit>\(unit\);/);
-  assert.match(screen, /if \(!editing \|\| editUnit === unit\) return;/);
-  assert.match(screen, /setInput\(String\(toDisplayWeight\(editing\.kilograms, unit\)\)\);/);
-  assert.match(screen, /const inputUnit = editing \? editUnit : unit;/);
+  assert.match(screen, /const \[draftUnit, setDraftUnit\] = useState<MassUnit>\(unit\);/);
+  assert.match(screen, /if \(draftUnit === unit\) return;/);
+  assert.match(screen, /convertWeightInput\(input, draftUnit, unit\) \?\? ''/);
+  assert.match(screen, /const parsed = parseWeightInput\(input, draftUnit\);/);
 });

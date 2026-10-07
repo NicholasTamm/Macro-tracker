@@ -22,6 +22,7 @@ import {
 } from '@/modules/app-core/user-data';
 import {
   chartPoints,
+  convertWeightInput,
   formatWeight,
   parseWeightInput,
   summarizeWeights,
@@ -46,7 +47,7 @@ export default function Analytics() {
   const [now, setNow] = useState(() => new Date());
   const [input, setInput] = useState('');
   const [editing, setEditing] = useState<WeightSample | null>(null);
-  const [editUnit, setEditUnit] = useState<MassUnit>(unit);
+  const [draftUnit, setDraftUnit] = useState<MassUnit>(unit);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
@@ -64,11 +65,17 @@ export default function Analytics() {
   );
 
   useEffect(() => {
-    if (!editing || editUnit === unit) return;
-    setInput(String(toDisplayWeight(editing.kilograms, unit)));
-    setEditUnit(unit);
+    if (draftUnit === unit) return;
+    if (input.trim() !== '') {
+      setInput(
+        editing
+          ? String(toDisplayWeight(editing.kilograms, unit))
+          : (convertWeightInput(input, draftUnit, unit) ?? ''),
+      );
+    }
+    setDraftUnit(unit);
     setError(null);
-  }, [editUnit, editing, unit]);
+  }, [draftUnit, editing, input, unit]);
 
   const windowed = useMemo(() => windowSamples(samples, now), [samples, now]);
   const summary = useMemo(() => summarizeWeights(windowed), [windowed]);
@@ -78,14 +85,13 @@ export default function Analytics() {
 
   const resetForm = () => {
     setEditing(null);
-    setEditUnit(unit);
+    setDraftUnit(unit);
     setInput('');
   };
 
   const onSubmit = () => {
     if (!db) return;
-    const inputUnit = editing ? editUnit : unit;
-    const parsed = parseWeightInput(input, inputUnit);
+    const parsed = parseWeightInput(input, draftUnit);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -94,8 +100,8 @@ export default function Analytics() {
       if (editing) {
         // Unchanged display text → keep canonical kg as-is (no unit round-trip drift).
         const unchanged =
-          toDisplayWeight(parsed.kilograms, inputUnit) ===
-          toDisplayWeight(editing.kilograms, inputUnit);
+          toDisplayWeight(parsed.kilograms, draftUnit) ===
+          toDisplayWeight(editing.kilograms, draftUnit);
         if (!unchanged) updateWeightSample(db, editing.id, { kilograms: parsed.kilograms });
         setStatus(`Updated weight to ${formatWeight(parsed.kilograms, unit)}.`);
       } else {
@@ -123,7 +129,7 @@ export default function Analytics() {
 
   const onEdit = (s: WeightSample) => {
     setEditing(s);
-    setEditUnit(unit);
+    setDraftUnit(unit);
     setInput(String(toDisplayWeight(s.kilograms, unit)));
     setError(null);
     setStatus(null);
