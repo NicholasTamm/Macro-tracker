@@ -32,3 +32,9 @@ test('Gallery scheme toggle has 44 min height and labels', () => {
   assert.match(src, /minHeight:\s*44/);
   assert.match(src, /Color scheme:/);
 });
+
+test('MacroSummary includes the selected energy unit in its accessibility summary', () => {
+  const src = readFileSync(join(componentsDir, 'MacroSummary.tsx'), 'utf8');
+  assert.match(src, /energyUnitForSpeech\(unit\)/);
+  assert.match(src, /a11yValue\('Energy', energyValue, energyUnit\)/);
+});

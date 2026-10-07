@@ -192,3 +192,15 @@ test('create rejects invalid barcode via save path', async () => {
   assert.equal(r.ok, false);
   assert.match(r.reason, /check digit|Barcode/i);
 });
+
+test('kJ custom-food input is stored as canonical kcal', async () => {
+  const db = await openDb();
+  const result = saveCustom.saveCustomFoodCreate(
+    db,
+    baseDraft({ energyKcalText: '418.4' }),
+    'kJ',
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.food.nutrients.energy_kcal, 100);
+  db.close();
+});
