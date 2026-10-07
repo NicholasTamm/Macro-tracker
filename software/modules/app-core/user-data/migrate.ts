@@ -1,11 +1,13 @@
 import type { SqlExecutor } from './sqlExecutor';
 import { USER_STORE_V1_SQL } from './schemaV1';
 import { USER_STORE_V2_PROFILE_SQL } from './schemaV2';
+import { USER_STORE_V3_SETTINGS_SQL } from './schemaV3';
 
-/** Current user-store schema version after M1-10 profile tables. */
-export const USER_STORE_SCHEMA_VERSION = '2';
+/** Current user-store schema version after M1-18 application settings. */
+export const USER_STORE_SCHEMA_VERSION = '3';
 
 export const USER_STORE_V1_VERSION = '1';
+export const USER_STORE_V2_VERSION = '2';
 
 export type MigrateResult = {
   applied: boolean;
@@ -14,16 +16,18 @@ export type MigrateResult = {
 };
 
 /**
- * Apply user-store v1 (food/diary) then v2 (profile/goal/target) as needed.
+ * Apply user-store v1 (food/diary), v2 (profile), then v3 (settings) as needed.
  * Pass optional SQL overrides; defaults use bundled schema strings (no fs).
  */
 export function migrateUserStore(
   db: SqlExecutor,
   schemaSql?: string,
   schemaV2Sql?: string,
+  schemaV3Sql?: string,
 ): MigrateResult {
   const v1 = schemaSql ?? USER_STORE_V1_SQL;
   const v2 = schemaV2Sql ?? USER_STORE_V2_PROFILE_SQL;
+  const v3 = schemaV3Sql ?? USER_STORE_V3_SETTINGS_SQL;
   db.exec('PRAGMA foreign_keys = ON;');
 
   const table = db.get<{ name: string }>(
@@ -72,17 +76,29 @@ export function migrateUserStore(
     db.exec(v2);
     db.run(
       "UPDATE schema_meta SET value = ? WHERE key = 'user_store_version'",
+      [USER_STORE_V2_VERSION],
+    );
+    applied = true;
+  }
+
+  const afterV2 = db.get<{ value: string }>(
+    "SELECT value FROM schema_meta WHERE key = 'user_store_version'",
+  );
+  if (afterV2?.value === USER_STORE_V2_VERSION) {
+    db.exec(v3);
+    db.run(
+      "UPDATE schema_meta SET value = ? WHERE key = 'user_store_version'",
       [USER_STORE_SCHEMA_VERSION],
     );
     return {
       applied: true,
       version: USER_STORE_SCHEMA_VERSION,
-      fromVersion: fromVersion ?? USER_STORE_V1_VERSION,
+      fromVersion: fromVersion ?? afterV1.value,
     };
   }
 
   throw new Error(
-    `Unsupported user store schema version ${afterV1.value}; expected ${USER_STORE_V1_VERSION} or ${USER_STORE_SCHEMA_VERSION}`,
+    `Unsupported user store schema version ${afterV2?.value ?? afterV1.value}; expected ${USER_STORE_V1_VERSION}, ${USER_STORE_V2_VERSION}, or ${USER_STORE_SCHEMA_VERSION}`,
   );
 }
 

@@ -14,6 +14,7 @@ import {
   type Sex,
 } from '@/modules/app-core/user-data';
 import { useTheme } from '@/design-system';
+import { isAdultBirthYear } from '@/modules/app-core/settings';
 
 export default function BiometricsScreen() {
   const { db, snapshot, refresh } = useUserData();
@@ -44,9 +45,7 @@ export default function BiometricsScreen() {
   const weightKg = massUnit === 'lb' ? lbToKg(weightNum) : weightNum;
 
   const valid =
-    Number.isFinite(year) &&
-    year >= 1900 &&
-    year <= new Date().getFullYear() - 18 &&
+    isAdultBirthYear(year) &&
     Number.isFinite(heightCm) &&
     heightCm > 0 &&
     Number.isFinite(weightKg) &&

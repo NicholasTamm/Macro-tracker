@@ -4,6 +4,7 @@
  * Write/quick-add paths belong to M1-16.
  */
 import type { LocalFoodRepository } from '../local-food-repo';
+import type { EnergyUnit } from '../../app-core/user-data/profileTypes';
 import {
   formatResultDetail,
   macrosFromNutrientMap,
@@ -48,6 +49,7 @@ function seedDetail(
   repo: LocalFoodRepository | null,
   foodStableId: string,
   fallbackLicense: string,
+  energyUnit: EnergyUnit,
 ): { detail: string; sourceLabel: string } {
   const empty = {
     energyKcal: null,
@@ -58,29 +60,35 @@ function seedDetail(
   if (!repo) {
     return {
       sourceLabel: fallbackLicense,
-      detail: formatResultDetail(fallbackLicense, empty),
+      detail: formatResultDetail(fallbackLicense, empty, energyUnit),
     };
   }
   const food = repo.getFood(foodStableId);
   if (!food) {
     return {
       sourceLabel: fallbackLicense,
-      detail: formatResultDetail(fallbackLicense, empty),
+      detail: formatResultDetail(fallbackLicense, empty, energyUnit),
     };
   }
   const source = repo.getSource(food.sourceId);
   const sourceLabel = source?.displayName ?? food.sourceId;
   const macros = macrosFromNutrientRows(repo.getNutrients(food.foodId));
-  return { sourceLabel, detail: formatResultDetail(sourceLabel, macros) };
+  return { sourceLabel, detail: formatResultDetail(sourceLabel, macros, energyUnit) };
 }
 
 function fromListed(
   prefix: string,
   rec: BrowseListRecord,
   repo: LocalFoodRepository | null,
+  energyUnit: EnergyUnit,
 ): BrowseItem {
   if (rec.foodKind === 'seed') {
-    const { detail, sourceLabel } = seedDetail(repo, rec.foodStableId, rec.foodLicenseTag);
+    const { detail, sourceLabel } = seedDetail(
+      repo,
+      rec.foodStableId,
+      rec.foodLicenseTag,
+      energyUnit,
+    );
     return {
       key: `${prefix}:${rec.foodKind}:${rec.foodStableId}`,
       foodKind: rec.foodKind,
@@ -102,12 +110,12 @@ function fromListed(
       proteinG: null,
       fatG: null,
       carbG: null,
-    }),
+    }, energyUnit),
     sourceLabel,
   };
 }
 
-function fromCustom(food: CustomBrowseRecord): BrowseItem {
+function fromCustom(food: CustomBrowseRecord, energyUnit: EnergyUnit): BrowseItem {
   const macros = macrosFromNutrientMap(food.nutrients);
   const sourceLabel = food.brand ? `My Foods · ${food.brand}` : 'My Foods';
   return {
@@ -115,7 +123,7 @@ function fromCustom(food: CustomBrowseRecord): BrowseItem {
     foodKind: 'custom',
     foodStableId: food.id,
     name: food.name,
-    detail: formatResultDetail(sourceLabel, macros),
+    detail: formatResultDetail(sourceLabel, macros, energyUnit),
     sourceLabel,
   };
 }
@@ -125,23 +133,25 @@ export function buildBrowseSections(input: {
   favorites?: BrowseListRecord[];
   myFoods?: CustomBrowseRecord[];
   seedRepo?: LocalFoodRepository | null;
+  energyUnit?: EnergyUnit;
 }): BrowseSection[] {
   const repo = input.seedRepo ?? null;
+  const energyUnit = input.energyUnit ?? 'kcal';
   return [
     {
       id: 'recent',
       title: 'Recent',
-      items: (input.recent ?? []).map((r) => fromListed('recent', r, repo)),
+      items: (input.recent ?? []).map((r) => fromListed('recent', r, repo, energyUnit)),
     },
     {
       id: 'favorites',
       title: 'Favorites',
-      items: (input.favorites ?? []).map((f) => fromListed('fav', f, repo)),
+      items: (input.favorites ?? []).map((f) => fromListed('fav', f, repo, energyUnit)),
     },
     {
       id: 'my_foods',
       title: 'My Foods',
-      items: (input.myFoods ?? []).map(fromCustom),
+      items: (input.myFoods ?? []).map((food) => fromCustom(food, energyUnit)),
     },
   ];
 }

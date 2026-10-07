@@ -82,9 +82,20 @@ test('formatResultDetail includes source and per-100 g macros', () => {
     carbG: 23,
   });
   assert.match(detail, /USDA SR Legacy/);
-  assert.match(detail, /89 Cal/);
+  assert.match(detail, /89 kcal/);
   assert.match(detail, /1P|1\.1P/);
   assert.match(detail, /per 100 g/);
+});
+
+test('formatResultDetail converts display energy without changing canonical kcal', () => {
+  const macros = {
+    energyKcal: 89,
+    proteinG: 1.1,
+    fatG: 0.3,
+    carbG: 23,
+  };
+  assert.match(formatResultDetail('USDA SR Legacy', macros, 'kJ'), /372 kJ/);
+  assert.equal(macros.energyKcal, 89);
 });
 
 test('macrosFromNutrientRows maps canonical IDs', () => {
@@ -238,6 +249,7 @@ test('ranking fixtures still hold after enrich (source/per-100g)', () => {
 
 test('browseSections assembles Recent / Favorites / My Foods', () => {
   const sections = buildBrowseSections({
+    energyUnit: 'kJ',
     recent: [
       {
         foodKind: 'seed',
@@ -270,5 +282,6 @@ test('browseSections assembles Recent / Favorites / My Foods', () => {
   assert.equal(sections[0].items[0].name, 'Bananas, raw');
   assert.equal(sections[1].items[0].name, 'Protein shake');
   assert.match(sections[2].items[0].detail, /My Foods/);
+  assert.match(sections[2].items[0].detail, /837 kJ/);
   assert.match(sections[2].items[0].detail, /per 100 g/);
 });

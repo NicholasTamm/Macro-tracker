@@ -1,5 +1,16 @@
 # Docs demos
 
+## Issue #63 — Settings smoke
+
+Validates persisted display units and theme, profile editing, USDA attribution, licenses, privacy placeholder, routes, typecheck, and tests.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-18-settings.sh
+```
+
+Writes `out/issue-63-smoke-result.txt` on success.
+
 ## Issue #13 — MVP backlog smoke
 
 Validates the Expo-reconciled backlog markdown (headings, task IDs, supersession keywords).
@@ -87,3 +98,15 @@ bash docs/demo/smoke-m1-17-weight.sh
 ```
 
 Writes `out/issue-64-smoke-result.txt` on success.
+
+## Issue #65 — Seed update client smoke
+
+Validates the disabled-by-default seed updater, signed-manifest tests, atomic
+rollback behavior, typecheck, and the complete serialized test suite.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-20-seed-update.sh
+```
+
+Writes `out/issue-65-smoke-result.txt` on success.
