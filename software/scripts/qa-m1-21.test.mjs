@@ -76,6 +76,57 @@ function walk(dir) {
   });
 }
 
+const DIRECTIONAL_TEXT_GLYPH = /[‹›«»←→⟨⟩◀▶❮❯]/;
+
+function directionalTextGlyphOffenders(path, source) {
+  const offenders = [];
+  const sourceFile = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+  function isRtlAware(node, expression) {
+    for (let current = node.parent; current && current !== expression; current = current.parent) {
+      if (
+        ts.isConditionalExpression(current)
+        && /\bI18nManager\.isRTL\b/.test(current.condition.getText(sourceFile))
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function inspectRenderedExpression(expression) {
+    function inspect(node) {
+      if (
+        (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
+        && DIRECTIONAL_TEXT_GLYPH.test(node.text)
+        && !isRtlAware(node, expression)
+      ) {
+        const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+        offenders.push(`${path}:${line + 1}: ${node.text}`);
+      }
+      ts.forEachChild(node, inspect);
+    }
+    if (expression.expression) inspect(expression.expression);
+  }
+
+  function visit(node) {
+    if (ts.isJsxText(node) && DIRECTIONAL_TEXT_GLYPH.test(node.text)) {
+      const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+      offenders.push(`${path}:${line + 1}: ${node.text.trim()}`);
+    } else if (
+      ts.isJsxExpression(node)
+      && (ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent))
+    ) {
+      inspectRenderedExpression(node);
+      return;
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return offenders;
+}
+
 test('QA source walker tolerates concurrently removed directories', () => {
   const root = mkdtempSync(join(tmpdir(), 'qa-source-walk-'));
   const removed = join(root, 'removed');
@@ -374,6 +425,22 @@ test('RTL: directional icon names are selected for the active direction', () => 
     settings,
     /name=\{I18nManager\.isRTL \? 'chevron-left' : 'chevron-right'\}/,
   );
+});
+
+test('RTL: directional text glyphs are selected for the active direction', () => {
+  assert.deepEqual(
+    directionalTextGlyphOffenders('example.tsx', "// <Text>‹</Text>\n<Text>{I18nManager.isRTL ? '›' : '‹'}</Text>"),
+    [],
+  );
+  assert.deepEqual(
+    directionalTextGlyphOffenders('example.tsx', "<Text>{delta < 0 ? '‹' : '›'}</Text>"),
+    ['example.tsx:1: ‹', 'example.tsx:1: ›'],
+  );
+
+  const offenders = tsxFiles().flatMap((p) =>
+    directionalTextGlyphOffenders(rel(p), readFileSync(p, 'utf8')),
+  );
+  assert.deepEqual(offenders, []);
 });
 
 test('Reduce Motion: modals do not force slide animation', () => {

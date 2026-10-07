@@ -60,7 +60,7 @@ Design note: the token changes are a11y overrides of the HTML design-system valu
 
 ## RTL smoke
 
-- Static: no `marginLeft/Right`, `paddingLeft/Right`, `left/right`, `border{Left,Right}*` in any `.tsx` (gated). Rows use `flexDirection: 'row'`, which RN mirrors under RTL; directional icon names cannot be hard-coded, and Settings selects its chevron with `I18nManager.isRTL`.
+- Static: no `marginLeft/Right`, `paddingLeft/Right`, `left/right`, `border{Left,Right}*` in any `.tsx` (gated). Rows use `flexDirection: 'row'`, which RN mirrors under RTL; directional icon names and rendered Unicode text glyphs cannot be hard-coded. Settings selects its chevron and Today selects its previous/next glyphs with `I18nManager.isRTL`.
 - Weight chart dots use `start:` so the time axis mirrors along with its captions.
 - Manual smoke (device / web): `I18nManager.forceRTL(true)` + reload, or Android "Force RTL layout direction"; check Today meal cards, MacroSummary separators, Search rows, sheets, Settings rows, Weight rows. *(Required device step.)*
 
