@@ -4,7 +4,7 @@
 **Checklist source:** [`issue-24-accessibility-localization.md`](./issue-24-accessibility-localization.md) (severity rubric: Critical / Major / Minor)  
 **Automated gates:** `software/scripts/qa-m1-21.test.mjs` · **Demo:** `bash docs/demo/smoke-m1-21-qa.sh`
 
-**Merged base:** `d33f79a` (including Settings #67 and Weight #69 from `origin/main` at `c04d756`) · **QA head:** current pass-6 fix commit (parent/reviewed head `62696db`)
+**Merged base:** `d33f79a` (including Settings #67 and Weight #69 from `origin/main` at `c04d756`) · **QA software tree:** `3530e5bb146ba52678091288eb1317a74e05d387` (also recorded with the tested HEAD in `out/issue-66-smoke-result.txt`)
 
 Open critical findings: **0**
 
@@ -31,6 +31,8 @@ Onboarding (`app/onboarding/*`), Today (`app/(tabs)/today.tsx`), Search (`app/(t
 | QA-11 | Localization | Strings are English literals; no i18n catalog yet. Numbers/dates use `toLocaleDateString` / fixed-decimal formatting | Minor (pre-catalog) | Tracked — catalog is M2 |
 | QA-12 | Contrast | Gallery's 11pt “DESIGN SYSTEM” caption used light `brand` at 2.21:1 on canvas | **Critical** (TC-03) | **Fixed** → `ink`; gate now covers every token used as a text foreground |
 | QA-13 | Contrast | Inputs, unselected choices, and secondary buttons used decorative `divider` for their control boundary (< 3:1) | Major (TC-04) | **Fixed** → dedicated `controlBorder` token, gated on canvas and raised surfaces |
+| QA-14 | Contrast | ErrorBanner message text used `muted` on education and translucent tint backgrounds (< 4.5:1) | **Critical** (TC-03) | **Fixed** → banner foreground (`ink` / `educationInk`); translucent backgrounds are composited before contrast is gated |
+| QA-15 | RTL | Settings used a hard-coded right chevron, so the glyph did not mirror in RTL | Major (RTL mirror) | **Fixed** → direction-aware left/right chevron; hard-coded directional icon names are gated |
 
 ## Contrast (WCAG AA, text 4.5:1)
 
@@ -45,7 +47,7 @@ Computed with WCAG 2.x relative luminance (`contrast()` in the QA test).
 | Dark | `muted` #a8a8a8 | 7.75 | 6.93 | 6.45 | 4.93 |
 | Dark | `danger` #ff8080 | 7.59 | 6.79 | 6.31 | 4.83 |
 
-Also gated: primary/selected-control text (`raised` on `ink`) ≥4.5; education text (`educationInk` on `education`) ≥4.5; weight chart dots (`weightTrend` on `band`) ≥3:1 non-text; and control boundaries (`controlBorder` on `canvas` and `raised`) ≥3:1 in both schemes. Light `controlBorder` is #8a8a8a (3.28:1 on canvas, 3.45:1 on raised); dark is #777777 (4.11:1 on canvas, 3.42:1 on raised).
+Also gated: primary/selected-control text (`raised` on `ink`) ≥4.5; education text (`educationInk` on `education`) ≥4.5; `ink` on every translucent ErrorBanner tint after compositing it over the canvas; weight chart dots (`weightTrend` on `band`) ≥3:1 non-text; and control boundaries (`controlBorder` on `canvas` and `raised`) ≥3:1 in both schemes. Light `controlBorder` is #8a8a8a (3.28:1 on canvas, 3.45:1 on raised); dark is #777777 (4.11:1 on canvas, 3.42:1 on raised).
 
 Design note: the token changes are a11y overrides of the HTML design-system values (`--app-muted`, `--app-danger`); the HTML library should be updated to match.
 
@@ -58,7 +60,7 @@ Design note: the token changes are a11y overrides of the HTML design-system valu
 
 ## RTL smoke
 
-- Static: no `marginLeft/Right`, `paddingLeft/Right`, `left/right`, `border{Left,Right}*` in any `.tsx` (gated). Rows use `flexDirection: 'row'`, which RN mirrors under RTL.
+- Static: no `marginLeft/Right`, `paddingLeft/Right`, `left/right`, `border{Left,Right}*` in any `.tsx` (gated). Rows use `flexDirection: 'row'`, which RN mirrors under RTL; directional icon names cannot be hard-coded, and Settings selects its chevron with `I18nManager.isRTL`.
 - Weight chart dots use `start:` so the time axis mirrors along with its captions.
 - Manual smoke (device / web): `I18nManager.forceRTL(true)` + reload, or Android "Force RTL layout direction"; check Today meal cards, MacroSummary separators, Search rows, sheets, Settings rows, Weight rows. *(Required device step.)*
 
@@ -74,7 +76,7 @@ Static gate covers labels/roles for every interactive control. Patterns verified
 
 ## Post-merge cross-check
 
-Settings PR #67 and Weight PR #69 are present in `origin/main` at `c04d756` and were merged into this branch at `d33f79a`. The static gates and full `bash docs/demo/smoke-m1-21-qa.sh` smoke were completed on the current post-merge QA tree; the regenerated result is recorded in `out/issue-66-smoke-result.txt`.
+Settings PR #67 and Weight PR #69 are present in `origin/main` at `c04d756` and were merged into this branch at `d33f79a`. The smoke script refuses dirty changes under `software/`, `docs/demo/`, or this report. The regenerated `out/issue-66-smoke-result.txt` records both the tested HEAD and the immutable `git rev-parse HEAD:software` tree hash, so the tested software contents can be verified independently of the later evidence-only commit.
 
 ## Device QA still required (not clearable by static analysis)
 

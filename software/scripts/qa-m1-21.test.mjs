@@ -27,6 +27,12 @@ const TEXT_PAIRED_TOKENS = [
   ['raised', 'ink'],
   ['educationInk', 'education'],
 ];
+const BANNER_TINTS = [
+  ['info', 'rgba(91,149,243,0.12)'],
+  ['success', 'rgba(70,174,116,0.12)'],
+  ['warning', 'rgba(255,194,65,0.17)'],
+  ['error', 'rgba(223,76,76,0.12)'],
+];
 const GATED_TEXT_TOKENS = new Set([
   ...TEXT_SURFACE_TOKENS,
   ...TEXT_PAIRED_TOKENS.map(([fg]) => fg),
@@ -164,6 +170,23 @@ function luminance(hex) {
   const lin = (v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
+
+function composite(foreground, background) {
+  const match = foreground.match(
+    /^rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(0(?:\.\d+)?|1(?:\.0+)?)\s*\)$/,
+  );
+  assert.ok(match, `expected rgba color, received ${foreground}`);
+  const alpha = Number(match[4]);
+  const backgroundHex = background.replace('#', '');
+  const backgroundChannels = [0, 2, 4].map((offset) =>
+    parseInt(backgroundHex.slice(offset, offset + 2), 16),
+  );
+  const channels = match.slice(1, 4).map((channel, index) =>
+    Math.round(Number(channel) * alpha + backgroundChannels[index] * (1 - alpha)),
+  );
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export function contrast(a, b) {
   const [x, y] = [luminance(a), luminance(b)];
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
@@ -220,6 +243,13 @@ test('WCAG AA text and non-text contrast for semantic tokens (light + dark)', ()
       const r = contrast(p[fg], p[bg]);
       if (r < 4.5) failures.push(`${scheme} ${fg} on ${bg}: ${r.toFixed(2)}`);
     }
+    // ErrorBanner tint colors are translucent, so measure their rendered color
+    // after compositing over the canvas where banners are placed.
+    for (const [tone, tint] of BANNER_TINTS) {
+      const background = composite(tint, p.canvas);
+      const r = contrast(p.ink, background);
+      if (r < 4.5) failures.push(`${scheme} ink on ${tone} banner: ${r.toFixed(2)}`);
+    }
     // Interactive control boundaries (WCAG 1.4.11) must remain visible on
     // both app and elevated surfaces; decorative dividers are intentionally separate.
     for (const bg of ['canvas', 'raised']) {
@@ -231,6 +261,18 @@ test('WCAG AA text and non-text contrast for semantic tokens (light + dark)', ()
     if (dot < 3) failures.push(`${scheme} weightTrend on band: ${dot.toFixed(2)}`);
   }
   assert.deepEqual(failures, []);
+});
+
+test('ErrorBanner text uses the foregrounds gated for every banner background', () => {
+  const source = readFileSync(
+    join(softwareRoot, 'design-system/components/ErrorBanner.tsx'),
+    'utf8',
+  );
+  assert.match(source, /const textColor = tone === 'education' \? colors\.educationInk : colors\.ink/);
+  assert.match(source, /typography\.caption, \{ color: textColor, marginTop: 2 \}/);
+  for (const [tone, tint] of BANNER_TINTS) {
+    assert.ok(source.includes(`'${tint}'`), `${tone} banner tint is not contrast-gated`);
+  }
 });
 
 test('no camera / mic / location permissions declared; sensitive ones blocked', () => {
@@ -298,6 +340,40 @@ test('RTL: layout uses start/end, not hard-coded left/right', () => {
       });
   }
   assert.deepEqual(offenders, []);
+});
+
+test('RTL: directional icon names are selected for the active direction', () => {
+  const offenders = [];
+  const directionalIcon = /(?:arrow|chevron|caret|navigate).*(?:left|right|back|forward|next|before)|(?:left|right|back|forward|next|before).*(?:arrow|chevron|caret|navigate)/;
+  for (const p of tsxFiles()) {
+    const source = readFileSync(p, 'utf8');
+    const sourceFile = ts.createSourceFile(p, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    function findHardCodedNames(node) {
+      if (ts.isJsxAttribute(node) && node.name.text === 'name') {
+        const value = ts.isStringLiteral(node.initializer)
+          ? node.initializer.text
+          : node.initializer
+            && ts.isJsxExpression(node.initializer)
+            && node.initializer.expression
+            && ts.isStringLiteral(node.initializer.expression)
+              ? node.initializer.expression.text
+              : undefined;
+        if (value && directionalIcon.test(value)) {
+          const { line } = sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+          offenders.push(`${rel(p)}:${line + 1}: ${value}`);
+        }
+      }
+      ts.forEachChild(node, findHardCodedNames);
+    }
+    findHardCodedNames(sourceFile);
+  }
+  assert.deepEqual(offenders, []);
+
+  const settings = readFileSync(join(softwareRoot, 'app/(tabs)/settings.tsx'), 'utf8');
+  assert.match(
+    settings,
+    /name=\{I18nManager\.isRTL \? 'chevron-left' : 'chevron-right'\}/,
+  );
 });
 
 test('Reduce Motion: modals do not force slide animation', () => {

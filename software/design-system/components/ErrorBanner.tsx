@@ -85,7 +85,7 @@ export function ErrorBanner({
           {title}
         </Text>
         {message ? (
-          <Text style={[typography.caption, { color: colors.muted, marginTop: 2 }]}>
+          <Text style={[typography.caption, { color: textColor, marginTop: 2 }]}>
             {message}
           </Text>
         ) : null}
