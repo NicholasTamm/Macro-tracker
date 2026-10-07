@@ -189,7 +189,7 @@ export default function Analytics() {
                   styles.input,
                   {
                     minHeight: 44,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     borderRadius: radius.control,
                     color: colors.ink,
                     backgroundColor: colors.raised,

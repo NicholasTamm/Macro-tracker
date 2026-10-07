@@ -61,7 +61,7 @@ export default function ProfileScreen() {
           minHeight: 44,
           color: colors.ink,
           backgroundColor: colors.raised,
-          borderColor: colors.divider,
+          borderColor: colors.controlBorder,
           borderWidth: 1,
           borderRadius: radius.card,
           paddingHorizontal: spacing.md,

@@ -12,6 +12,7 @@ export type AppPalette = {
   raised: string;
   control: string;
   divider: string;
+  controlBorder: string;
   ink: string;
   muted: string;
   overlayStage: string;
@@ -35,13 +36,16 @@ export const lightPalette: AppPalette = {
   raised: '#ffffff',
   control: '#ececec',
   divider: '#e5e5e5',
+  controlBorder: '#8a8a8a',
   ink: '#080808',
-  muted: '#777777',
+  // M1-21: darkened from #777777 (4.25:1 on canvas) to meet WCAG AA 4.5:1 on canvas/band/control.
+  muted: '#6b6b6b',
   overlayStage: '#202020',
   scrim: 'rgba(5,5,7,0.68)',
   educationInk: '#2e2140',
   brand: '#ff8b41',
-  danger: '#df4c4c',
+  // M1-21: darkened from #df4c4c (3.37:1 on control) — destructive labels are text.
+  danger: '#b83232',
   energy: '#5b95f3',
   protein: '#ff825b',
   fat: '#ffc241',
@@ -59,8 +63,12 @@ export const darkPalette: AppPalette = {
   raised: '#252525',
   control: '#383838',
   divider: '#3a3a3c',
+  controlBorder: '#777777',
   ink: '#f6f6f3',
-  muted: '#9a9a9a',
+  // M1-21: lightened from #9a9a9a (4.17:1 on control).
+  muted: '#a8a8a8',
+  // M1-21: dark-only danger (light #b83232 is ~2:1 on dark control).
+  danger: '#ff8080',
   overlayStage: '#141414',
 };
 
@@ -75,6 +83,7 @@ export const cssTokenMap = {
   '--app-raised': 'palette.raised',
   '--app-control': 'palette.control',
   '--app-divider': 'palette.divider',
+  '--app-control-border': 'palette.controlBorder',
   '--app-ink': 'palette.ink',
   '--app-muted': 'palette.muted',
   '--app-scrim': 'palette.scrim',

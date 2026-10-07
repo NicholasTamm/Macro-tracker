@@ -19,6 +19,8 @@ import {
   PrimaryButton,
   ErrorBanner,
   useTheme,
+  useReduceMotion,
+  modalAnimationFor,
 } from '@/design-system';
 import type { FoodDetailModel } from './buildFoodDetail';
 import { gramsUnitAvailable, unitChoiceFromSelection } from './buildFoodDetail';
@@ -88,6 +90,7 @@ export function FoodDetailSheet({
   onLogged,
 }: FoodDetailSheetProps) {
   const { colors, spacing, typography, radius } = useTheme();
+  const reduceMotion = useReduceMotion();
   const [qtyText, setQtyText] = useState('1');
   const [unitSelection, setUnitSelection] = useState('grams');
   const [mealSlotId, setMealSlotId] = useState<string | null>(null);
@@ -251,7 +254,7 @@ export function FoodDetailSheet({
   return (
     <Modal
       visible={visible && !!model}
-      animationType="slide"
+      animationType={modalAnimationFor(reduceMotion)}
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
       onRequestClose={onClose}
       accessibilityViewIsModal
@@ -322,7 +325,7 @@ export function FoodDetailSheet({
                   {
                     minHeight: 44,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     borderRadius: radius.card,
                     paddingHorizontal: spacing.md,
                     color: colors.ink,
@@ -460,7 +463,7 @@ export function FoodDetailSheet({
                   {
                     minHeight: 44,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     borderRadius: radius.card,
                     paddingHorizontal: spacing.md,
                     color: colors.ink,

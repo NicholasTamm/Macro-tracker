@@ -53,7 +53,7 @@ export function ErrorBanner({
               ? '#a66d00'
               : colors.ink;
 
-  const titleColor = tone === 'education' ? colors.educationInk : colors.ink;
+  const textColor = tone === 'education' ? colors.educationInk : colors.ink;
 
   return (
     <View
@@ -76,16 +76,16 @@ export function ErrorBanner({
           { borderColor: accent },
         ]}
       >
-        <Text style={{ color: accent, fontWeight: '800', fontSize: 9 }}>
+        <Text style={{ color: textColor, fontWeight: '800', fontSize: 9 }}>
           {tone === 'error' ? '!' : tone === 'success' ? '✓' : '●'}
         </Text>
       </View>
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={[typography.bodyStrong, { color: titleColor, fontSize: 12 }]}>
+        <Text style={[typography.bodyStrong, { color: textColor, fontSize: 12 }]}>
           {title}
         </Text>
         {message ? (
-          <Text style={[typography.caption, { color: colors.muted, marginTop: 2 }]}>
+          <Text style={[typography.caption, { color: textColor, marginTop: 2 }]}>
             {message}
           </Text>
         ) : null}
@@ -99,7 +99,7 @@ export function ErrorBanner({
             hitSlop={8}
             style={styles.hitTarget}
           >
-            <Text style={{ color: accent, fontSize: 11, fontWeight: '700' }}>
+            <Text style={{ color: textColor, fontSize: 11, fontWeight: '700' }}>
               {actionLabel}
             </Text>
           </Pressable>
@@ -112,7 +112,7 @@ export function ErrorBanner({
             hitSlop={8}
             style={styles.hitTarget}
           >
-            <Text style={{ color: accent, fontSize: 16 }}>×</Text>
+            <Text style={{ color: textColor, fontSize: 16 }}>×</Text>
           </Pressable>
         ) : null}
       </View>

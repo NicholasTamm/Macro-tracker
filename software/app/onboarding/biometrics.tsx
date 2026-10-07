@@ -62,7 +62,7 @@ export default function BiometricsScreen() {
         style={{
           minHeight: 44,
           borderWidth: 1,
-          borderColor: colors.divider,
+          borderColor: colors.controlBorder,
           borderRadius: radius.card,
           paddingHorizontal: spacing.md,
           color: colors.ink,

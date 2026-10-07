@@ -24,7 +24,7 @@ export function ChoiceRow({ label, selected, onPress, hint }: Props) {
           padding: spacing.md,
           borderRadius: radius.card,
           borderWidth: 1,
-          borderColor: selected ? colors.ink : colors.divider,
+          borderColor: selected ? colors.ink : colors.controlBorder,
           backgroundColor: selected ? colors.band : colors.raised,
           marginBottom: spacing.sm,
         },

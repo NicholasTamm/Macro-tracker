@@ -29,7 +29,7 @@ function GalleryBody() {
       contentContainerStyle={{ padding: spacing.lg, gap: spacing.xl, paddingBottom: 48 }}
     >
       <View>
-        <Text style={[typography.caption, { color: colors.brand, fontWeight: '800' }]}>
+        <Text style={[typography.caption, { color: colors.ink, fontWeight: '800' }]}>
           DESIGN SYSTEM
         </Text>
         <Text style={[typography.display, { color: colors.ink, marginTop: 8 }]}>

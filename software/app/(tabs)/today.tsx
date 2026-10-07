@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  I18nManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -195,7 +196,7 @@ function DateSelector({
       ]}
     >
       <Text style={{ color: colors.ink, fontSize: 18, fontWeight: '700' }}>
-        {delta < 0 ? '‹' : '›'}
+        {(delta < 0) === I18nManager.isRTL ? '›' : '‹'}
       </Text>
     </Pressable>
   );

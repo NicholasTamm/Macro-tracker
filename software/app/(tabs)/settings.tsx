@@ -1,5 +1,5 @@
 import { useState, type ComponentProps } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, I18nManager, Pressable, ScrollView, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -94,7 +94,7 @@ function SettingsRow({ label, icon, onPress, disabled = false }: { label: string
     >
       <Feather name={icon} size={22} color={colors.ink} />
       <Text style={[typography.body, { color: colors.ink, flex: 1 }]}>{label}</Text>
-      <Feather name="chevron-right" size={20} color={colors.muted} />
+      <Feather name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'} size={20} color={colors.muted} />
     </Pressable>
   );
 }

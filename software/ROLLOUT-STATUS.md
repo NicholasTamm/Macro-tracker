@@ -41,7 +41,7 @@
 | M1-18 | Settings / About / data sources | todo |
 | M1-19 | CSV/JSON export | **done** (issue #59) |
 | M1-20 | Seed updater (feature-flagged) | todo |
-| M1-21 | A11y / localization / privacy QA | todo (checklist in #24 docs; device QA outstanding) |
+| M1-21 | A11y / localization / privacy QA | **done (static)** (issue #66; Grok-built, PR pending Codex review; device QA steps in `docs/m1-21-a11y-l10n-privacy-qa.md`) |
 | M1-22 | Educational insight cards | todo |
 
 ## Paths added this pass

@@ -14,7 +14,13 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PrimaryButton, ErrorBanner, useTheme } from '@/design-system';
+import {
+  PrimaryButton,
+  ErrorBanner,
+  useTheme,
+  useReduceMotion,
+  modalAnimationFor,
+} from '@/design-system';
 import type { CustomFood, EnergyUnit, SqlExecutor } from '../../app-core/user-data';
 import { formatEnergyInput } from '../../app-core/settings/unitDisplay';
 import {
@@ -110,7 +116,7 @@ function Field({
           {
             minHeight: 44,
             borderWidth: StyleSheet.hairlineWidth,
-            borderColor: colors.divider,
+            borderColor: colors.controlBorder,
             borderRadius: radius.card,
             paddingHorizontal: spacing.md,
             color: colors.ink,
@@ -131,6 +137,7 @@ export function CustomFoodEditorSheet({
   onSaved,
 }: CustomFoodEditorSheetProps) {
   const { colors, spacing, typography, radius } = useTheme();
+  const reduceMotion = useReduceMotion();
   const isEdit = food != null;
   const [draft, setDraft] = useState<CustomFoodDraft>(() => draftFromFood(food, energyUnit));
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +185,7 @@ export function CustomFoodEditorSheet({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} animationType={modalAnimationFor(reduceMotion)} onRequestClose={onClose}>
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.canvas }]}>
         <View
           style={[
@@ -348,7 +355,7 @@ export function CustomFoodEditorSheet({
                     justifyContent: 'center',
                     borderRadius: radius.card,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     opacity: pressed || food.isArchived ? 0.5 : 1,
                   },
                 ]}

@@ -294,7 +294,7 @@ export default function SearchScreen() {
                 flex: 1,
                 color: colors.ink,
                 backgroundColor: colors.raised,
-                borderColor: colors.divider,
+                borderColor: colors.controlBorder,
                 borderRadius: radius.card,
                 paddingHorizontal: spacing.md,
                 minHeight: 44,
