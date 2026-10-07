@@ -325,7 +325,7 @@ export function FoodDetailSheet({
                   {
                     minHeight: 44,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     borderRadius: radius.card,
                     paddingHorizontal: spacing.md,
                     color: colors.ink,
@@ -463,7 +463,7 @@ export function FoodDetailSheet({
                   {
                     minHeight: 44,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     borderRadius: radius.card,
                     paddingHorizontal: spacing.md,
                     color: colors.ink,

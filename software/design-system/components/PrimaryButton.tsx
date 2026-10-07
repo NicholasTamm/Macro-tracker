@@ -40,7 +40,7 @@ export function PrimaryButton({
       : variant === 'destructive'
         ? colors.danger
         : colors.ink;
-  const borderColor = variant === 'secondary' ? colors.divider : 'transparent';
+  const borderColor = variant === 'secondary' ? colors.controlBorder : 'transparent';
 
   return (
     <Pressable

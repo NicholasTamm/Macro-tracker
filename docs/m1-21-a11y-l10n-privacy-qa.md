@@ -4,9 +4,11 @@
 **Checklist source:** [`issue-24-accessibility-localization.md`](./issue-24-accessibility-localization.md) (severity rubric: Critical / Major / Minor)  
 **Automated gates:** `software/scripts/qa-m1-21.test.mjs` · **Demo:** `bash docs/demo/smoke-m1-21-qa.sh`
 
+**Merged base:** `d33f79a` (including Settings #67 and Weight #69 from `origin/main` at `c04d756`) · **QA head:** current pass-6 fix commit (parent/reviewed head `62696db`)
+
 Open critical findings: **0**
 
-> Scope note: this pass audits `origin/main` (17ef72f) **plus** the open M1 PRs for Settings (#67 / M1-18) and Weight (#69 / M1-17), by running the static gates against a local merge of all three branches (see *Pre-merge cross-check*). Device-level checks (VoiceOver/TalkBack walkthroughs, max Dynamic Type, RTL on device) are listed under *Device QA still required* — static analysis cannot clear them.
+> Scope note: this pass audits the current post-merge QA tree. Settings (#67 / M1-18) and Weight (#69 / M1-17) are merged into the recorded base above, and the full smoke was completed again after those merges. Device-level checks (VoiceOver/TalkBack walkthroughs, max Dynamic Type, RTL on device) are listed under *Device QA still required* — static analysis cannot clear them.
 
 ## Surfaces covered
 
@@ -27,6 +29,8 @@ Onboarding (`app/onboarding/*`), Today (`app/(tabs)/today.tsx`), Search (`app/(t
 | QA-09 | Typography | `Typography.micro` (9pt) still exists; not used for essential info on audited surfaces | Minor | Tracked (Dynamic Type helper is post-M1) |
 | QA-10 | ErrorBanner | Tint backgrounds are hard-coded `rgba(...)` from old token values; text uses `ink`, so contrast holds | Minor | Tracked |
 | QA-11 | Localization | Strings are English literals; no i18n catalog yet. Numbers/dates use `toLocaleDateString` / fixed-decimal formatting | Minor (pre-catalog) | Tracked — catalog is M2 |
+| QA-12 | Contrast | Gallery's 11pt “DESIGN SYSTEM” caption used light `brand` at 2.21:1 on canvas | **Critical** (TC-03) | **Fixed** → `ink`; gate now covers every token used as a text foreground |
+| QA-13 | Contrast | Inputs, unselected choices, and secondary buttons used decorative `divider` for their control boundary (< 3:1) | Major (TC-04) | **Fixed** → dedicated `controlBorder` token, gated on canvas and raised surfaces |
 
 ## Contrast (WCAG AA, text 4.5:1)
 
@@ -41,7 +45,7 @@ Computed with WCAG 2.x relative luminance (`contrast()` in the QA test).
 | Dark | `muted` #a8a8a8 | 7.75 | 6.93 | 6.45 | 4.93 |
 | Dark | `danger` #ff8080 | 7.59 | 6.79 | 6.31 | 4.83 |
 
-Also gated: primary button (`raised` on `ink`) ≥4.5 both schemes; weight chart dots (`weightTrend` on `band`) ≥3:1 non-text (light 3.07, dark 4.75).
+Also gated: primary/selected-control text (`raised` on `ink`) ≥4.5; education text (`educationInk` on `education`) ≥4.5; weight chart dots (`weightTrend` on `band`) ≥3:1 non-text; and control boundaries (`controlBorder` on `canvas` and `raised`) ≥3:1 in both schemes. Light `controlBorder` is #8a8a8a (3.28:1 on canvas, 3.45:1 on raised); dark is #777777 (4.11:1 on canvas, 3.42:1 on raised).
 
 Design note: the token changes are a11y overrides of the HTML design-system values (`--app-muted`, `--app-danger`); the HTML library should be updated to match.
 
@@ -68,9 +72,9 @@ Design note: the token changes are a11y overrides of the HTML design-system valu
 
 Static gate covers labels/roles for every interactive control. Patterns verified: PrimaryButton (role button, label, disabled state), FoodRow action, ErrorBanner `alert` role + labeled dismiss, ChoiceRow/selection chips with `selected` state, sheets with `accessibilityViewIsModal`, Weight per-row "Edit/Delete <weight> on <date>" labels and live-region status.
 
-## Pre-merge cross-check
+## Post-merge cross-check
 
-Static gates were run on a throwaway local merge of `origin/main` + `worktree-63-settings` (PR #67) + `worktree-64-weight` (PR #69) + this branch — result recorded in the PR body. Re-run `bash docs/demo/smoke-m1-21-qa.sh` on `main` after #67/#69 land.
+Settings PR #67 and Weight PR #69 are present in `origin/main` at `c04d756` and were merged into this branch at `d33f79a`. The static gates and full `bash docs/demo/smoke-m1-21-qa.sh` smoke were completed on the current post-merge QA tree; the regenerated result is recorded in `out/issue-66-smoke-result.txt`.
 
 ## Device QA still required (not clearable by static analysis)
 

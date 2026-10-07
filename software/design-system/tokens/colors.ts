@@ -12,6 +12,7 @@ export type AppPalette = {
   raised: string;
   control: string;
   divider: string;
+  controlBorder: string;
   ink: string;
   muted: string;
   overlayStage: string;
@@ -35,6 +36,7 @@ export const lightPalette: AppPalette = {
   raised: '#ffffff',
   control: '#ececec',
   divider: '#e5e5e5',
+  controlBorder: '#8a8a8a',
   ink: '#080808',
   // M1-21: darkened from #777777 (4.25:1 on canvas) to meet WCAG AA 4.5:1 on canvas/band/control.
   muted: '#6b6b6b',
@@ -61,6 +63,7 @@ export const darkPalette: AppPalette = {
   raised: '#252525',
   control: '#383838',
   divider: '#3a3a3c',
+  controlBorder: '#777777',
   ink: '#f6f6f3',
   // M1-21: lightened from #9a9a9a (4.17:1 on control).
   muted: '#a8a8a8',
@@ -80,6 +83,7 @@ export const cssTokenMap = {
   '--app-raised': 'palette.raised',
   '--app-control': 'palette.control',
   '--app-divider': 'palette.divider',
+  '--app-control-border': 'palette.controlBorder',
   '--app-ink': 'palette.ink',
   '--app-muted': 'palette.muted',
   '--app-scrim': 'palette.scrim',

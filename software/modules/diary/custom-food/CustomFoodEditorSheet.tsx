@@ -116,7 +116,7 @@ function Field({
           {
             minHeight: 44,
             borderWidth: StyleSheet.hairlineWidth,
-            borderColor: colors.divider,
+            borderColor: colors.controlBorder,
             borderRadius: radius.card,
             paddingHorizontal: spacing.md,
             color: colors.ink,
@@ -355,7 +355,7 @@ export function CustomFoodEditorSheet({
                     justifyContent: 'center',
                     borderRadius: radius.card,
                     borderWidth: StyleSheet.hairlineWidth,
-                    borderColor: colors.divider,
+                    borderColor: colors.controlBorder,
                     opacity: pressed || food.isArchived ? 0.5 : 1,
                   },
                 ]}

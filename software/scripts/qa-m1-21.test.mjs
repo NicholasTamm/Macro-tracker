@@ -16,28 +16,41 @@ import {
 import { tmpdir } from 'node:os';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { execFileSync } from 'node:child_process';
+import ts from 'typescript';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const softwareRoot = join(__dirname, '..');
 const bundleDir = join(__dirname, '.bundle');
 const UI_DIRS = ['app', 'components', 'design-system', 'modules'];
+const TEXT_SURFACE_TOKENS = ['ink', 'muted', 'danger'];
+const TEXT_PAIRED_TOKENS = [
+  ['raised', 'ink'],
+  ['educationInk', 'education'],
+];
+const GATED_TEXT_TOKENS = new Set([
+  ...TEXT_SURFACE_TOKENS,
+  ...TEXT_PAIRED_TOKENS.map(([fg]) => fg),
+]);
+const TEXT_COLOR_PROPERTIES = new Set([
+  'color',
+  'placeholderTextColor',
+  'headerTintColor',
+  'tabBarActiveTintColor',
+  'tabBarInactiveTintColor',
+]);
 
 let colors;
 
 before(async () => {
   mkdirSync(bundleDir, { recursive: true });
   writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({ type: 'module' }));
-  execFileSync(
-    join(softwareRoot, 'node_modules/esbuild/bin/esbuild'),
-    [
-      join(softwareRoot, 'design-system/tokens/colors.ts'),
-      '--bundle',
-      '--platform=node',
-      '--format=esm',
-      `--outfile=${join(bundleDir, 'colors.js')}`,
-    ],
-    { cwd: softwareRoot, stdio: 'pipe' },
+  const source = readFileSync(join(softwareRoot, 'design-system/tokens/colors.ts'), 'utf8');
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  });
+  writeFileSync(
+    join(bundleDir, 'colors.js'),
+    compiled.outputText,
   );
   colors = await import(pathToFileURL(join(bundleDir, 'colors.js')).href);
 });
@@ -73,6 +86,58 @@ const tsxFiles = () =>
   UI_DIRS.flatMap((d) => walk(join(softwareRoot, d))).filter((p) => p.endsWith('.tsx'));
 const rel = (p) => relative(softwareRoot, p);
 
+function textColorTokens(path) {
+  const source = readFileSync(path, 'utf8');
+  const sourceFile = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const declarations = new Map();
+  const tokens = new Set();
+
+  function indexDeclarations(node) {
+    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer) {
+      declarations.set(node.name.text, node.initializer);
+    }
+    ts.forEachChild(node, indexDeclarations);
+  }
+
+  function collectTokens(node, resolving = new Set()) {
+    if (
+      ts.isPropertyAccessExpression(node)
+      && ts.isIdentifier(node.expression)
+      && node.expression.text === 'colors'
+    ) {
+      tokens.add(node.name.text);
+      return;
+    }
+    if (ts.isIdentifier(node) && declarations.has(node.text) && !resolving.has(node.text)) {
+      const nextResolving = new Set(resolving).add(node.text);
+      collectTokens(declarations.get(node.text), nextResolving);
+      return;
+    }
+    ts.forEachChild(node, (child) => collectTokens(child, resolving));
+  }
+
+  function propertyName(node) {
+    if (ts.isIdentifier(node) || ts.isStringLiteral(node)) return node.text;
+    return undefined;
+  }
+
+  function findTextColors(node) {
+    if (ts.isPropertyAssignment(node) && TEXT_COLOR_PROPERTIES.has(propertyName(node.name))) {
+      collectTokens(node.initializer);
+    }
+    if (ts.isJsxAttribute(node) && TEXT_COLOR_PROPERTIES.has(node.name.text)) {
+      if (node.initializer && ts.isJsxExpression(node.initializer) && node.initializer.expression) {
+        collectTokens(node.initializer.expression);
+      }
+    }
+    ts.forEachChild(node, findTextColors);
+  }
+
+  indexDeclarations(sourceFile);
+  findTextColors(sourceFile);
+  return tokens;
+}
+
 const BUNDLED_ASSET_FETCH = {
   path: 'components/FoodCatalogProvider.tsx',
   line: 'const response = await fetch(uri);',
@@ -104,21 +169,63 @@ export function contrast(a, b) {
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
 
-test('WCAG AA text contrast for semantic tokens (light + dark)', () => {
+test('every text color token is registered in the contrast gate', () => {
+  const used = new Set();
+  for (const p of tsxFiles()) {
+    for (const token of textColorTokens(p)) used.add(token);
+  }
+  assert.deepEqual(
+    [...used].filter((token) => !GATED_TEXT_TOKENS.has(token)).sort(),
+    [],
+    `ungated text foreground tokens: ${[...used].filter((token) => !GATED_TEXT_TOKENS.has(token)).sort().join(', ')}`,
+  );
+  assert.deepEqual([...used].sort(), [...GATED_TEXT_TOKENS].sort());
+});
+
+test('interactive control boundaries use the non-text contrast token', () => {
+  let inputCount = 0;
+  for (const p of tsxFiles()) {
+    const source = readFileSync(p, 'utf8');
+    for (const match of source.matchAll(/<TextInput\b[\s\S]*?\/>/g)) {
+      inputCount += 1;
+      assert.match(match[0], /borderColor:\s*colors\.controlBorder/, rel(p));
+    }
+  }
+  assert.ok(inputCount > 0, 'expected to audit at least one text input');
+
+  const choice = readFileSync(join(softwareRoot, 'app/onboarding/ChoiceRow.tsx'), 'utf8');
+  assert.match(choice, /selected\s*\?\s*colors\.ink\s*:\s*colors\.controlBorder/);
+
+  const button = readFileSync(
+    join(softwareRoot, 'design-system/components/PrimaryButton.tsx'),
+    'utf8',
+  );
+  assert.match(button, /variant === 'secondary'\s*\?\s*colors\.controlBorder/);
+});
+
+test('WCAG AA text and non-text contrast for semantic tokens (light + dark)', () => {
   const surfaces = ['canvas', 'band', 'raised', 'control'];
   const failures = [];
   for (const scheme of ['light', 'dark']) {
     const p = colors.paletteFor(scheme);
-    // Body text roles must hit 4.5:1 on every surface they sit on.
-    for (const fg of ['ink', 'muted', 'danger']) {
+    // Every text role used on general app surfaces must hit 4.5:1.
+    for (const fg of TEXT_SURFACE_TOKENS) {
       for (const bg of surfaces) {
         const r = contrast(p[fg], p[bg]);
         if (r < 4.5) failures.push(`${scheme} ${fg} on ${bg}: ${r.toFixed(2)}`);
       }
     }
-    // Primary button: raised label on ink fill.
-    const btn = contrast(p.raised, p.ink);
-    if (btn < 4.5) failures.push(`${scheme} raised on ink: ${btn.toFixed(2)}`);
+    // Remaining text roles have a single, intentional background pairing.
+    for (const [fg, bg] of TEXT_PAIRED_TOKENS) {
+      const r = contrast(p[fg], p[bg]);
+      if (r < 4.5) failures.push(`${scheme} ${fg} on ${bg}: ${r.toFixed(2)}`);
+    }
+    // Interactive control boundaries (WCAG 1.4.11) must remain visible on
+    // both app and elevated surfaces; decorative dividers are intentionally separate.
+    for (const bg of ['canvas', 'raised']) {
+      const r = contrast(p.controlBorder, p[bg]);
+      if (r < 3) failures.push(`${scheme} controlBorder on ${bg}: ${r.toFixed(2)}`);
+    }
     // Weight chart dots (non-text, WCAG 1.4.11) on band plot.
     const dot = contrast(p.weightTrend, p.band);
     if (dot < 3) failures.push(`${scheme} weightTrend on band: ${dot.toFixed(2)}`);
