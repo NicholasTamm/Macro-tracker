@@ -88,6 +88,17 @@ bash docs/demo/smoke-a11y-l10n.sh
 
 Writes `out/issue-24-smoke-result.txt` on success/failure.
 
+## Issue #64 — M1-17 Weight samples + 30-day chart
+
+Weight create/edit/soft-delete on `weight_sample` (canonical kg, entry in profile kg/lb), 30-day View-based chart (no chart deps) with an accessible text summary (count/latest/min/max/change), empty + sparse copy. Screen: Analytics tab.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-17-weight.sh
+```
+
+Writes `out/issue-64-smoke-result.txt` on success.
+
 ## Issue #65 — Seed update client smoke
 
 Validates the disabled-by-default seed updater, signed-manifest tests, atomic
