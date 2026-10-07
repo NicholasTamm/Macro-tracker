@@ -95,6 +95,47 @@ test('profile display conversion validates positive finite values', () => {
   assert.equal(settings.formatEnergy(100, 'kJ'), '418');
 });
 
+test('profile save preserves canonical measurements that were not edited', async () => {
+  const db = await openDb();
+  userData.ensureProfile(db);
+  userData.updateProfile(db, { heightCm: 180, weightKg: 80 });
+
+  const heightDisplay = settings.formatHeight(180, 'in');
+  const weightDisplay = settings.formatMass(80, 'lb');
+  const patch = settings.profileEditPatch({
+    sex: 'unspecified',
+    birthYear: 1990,
+    heightCm: settings.displayHeightToCm(heightDisplay, 'in'),
+    weightKg: settings.displayMassToKg(weightDisplay, 'lb'),
+    heightEdited: false,
+    weightEdited: false,
+  });
+  userData.updateProfile(db, patch);
+
+  assert.equal(heightDisplay, '70.9');
+  assert.equal(settings.displayHeightToCm(heightDisplay, 'in'), 180.1);
+  assert.equal(userData.getProfile(db).heightCm, 180);
+  assert.equal(userData.getProfile(db).weightKg, 80);
+
+  userData.updateProfile(db, settings.profileEditPatch({
+    sex: 'unspecified',
+    birthYear: 1990,
+    heightCm: 181,
+    weightKg: 81,
+    heightEdited: true,
+    weightEdited: true,
+  }));
+  assert.equal(userData.getProfile(db).heightCm, 181);
+  assert.equal(userData.getProfile(db).weightKg, 81);
+  db.close();
+});
+
+test('profile birth year requires the user to remain at least 18', () => {
+  assert.equal(settings.isAdultBirthYear(2006, 2024), true);
+  assert.equal(settings.isAdultBirthYear(2007, 2024), false);
+  assert.equal(settings.isAdultBirthYear(1899, 2024), false);
+});
+
 test('energy input conversion preserves canonical kcal storage', () => {
   assert.equal(settings.formatEnergyInput(100, 'kJ'), '418.4');
   assert.equal(settings.energyInputToKcalText('418.4', 'kJ'), '100');

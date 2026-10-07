@@ -9,6 +9,7 @@ import type {
   EnergyUnit,
   HeightUnit,
   MassUnit,
+  Sex,
 } from '../user-data/profileTypes';
 import type { ProfilePatch } from '../user-data/profileRepo';
 
@@ -21,6 +22,26 @@ export type UnitPreferences = {
 /** A display-only unit update: no canonical measurement fields are included. */
 export function unitPreferencePatch(units: UnitPreferences): ProfilePatch {
   return { ...units };
+}
+
+export function isAdultBirthYear(year: number, currentYear = new Date().getFullYear()): boolean {
+  return Number.isInteger(year) && year >= 1900 && year <= currentYear - 18;
+}
+
+export function profileEditPatch(input: {
+  sex: Sex;
+  birthYear: number;
+  heightCm: number;
+  weightKg: number;
+  heightEdited: boolean;
+  weightEdited: boolean;
+}): ProfilePatch {
+  return {
+    sex: input.sex,
+    birthYear: input.birthYear,
+    ...(input.heightEdited ? { heightCm: input.heightCm } : {}),
+    ...(input.weightEdited ? { weightKg: input.weightKg } : {}),
+  };
 }
 
 export function formatMass(kg: number | null, unit: MassUnit): string {

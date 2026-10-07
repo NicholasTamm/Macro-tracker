@@ -8,6 +8,8 @@ import {
   displayMassToKg,
   formatHeight,
   formatMass,
+  isAdultBirthYear,
+  profileEditPatch,
 } from '@/modules/app-core/settings';
 import { ChoiceRow } from '@/app/onboarding/ChoiceRow';
 import { SettingsShell } from './SettingsShell';
@@ -22,6 +24,8 @@ export default function ProfileScreen() {
   const [birthYear, setBirthYear] = useState(profile?.birthYear == null ? '' : String(profile.birthYear));
   const [height, setHeight] = useState(formatHeight(profile?.heightCm ?? null, heightUnit));
   const [weight, setWeight] = useState(formatMass(profile?.weightKg ?? null, massUnit));
+  const [heightEdited, setHeightEdited] = useState(false);
+  const [weightEdited, setWeightEdited] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const hydrated = useRef(false);
 
@@ -40,7 +44,7 @@ export default function ProfileScreen() {
       year,
       heightCm: displayHeightToCm(height, heightUnit),
       weightKg: displayMassToKg(weight, massUnit),
-      validYear: birthYear.trim() !== '' && Number.isInteger(year) && year >= 1900 && year <= new Date().getFullYear(),
+      validYear: isAdultBirthYear(year),
     };
   }, [birthYear, height, heightUnit, weight, massUnit]);
   const valid = parsed.validYear && parsed.heightCm != null && parsed.weightKg != null;
@@ -75,17 +79,32 @@ export default function ProfileScreen() {
         <ChoiceRow label="Other" selected={sex === 'other'} onPress={() => setSex('other')} />
         <ChoiceRow label="Prefer not to say" selected={sex === 'unspecified'} onPress={() => setSex('unspecified')} />
         {field('Birth year', null, birthYear, setBirthYear)}
-        {field('Height', heightUnit, height, setHeight)}
-        {field('Weight', massUnit, weight, setWeight)}
+        {field('Height', heightUnit, height, (value) => {
+          setHeight(value);
+          setHeightEdited(true);
+        })}
+        {field('Weight', massUnit, weight, (value) => {
+          setWeight(value);
+          setWeightEdited(true);
+        })}
       </Card>
-      {!valid ? <Text style={[typography.caption, { color: colors.danger }]}>Enter a valid birth year and positive height and weight.</Text> : null}
+      {!valid ? <Text style={[typography.caption, { color: colors.danger }]}>Enter an adult birth year and positive height and weight.</Text> : null}
       <PrimaryButton
         label="Save profile"
         disabled={!db || !valid}
         onPress={() => {
           if (!db || !valid || parsed.heightCm == null || parsed.weightKg == null) return;
-          updateProfile(db, { sex, birthYear: parsed.year, heightCm: parsed.heightCm, weightKg: parsed.weightKg });
+          updateProfile(db, profileEditPatch({
+            sex,
+            birthYear: parsed.year,
+            heightCm: parsed.heightCm,
+            weightKg: parsed.weightKg,
+            heightEdited,
+            weightEdited,
+          }));
           refresh();
+          setHeightEdited(false);
+          setWeightEdited(false);
           setMessage('Profile saved.');
         }}
       />
