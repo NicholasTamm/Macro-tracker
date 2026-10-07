@@ -28,7 +28,7 @@ import {
   parseQuantityInput,
   quantityErrorMessage,
 } from './parseQuantity';
-import type { SqlExecutor } from '../../app-core/user-data';
+import type { EnergyUnit, SqlExecutor } from '../../app-core/user-data';
 import {
   ensureDefaultMealSlots,
   getRecentFood,
@@ -48,6 +48,7 @@ export type FoodDetailSheetProps = {
   visible: boolean;
   model: FoodDetailModel | null;
   db: SqlExecutor | null;
+  energyUnit: EnergyUnit;
   /** Pre-select meal slot when opened from a Today slot (optional). */
   initialMealSlotId?: string | null;
   onClose: () => void;
@@ -81,6 +82,7 @@ export function FoodDetailSheet({
   visible,
   model,
   db,
+  energyUnit,
   initialMealSlotId = null,
   onClose,
   onLogged,
@@ -487,7 +489,7 @@ export function FoodDetailSheet({
               {preview && !preview.ok ? (
                 <ErrorBanner title="Cannot calculate" message={preview.reason} tone="error" />
               ) : (
-                <MacroSummary totals={macros} />
+                <MacroSummary totals={macros} energyUnit={energyUnit} />
               )}
               {preview && preview.ok && preview.grams != null ? (
                 <Text style={[typography.micro, { color: colors.muted }]}>

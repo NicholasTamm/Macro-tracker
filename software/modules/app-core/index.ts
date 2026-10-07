@@ -32,3 +32,4 @@ export type AppRoute =
 export * from './user-data';
 
 export * from './export';
+export * from './settings';

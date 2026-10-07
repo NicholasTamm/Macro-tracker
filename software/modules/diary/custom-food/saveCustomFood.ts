@@ -3,8 +3,10 @@ import {
   createCustomFood,
   updateCustomFood,
   type CustomFood,
+  type EnergyUnit,
   type SqlExecutor,
 } from '../../app-core/user-data';
+import { energyInputToKcalText } from '../../app-core/settings/unitDisplay';
 import { validateCustomFoodDraft, type CustomFoodDraft } from './validateDraft';
 
 export type SaveCustomFoodResult =
@@ -14,8 +16,12 @@ export type SaveCustomFoodResult =
 export function saveCustomFoodCreate(
   db: SqlExecutor,
   draft: CustomFoodDraft,
+  energyUnit: EnergyUnit = 'kcal',
 ): SaveCustomFoodResult {
-  const v = validateCustomFoodDraft(draft);
+  const v = validateCustomFoodDraft({
+    ...draft,
+    energyKcalText: energyInputToKcalText(draft.energyKcalText, energyUnit),
+  });
   if (!v.ok) return v;
   try {
     const food = createCustomFood(db, {
@@ -38,8 +44,12 @@ export function saveCustomFoodEdit(
   db: SqlExecutor,
   id: string,
   draft: CustomFoodDraft,
+  energyUnit: EnergyUnit = 'kcal',
 ): SaveCustomFoodResult {
-  const v = validateCustomFoodDraft(draft);
+  const v = validateCustomFoodDraft({
+    ...draft,
+    energyKcalText: energyInputToKcalText(draft.energyKcalText, energyUnit),
+  });
   if (!v.ok) return v;
   try {
     const food = updateCustomFood(db, id, {
