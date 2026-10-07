@@ -5,7 +5,15 @@
  */
 import { test, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync } from 'node:fs';
+import {
+  readFileSync,
+  readdirSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -35,12 +43,32 @@ before(async () => {
 });
 
 function walk(dir) {
-  return readdirSync(dir).flatMap((f) => {
-    if (f === 'node_modules' || f.startsWith('.')) return [];
-    const p = join(dir, f);
-    return statSync(p).isDirectory() ? walk(p) : [p];
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+  return entries.flatMap((entry) => {
+    if (entry.name === 'node_modules' || entry.name.startsWith('.')) return [];
+    const p = join(dir, entry.name);
+    return entry.isDirectory() ? walk(p) : [p];
   });
 }
+
+test('QA source walker tolerates concurrently removed directories', () => {
+  const root = mkdtempSync(join(tmpdir(), 'qa-source-walk-'));
+  const removed = join(root, 'removed');
+  mkdirSync(removed);
+  rmSync(removed, { recursive: true });
+  try {
+    assert.deepEqual(walk(removed), []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 const tsxFiles = () =>
   UI_DIRS.flatMap((d) => walk(join(softwareRoot, d))).filter((p) => p.endsWith('.tsx'));
 const rel = (p) => relative(softwareRoot, p);
