@@ -24,6 +24,8 @@ export type DiaryEntry = {
 };
 
 export type DiaryEntryCreate = {
+  /** Optional stable ID used by callers that need idempotent creation. */
+  id?: string;
   timestamp: string;
   localDayKey: string;
   timezoneIdentifier: string;
@@ -64,7 +66,7 @@ function mapRow(row: Record<string, unknown>): DiaryEntry {
 }
 
 export function createDiaryEntry(db: SqlExecutor, input: DiaryEntryCreate): DiaryEntry {
-  const id = newEntityId();
+  const id = input.id ?? newEntityId();
   const ts = nowIso();
   db.run(
     `INSERT INTO diary_entry (

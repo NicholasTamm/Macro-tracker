@@ -1,5 +1,18 @@
 # Docs demos
 
+## Issue #71 — M1-22 Theme/diary integrity
+
+Validates that repeated system/light/dark saves, provider refreshes, Today reloads,
+and sql.js persistence do not create, duplicate, restore, delete, or mutate diary
+rows. Also verifies idempotent replay of one banana log intent.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-71.sh
+```
+
+Writes `out/issue-71-smoke-result.txt` on success.
+
 ## Issue #63 — Settings smoke
 
 Validates persisted display units and theme, profile editing, USDA attribution, licenses, privacy placeholder, routes, typecheck, and tests.
