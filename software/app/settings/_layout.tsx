@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { useTheme } from '@/design-system';
+import { HeaderBackButton } from '@/components/HeaderBackButton';
 
 export default function SettingsLayout() {
   const { colors } = useTheme();
@@ -8,6 +9,13 @@ export default function SettingsLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.canvas },
         headerTintColor: colors.ink,
+        headerBackVisible: false,
+        headerLeft: ({ tintColor }) => (
+          <HeaderBackButton
+            label="Back to Settings"
+            tintColor={tintColor ?? colors.ink}
+          />
+        ),
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.canvas },
       }}
