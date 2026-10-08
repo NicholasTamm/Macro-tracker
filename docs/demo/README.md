@@ -1,5 +1,18 @@
 # Docs demos
 
+## Issue #73 — sql.js WASM on direct web routes
+
+Runs focused and full tests, then uses headless Chrome network logs to verify
+root, direct settings routes, and a profile refresh request the stable sql.js
+WASM URL without a route-relative request or failure UI.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-73.sh
+```
+
+Writes `out/issue-73-smoke-result.txt` on success.
+
 ## Issue #72 — Expo web WASM startup
 
 Clean-installs dependencies, verifies the generated sql.js browser WASM, runs
