@@ -1,14 +1,15 @@
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { I18nManager, Pressable } from 'react-native';
 import { useState } from 'react';
 
 type Props = {
+  destination: Href;
   label: string;
   tintColor: string;
 };
 
-export function HeaderBackButton({ label, tintColor }: Props) {
+export function HeaderBackButton({ destination, label, tintColor }: Props) {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -17,7 +18,7 @@ export function HeaderBackButton({ label, tintColor }: Props) {
       accessibilityRole="button"
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      onPress={() => router.back()}
+      onPress={() => router.replace(destination)}
       style={{
         width: 44,
         height: 44,

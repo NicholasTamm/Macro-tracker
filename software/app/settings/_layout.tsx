@@ -12,6 +12,7 @@ export default function SettingsLayout() {
         headerBackVisible: false,
         headerLeft: ({ tintColor }) => (
           <HeaderBackButton
+            destination="/settings"
             label="Back to Settings"
             tintColor={tintColor ?? colors.ink}
           />

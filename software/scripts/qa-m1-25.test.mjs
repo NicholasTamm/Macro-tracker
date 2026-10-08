@@ -1,15 +1,71 @@
 /** M1-25 settings navigation and choice accessibility regression gates. */
-import { test } from 'node:test';
+import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { build } from 'esbuild';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Pressable, Text, View } from 'react-native-web';
 
 const softwareRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const source = (path) => readFileSync(join(softwareRoot, path), 'utf8');
+let bundleDir;
+let HeaderBackButton;
+
+before(async () => {
+  bundleDir = mkdtempSync(join(softwareRoot, '.header-back-button-'));
+  const outfile = join(bundleDir, 'HeaderBackButton.mjs');
+  await build({
+    entryPoints: [join(softwareRoot, 'components/HeaderBackButton.tsx')],
+    outfile,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    jsx: 'automatic',
+    external: ['react', 'react/jsx-runtime'],
+    plugins: [{
+      name: 'header-back-test-stubs',
+      setup(buildApi) {
+        buildApi.onResolve({ filter: /^(expo-router|react-native|@expo\/vector-icons)$/ }, ({ path }) => ({
+          path,
+          namespace: 'header-back-test-stub',
+        }));
+        buildApi.onLoad({ filter: /.*/, namespace: 'header-back-test-stub' }, ({ path }) => {
+          if (path === 'expo-router') {
+            return {
+              contents: `export const router = {
+                back() { throw new Error('HeaderBackButton must not use router.back()'); },
+                replace(destination) { globalThis.__headerBackDestination = destination; },
+              };`,
+              loader: 'js',
+            };
+          }
+          if (path === 'react-native') {
+            return {
+              contents: `import React from 'react';
+                export const I18nManager = { isRTL: false };
+                export function Pressable(props) {
+                  globalThis.__headerBackOnPress = props.onPress;
+                  return React.createElement('button');
+                }`,
+              loader: 'js',
+            };
+          }
+          return { contents: 'export function Feather() { return null; }', loader: 'js' };
+        });
+      },
+    }],
+  });
+  ({ HeaderBackButton } = await import(pathToFileURL(outfile).href));
+});
+
+after(() => {
+  delete globalThis.__headerBackDestination;
+  delete globalThis.__headerBackOnPress;
+  rmSync(bundleDir, { recursive: true, force: true });
+});
 
 test('header back control has a 44pt target, accessible name, and focus indicator', () => {
   const button = source('components/HeaderBackButton.tsx');
@@ -21,24 +77,40 @@ test('header back control has a 44pt target, accessible name, and focus indicato
   assert.match(button, /I18nManager\.isRTL/);
 });
 
-test('stack headers replace default route-group back text with destination labels', () => {
+test('header back control replaces the current route with its explicit destination', () => {
+  renderToStaticMarkup(React.createElement(HeaderBackButton, {
+    destination: '/settings',
+    label: 'Back to Settings',
+    tintColor: '#000000',
+  }));
+
+  assert.equal(typeof globalThis.__headerBackOnPress, 'function');
+  globalThis.__headerBackOnPress();
+  assert.equal(globalThis.__headerBackDestination, '/settings');
+});
+
+test('stack headers map destination labels to explicit routes', () => {
   const settings = source('app/settings/_layout.tsx');
   const onboarding = source('app/onboarding/_layout.tsx');
 
   assert.match(settings, /headerBackVisible:\s*false/);
-  assert.match(settings, /label="Back to Settings"/);
+  assert.match(settings, /destination="\/settings"\s+label="Back to Settings"/);
   assert.doesNotMatch(settings, /\(tabs\)/);
 
   assert.match(onboarding, /headerBackVisible:\s*false/);
-  for (const destination of [
-    'Welcome',
-    'Age confirmation',
-    'Units',
-    'About you',
-    'Goal',
-    'Safety exclusions',
+  assert.match(onboarding, /name="adult" options=\{\{ title: 'Age confirmation', headerLeft: \(\) => null \}\}/);
+  assert.doesNotMatch(onboarding, /Back to Welcome/);
+  for (const [route, label] of [
+    ['/onboarding/adult', 'Age confirmation'],
+    ['/onboarding/units', 'Units'],
+    ['/onboarding/biometrics', 'About you'],
+    ['/onboarding/goal', 'Goal'],
+    ['/onboarding/exclusions', 'Safety exclusions'],
   ]) {
-    assert.match(onboarding, new RegExp(`label="Back to ${destination}"`));
+    assert.match(
+      onboarding,
+      new RegExp(`destination="${route}"\\s+label="Back to ${label}"`),
+    );
   }
 });
 

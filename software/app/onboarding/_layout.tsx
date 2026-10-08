@@ -16,12 +16,12 @@ export default function OnboardingLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Welcome', headerLeft: () => null }} />
-      <Stack.Screen name="adult" options={{ title: 'Age confirmation', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to Welcome" tintColor={tintColor ?? colors.ink} /> }} />
-      <Stack.Screen name="units" options={{ title: 'Units', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to Age confirmation" tintColor={tintColor ?? colors.ink} /> }} />
-      <Stack.Screen name="biometrics" options={{ title: 'About you', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to Units" tintColor={tintColor ?? colors.ink} /> }} />
-      <Stack.Screen name="goal" options={{ title: 'Goal', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to About you" tintColor={tintColor ?? colors.ink} /> }} />
-      <Stack.Screen name="exclusions" options={{ title: 'Safety exclusions', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to Goal" tintColor={tintColor ?? colors.ink} /> }} />
-      <Stack.Screen name="target" options={{ title: 'Starter target', headerLeft: ({ tintColor }) => <HeaderBackButton label="Back to Safety exclusions" tintColor={tintColor ?? colors.ink} /> }} />
+      <Stack.Screen name="adult" options={{ title: 'Age confirmation', headerLeft: () => null }} />
+      <Stack.Screen name="units" options={{ title: 'Units', headerLeft: ({ tintColor }) => <HeaderBackButton destination="/onboarding/adult" label="Back to Age confirmation" tintColor={tintColor ?? colors.ink} /> }} />
+      <Stack.Screen name="biometrics" options={{ title: 'About you', headerLeft: ({ tintColor }) => <HeaderBackButton destination="/onboarding/units" label="Back to Units" tintColor={tintColor ?? colors.ink} /> }} />
+      <Stack.Screen name="goal" options={{ title: 'Goal', headerLeft: ({ tintColor }) => <HeaderBackButton destination="/onboarding/biometrics" label="Back to About you" tintColor={tintColor ?? colors.ink} /> }} />
+      <Stack.Screen name="exclusions" options={{ title: 'Safety exclusions', headerLeft: ({ tintColor }) => <HeaderBackButton destination="/onboarding/goal" label="Back to Goal" tintColor={tintColor ?? colors.ink} /> }} />
+      <Stack.Screen name="target" options={{ title: 'Starter target', headerLeft: ({ tintColor }) => <HeaderBackButton destination="/onboarding/exclusions" label="Back to Safety exclusions" tintColor={tintColor ?? colors.ink} /> }} />
     </Stack>
   );
 }
