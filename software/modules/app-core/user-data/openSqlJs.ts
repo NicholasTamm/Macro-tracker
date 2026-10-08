@@ -1,8 +1,9 @@
-import initSqlJs, { type Database } from 'sql.js';
+import { type Database } from 'sql.js';
+import { initializeSqlJs } from '../../sqlite/sqlJs';
 import type { SqlExecutor, SqlRow } from './sqlExecutor';
 
 export async function openSqlJsDatabase(bytes?: ArrayLike<number>): Promise<SqlExecutor> {
-  const SQL = await initSqlJs();
+  const SQL = await initializeSqlJs('user data storage');
   const db: Database = bytes
     ? new SQL.Database(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))
     : new SQL.Database();

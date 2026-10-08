@@ -5,7 +5,7 @@
  * - Expo: wrapExpoSqliteSeed(SQLite.openDatabaseSync(...)) after asset copy
  * - Node FTS5 tests: see openSeedNode.ts (node-sqlite3-wasm)
  */
-import initSqlJs from 'sql.js';
+import { initializeSqlJs } from '../../sqlite/sqlJs';
 import type { SqlExecutor, SqlRow } from './sqlTypes';
 
 export type OpenSeedOptions = {
@@ -59,7 +59,7 @@ export async function openSeedBytes(
   opts: OpenSeedOptions = {},
 ): Promise<SqlExecutor> {
   const readOnly = opts.readOnly !== false;
-  const SQL = await initSqlJs();
+  const SQL = await initializeSqlJs('food catalog storage');
   const db = new SQL.Database(
     bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes),
   );
