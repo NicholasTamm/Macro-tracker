@@ -1,0 +1,7 @@
+smoke-m1-issue-72 PASS 2026-10-08T12:15:16Z
+commit=3a87232 clean-install=npm ci
+web-document=http://127.0.0.1:18072/ HTTP 200 COOP=same-origin COEP=credentialless
+entry-bundle=http://127.0.0.1:18072/node_modules/expo-router/entry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.routerRoot=app HTTP 200
+expo-sqlite-wasm=http://127.0.0.1:18072/assets/?unstable_path=.%2Fnode_modules%2Fexpo-sqlite%2Fweb%2Fwa-sqlite/wa-sqlite.wasm HTTP 200 bytes=616660
+sqljs-wasm=http://127.0.0.1:18072/sql-wasm-browser.wasm HTTP 200 bytes=658410
+web-verification=Expo web document and browser-consumed entry, worker, and WASM resources returned successfully
