@@ -1,2 +1,3 @@
-smoke-m1-issue-71 PASS 2026-10-08T12:08:09Z
-web persistence: sql.js export/reopen retained the same raw diary rows and Today count
+smoke-m1-issue-71 PASS 2026-10-09T12:30:50Z
+coverage: Node theme/provider invariance + food-detail/quick-add intent replay
+note: production Expo web UI smoke deferred until #73 absolute sql.js WASM URL lands

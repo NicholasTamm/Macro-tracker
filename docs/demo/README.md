@@ -4,9 +4,8 @@
 
 Validates that repeated system/light/dark saves, provider refreshes, Today reloads,
 and sql.js persistence do not create, duplicate, restore, delete, or mutate diary
-rows. Also verifies idempotent replay of one banana log intent.
-The production web smoke saves dark theme through the settings UI, revisits
-Today, and reloads the browser while preserving that single banana row.
+rows. Also verifies idempotent replay of food-detail and quick-add intents.
+(Production Expo web UI smoke is deferred until #73 absolute sql.js WASM URL lands.)
 
 ```bash
 # from repo root
