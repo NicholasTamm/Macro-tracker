@@ -1,5 +1,19 @@
 # Docs demos
 
+## Issue #71 — M1-22 Theme/diary integrity
+
+Validates that repeated system/light/dark saves, provider refreshes, Today reloads,
+and sql.js persistence do not create, duplicate, restore, delete, or mutate diary
+rows. Also verifies idempotent replay of food-detail and quick-add intents.
+(Production Expo web UI smoke is deferred until #73 absolute sql.js WASM URL lands.)
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-71.sh
+```
+
+Writes `out/issue-71-smoke-result.txt` on success.
+
 ## Issue #72 — Expo web WASM startup
 
 Clean-installs dependencies, verifies the generated sql.js browser WASM, runs

@@ -8,8 +8,7 @@ const config = getDefaultConfig(__dirname);
 if (!config.resolver.assetExts.includes('sqlite')) {
   config.resolver.assetExts.push('sqlite');
 }
-
-// expo-sqlite's web worker imports wa-sqlite.wasm through Metro.
+// sql.js / expo-sqlite web workers import *.wasm through Metro.
 if (!config.resolver.assetExts.includes('wasm')) {
   config.resolver.assetExts.push('wasm');
 }

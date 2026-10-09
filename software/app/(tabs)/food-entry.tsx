@@ -2,7 +2,7 @@
  * M1-12 Search + M1-13 detail/log + M1-15 custom foods + M1-16 favorites/recents/quick-add.
  * Select opens detail sheet; Quick-add logs with remembered qty/unit; star toggles favorite.
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   FoodRow,
   EmptyState,
@@ -40,6 +41,7 @@ import {
   listRecentFoods,
   type CustomFood,
 } from '@/modules/app-core/user-data';
+import { newEntityId } from '@/modules/app-core/user-data/ids';
 import {
   buildCustomFoodDetail,
   buildSeedFoodDetail,
@@ -75,8 +77,19 @@ export default function SearchScreen() {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorFood, setEditorFood] = useState<CustomFood | null>(null);
+  const [quickAddSubmitting, setQuickAddSubmitting] = useState(false);
   const controllerRef = useRef<SearchController | null>(null);
+  const quickAddLockedRef = useRef(false);
+  const quickAddIntentIdRef = useRef<string | null>(null);
   const energyUnit = snapshot?.profile.energyUnit ?? 'kcal';
+
+  useFocusEffect(
+    useCallback(() => {
+      quickAddLockedRef.current = false;
+      quickAddIntentIdRef.current = null;
+      setQuickAddSubmitting(false);
+    }, []),
+  );
 
   const browseSections: BrowseSection[] = useMemo(() => {
     void browseTick;
@@ -206,19 +219,28 @@ export default function SearchScreen() {
   };
 
   const onQuickAdd = (foodKind: ListRow['foodKind'], foodStableId: string) => {
+    if (quickAddLockedRef.current) return;
     if (!userDb) {
       setDetailError('User data unavailable.');
       return;
     }
+    quickAddLockedRef.current = true;
+    setQuickAddSubmitting(true);
+    const intentId = quickAddIntentIdRef.current ?? newEntityId();
+    quickAddIntentIdRef.current = intentId;
     ensureDefaultMealSlots(userDb);
     const slots = listMealSlots(userDb);
     const mealSlotId = slots[0]?.id ?? null;
     const result = quickAddFood(userDb, repo, {
+      intentId,
       foodKind,
       foodStableId,
       mealSlotId,
     });
     if (!result.ok) {
+      quickAddLockedRef.current = false;
+      quickAddIntentIdRef.current = null;
+      setQuickAddSubmitting(false);
       setDetailError(result.reason);
       return;
     }
@@ -426,6 +448,8 @@ export default function SearchScreen() {
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`Quick-add ${item.name}`}
+                  accessibilityState={{ disabled: quickAddSubmitting }}
+                  disabled={quickAddSubmitting}
                   onPress={() => onQuickAdd(item.foodKind, item.foodStableId)}
                   hitSlop={8}
                   style={{
@@ -433,6 +457,7 @@ export default function SearchScreen() {
                     paddingHorizontal: spacing.md,
                     justifyContent: 'center',
                     marginBottom: spacing.xs,
+                    opacity: quickAddSubmitting ? 0.5 : 1,
                   }}
                 >
                   <Text style={[typography.micro, { color: colors.muted }]}>

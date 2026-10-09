@@ -6,6 +6,7 @@
 import {
   createDiaryEntry,
   ensureDefaultMealSlots,
+  getDiaryEntry,
   recordRecentFood,
   type DiaryEntry,
   type FoodKind,
@@ -18,6 +19,8 @@ import { isValidQuantity } from './parseQuantity';
 import type { UnitChoice } from './resolveAmount';
 
 export type LogFoodInput = {
+  /** Stable ID for one UI log intent. Replays return the original row. */
+  intentId?: string;
   model: FoodDetailModel;
   quantity: number;
   unit: UnitChoice;
@@ -77,7 +80,12 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
   try {
     const entry = withTransaction(db, () => {
       ensureDefaultMealSlots(db);
+      if (input.intentId) {
+        const existing = getDiaryEntry(db, input.intentId, { includeDeleted: true });
+        if (existing) return existing;
+      }
       const created = createDiaryEntry(db, {
+        id: input.intentId,
         timestamp,
         localDayKey,
         timezoneIdentifier,
@@ -107,6 +115,10 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
     });
     return { ok: true, entry };
   } catch (e) {
+    if (input.intentId) {
+      const existing = getDiaryEntry(db, input.intentId, { includeDeleted: true });
+      if (existing) return { ok: true, entry: existing };
+    }
     return { ok: false, reason: e instanceof Error ? e.message : String(e) };
   }
 }
