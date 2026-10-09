@@ -5,6 +5,8 @@
 Validates that repeated system/light/dark saves, provider refreshes, Today reloads,
 and sql.js persistence do not create, duplicate, restore, delete, or mutate diary
 rows. Also verifies idempotent replay of one banana log intent.
+The production web smoke saves dark theme through the settings UI, revisits
+Today, and reloads the browser while preserving that single banana row.
 
 ```bash
 # from repo root

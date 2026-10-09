@@ -245,3 +245,31 @@ test('quick-add uses remembered last qty/unit', async () => {
     repo.close();
   }
 });
+
+test('replayed quick-add intent creates one diary row and one recent use', async () => {
+  const db = await openDb();
+  const repo = await openSeedRepo();
+  try {
+    userData.ensureDefaultMealSlots(db);
+    const breakfast = userData.listMealSlots(db).find((s) => s.name === 'Breakfast');
+    const input = {
+      intentId: '517fc1d8-f9d9-4990-9870-295d01d1e6d2',
+      foodKind: 'seed',
+      foodStableId: 'usda-foundation:748967',
+      mealSlotId: breakfast?.id ?? null,
+      timestamp: '2026-10-04T15:00:00.000Z',
+      localDayKey: '2026-10-04',
+    };
+
+    const first = quick.quickAddFood(db, repo, input);
+    const replay = quick.quickAddFood(db, repo, input);
+
+    assert.equal(first.ok, true);
+    assert.equal(replay.ok, true);
+    assert.equal(replay.entryId, first.entryId);
+    assert.equal(userData.listDiaryEntriesForDay(db, input.localDayKey).length, 1);
+    assert.equal(userData.getRecentFood(db, 'seed', input.foodStableId).useCount, 1);
+  } finally {
+    repo.close();
+  }
+});

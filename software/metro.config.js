@@ -8,5 +8,8 @@ const config = getDefaultConfig(__dirname);
 if (!config.resolver.assetExts.includes('sqlite')) {
   config.resolver.assetExts.push('sqlite');
 }
+if (!config.resolver.assetExts.includes('wasm')) {
+  config.resolver.assetExts.push('wasm');
+}
 
 module.exports = config;
