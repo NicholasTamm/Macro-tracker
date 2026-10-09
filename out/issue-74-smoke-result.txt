@@ -1,4 +1,4 @@
-smoke-m1-issue-74 PASS 2026-10-08T20:19:13Z
-HEAD 466b7bc4eb5d346bb29e2f367272260f29b6e8e3
-software-tree e4d9a94beb671089c4a97edf7fa04cc0d60e7951
+smoke-m1-issue-74 PASS 2026-10-09T12:15:58Z
+HEAD a266d21052a96d6902987415003c9db9067b9abc
+software-tree c4ab67074d6a6888053cc3f2bfcc34b1dcb23520
 web verification: React Native Web DOM assertions PASS; interactive browser/device steps documented in docs/m1-25-settings-choice-a11y-qa.md
