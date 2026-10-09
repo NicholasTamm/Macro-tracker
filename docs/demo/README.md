@@ -15,6 +15,19 @@ bash docs/demo/smoke-m1-issue-71.sh
 
 Writes `out/issue-71-smoke-result.txt` on success.
 
+## Issue #72 — Expo web WASM startup
+
+Clean-installs dependencies, verifies the generated sql.js browser WASM, runs
+typecheck and tests, then starts Expo web and checks the document, entry/worker
+bundles, isolation headers, and both SQLite WASM resources over HTTP.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-72.sh
+```
+
+Writes `out/issue-72-smoke-result.txt` on success.
+
 ## Issue #63 — Settings smoke
 
 Validates persisted display units and theme, profile editing, USDA attribution, licenses, privacy placeholder, routes, typecheck, and tests.

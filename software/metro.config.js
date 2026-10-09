@@ -8,8 +8,24 @@ const config = getDefaultConfig(__dirname);
 if (!config.resolver.assetExts.includes('sqlite')) {
   config.resolver.assetExts.push('sqlite');
 }
+// sql.js / expo-sqlite web workers import *.wasm through Metro.
 if (!config.resolver.assetExts.includes('wasm')) {
   config.resolver.assetExts.push('wasm');
 }
+
+// SharedArrayBuffer-backed SQLite workers require a cross-origin-isolated page.
+config.server = config.server || {};
+const enhanceMiddleware = config.server.enhanceMiddleware;
+config.server.enhanceMiddleware = (middleware, metroServer) => {
+  const enhancedMiddleware = enhanceMiddleware
+    ? enhanceMiddleware(middleware, metroServer)
+    : middleware;
+
+  return (req, res, next) => {
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    return enhancedMiddleware(req, res, next);
+  };
+};
 
 module.exports = config;
