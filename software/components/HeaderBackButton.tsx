@@ -18,7 +18,7 @@ export function HeaderBackButton({ destination, label, tintColor }: Props) {
       accessibilityRole="button"
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      onPress={() => router.replace(destination)}
+      onPress={() => router.dismissTo(destination)}
       style={{
         width: 44,
         height: 44,

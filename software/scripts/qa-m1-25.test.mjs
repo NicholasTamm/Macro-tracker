@@ -37,7 +37,13 @@ before(async () => {
             return {
               contents: `export const router = {
                 back() { throw new Error('HeaderBackButton must not use router.back()'); },
-                replace(destination) { globalThis.__headerBackDestination = destination; },
+                replace() { throw new Error('HeaderBackButton must not use router.replace()'); },
+                dismissTo(destination) {
+                  const history = globalThis.__headerBackHistory;
+                  const destinationIndex = history.lastIndexOf(destination);
+                  if (destinationIndex === -1) history[history.length - 1] = destination;
+                  else history.splice(destinationIndex + 1);
+                },
               };`,
               loader: 'js',
             };
@@ -62,7 +68,7 @@ before(async () => {
 });
 
 after(() => {
-  delete globalThis.__headerBackDestination;
+  delete globalThis.__headerBackHistory;
   delete globalThis.__headerBackOnPress;
   rmSync(bundleDir, { recursive: true, force: true });
 });
@@ -77,16 +83,29 @@ test('header back control has a 44pt target, accessible name, and focus indicato
   assert.match(button, /I18nManager\.isRTL/);
 });
 
-test('header back control replaces the current route with its explicit destination', () => {
+test('header back control pops to its existing destination without leaving a duplicate route', () => {
+  globalThis.__headerBackHistory = ['/onboarding/adult', '/onboarding/units'];
+  renderToStaticMarkup(React.createElement(HeaderBackButton, {
+    destination: '/onboarding/adult',
+    label: 'Back to Age confirmation',
+    tintColor: '#000000',
+  }));
+
+  assert.equal(typeof globalThis.__headerBackOnPress, 'function');
+  globalThis.__headerBackOnPress();
+  assert.deepEqual(globalThis.__headerBackHistory, ['/onboarding/adult']);
+});
+
+test('header back control replaces a direct-entry route when its destination is absent', () => {
+  globalThis.__headerBackHistory = ['/settings/profile'];
   renderToStaticMarkup(React.createElement(HeaderBackButton, {
     destination: '/settings',
     label: 'Back to Settings',
     tintColor: '#000000',
   }));
 
-  assert.equal(typeof globalThis.__headerBackOnPress, 'function');
   globalThis.__headerBackOnPress();
-  assert.equal(globalThis.__headerBackDestination, '/settings');
+  assert.deepEqual(globalThis.__headerBackHistory, ['/settings']);
 });
 
 test('stack headers map destination labels to explicit routes', () => {
