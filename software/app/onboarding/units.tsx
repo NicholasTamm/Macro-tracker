@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { OnboardingShell } from './OnboardingShell';
-import { ChoiceRow } from './ChoiceRow';
+import { ChoiceGroup, ChoiceRow } from './ChoiceRow';
 import { useUserData } from '@/components/UserDataProvider';
 import {
   saveUnits,
@@ -36,12 +36,18 @@ export default function UnitsScreen() {
       onSecondary={() => router.back()}
     >
       <View>
-        <ChoiceRow label="Kilograms (kg)" selected={massUnit === 'kg'} onPress={() => setMassUnit('kg')} />
-        <ChoiceRow label="Pounds (lb)" selected={massUnit === 'lb'} onPress={() => setMassUnit('lb')} />
-        <ChoiceRow label="Centimetres (cm)" selected={heightUnit === 'cm'} onPress={() => setHeightUnit('cm')} />
-        <ChoiceRow label="Inches (in)" selected={heightUnit === 'in'} onPress={() => setHeightUnit('in')} />
-        <ChoiceRow label="Kilocalories (kcal)" selected={energyUnit === 'kcal'} onPress={() => setEnergyUnit('kcal')} />
-        <ChoiceRow label="Kilojoules (kJ)" selected={energyUnit === 'kJ'} onPress={() => setEnergyUnit('kJ')} />
+        <ChoiceGroup label="Mass unit">
+          <ChoiceRow label="Kilograms (kg)" selected={massUnit === 'kg'} onPress={() => setMassUnit('kg')} />
+          <ChoiceRow label="Pounds (lb)" selected={massUnit === 'lb'} onPress={() => setMassUnit('lb')} />
+        </ChoiceGroup>
+        <ChoiceGroup label="Height unit">
+          <ChoiceRow label="Centimetres (cm)" selected={heightUnit === 'cm'} onPress={() => setHeightUnit('cm')} />
+          <ChoiceRow label="Inches (in)" selected={heightUnit === 'in'} onPress={() => setHeightUnit('in')} />
+        </ChoiceGroup>
+        <ChoiceGroup label="Energy unit">
+          <ChoiceRow label="Kilocalories (kcal)" selected={energyUnit === 'kcal'} onPress={() => setEnergyUnit('kcal')} />
+          <ChoiceRow label="Kilojoules (kJ)" selected={energyUnit === 'kJ'} onPress={() => setEnergyUnit('kJ')} />
+        </ChoiceGroup>
       </View>
     </OnboardingShell>
   );

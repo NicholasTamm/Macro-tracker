@@ -11,7 +11,7 @@ import {
   isAdultBirthYear,
   profileEditPatch,
 } from '@/modules/app-core/settings';
-import { ChoiceRow } from '@/app/onboarding/ChoiceRow';
+import { ChoiceGroup, ChoiceRow } from '@/app/onboarding/ChoiceRow';
 import { SettingsShell } from './SettingsShell';
 
 export default function ProfileScreen() {
@@ -74,10 +74,12 @@ export default function ProfileScreen() {
     <SettingsShell title="Profile" intro="Your measurements are stored on this device in canonical centimetres and kilograms.">
       <Card style={{ gap: spacing.sm }}>
         <Text style={[typography.bodyStrong, { color: colors.ink }]}>Sex</Text>
-        <ChoiceRow label="Female" selected={sex === 'female'} onPress={() => setSex('female')} />
-        <ChoiceRow label="Male" selected={sex === 'male'} onPress={() => setSex('male')} />
-        <ChoiceRow label="Other" selected={sex === 'other'} onPress={() => setSex('other')} />
-        <ChoiceRow label="Prefer not to say" selected={sex === 'unspecified'} onPress={() => setSex('unspecified')} />
+        <ChoiceGroup label="Sex">
+          <ChoiceRow label="Female" selected={sex === 'female'} onPress={() => setSex('female')} />
+          <ChoiceRow label="Male" selected={sex === 'male'} onPress={() => setSex('male')} />
+          <ChoiceRow label="Other" selected={sex === 'other'} onPress={() => setSex('other')} />
+          <ChoiceRow label="Prefer not to say" selected={sex === 'unspecified'} onPress={() => setSex('unspecified')} />
+        </ChoiceGroup>
         {field('Birth year', null, birthYear, setBirthYear)}
         {field('Height', heightUnit, height, (value) => {
           setHeight(value);

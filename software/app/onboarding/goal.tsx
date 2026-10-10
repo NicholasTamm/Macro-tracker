@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { View, TextInput, Text } from 'react-native';
 import { OnboardingShell } from './OnboardingShell';
-import { ChoiceRow } from './ChoiceRow';
+import { ChoiceGroup, ChoiceRow } from './ChoiceRow';
 import { useUserData } from '@/components/UserDataProvider';
 import { saveGoalStep, type GoalKind } from '@/modules/app-core/user-data';
 import { useTheme } from '@/design-system';
@@ -34,21 +34,23 @@ export default function GoalScreen() {
       onSecondary={() => router.back()}
     >
       <View>
-        <ChoiceRow
-          label="Lose weight"
-          selected={goalKind === 'lose'}
-          onPress={() => setGoalKind('lose')}
-        />
-        <ChoiceRow
-          label="Maintain"
-          selected={goalKind === 'maintain'}
-          onPress={() => setGoalKind('maintain')}
-        />
-        <ChoiceRow
-          label="Gain weight"
-          selected={goalKind === 'gain'}
-          onPress={() => setGoalKind('gain')}
-        />
+        <ChoiceGroup label="Goal direction">
+          <ChoiceRow
+            label="Lose weight"
+            selected={goalKind === 'lose'}
+            onPress={() => setGoalKind('lose')}
+          />
+          <ChoiceRow
+            label="Maintain"
+            selected={goalKind === 'maintain'}
+            onPress={() => setGoalKind('maintain')}
+          />
+          <ChoiceRow
+            label="Gain weight"
+            selected={goalKind === 'gain'}
+            onPress={() => setGoalKind('gain')}
+          />
+        </ChoiceGroup>
         {goalKind !== 'maintain' ? (
           <View style={{ marginTop: spacing.sm }}>
             <Text style={[typography.caption, { color: colors.muted, marginBottom: 4 }]}>
