@@ -21,6 +21,13 @@ export function ChoiceGroup({ label, children }: { label: string; children: Reac
 export function ChoiceRow({ label, selected, onPress, hint, mode = 'radio' }: Props) {
   const { colors, spacing, radius, typography } = useTheme();
   const [focused, setFocused] = useState(false);
+  // RN Web PressResponder only treats Space as a press for role=button; radios/checkboxes need explicit Space.
+  const onKeyDown = (event: { key?: string; preventDefault?: () => void }) => {
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      event.preventDefault?.();
+      onPress();
+    }
+  };
   return (
     <Pressable
       accessibilityRole={mode}
@@ -29,6 +36,8 @@ export function ChoiceRow({ label, selected, onPress, hint, mode = 'radio' }: Pr
       accessibilityLabel={label}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      // @ts-expect-error RN Web forwards onKeyDown; React Native PressableProps omits it
+      onKeyDown={onKeyDown}
       onPress={onPress}
       style={[
         styles.row,

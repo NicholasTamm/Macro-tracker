@@ -142,6 +142,8 @@ test('choice primitive exposes group, radio/checkbox checked state, size, and fo
   assert.match(choice, /aria-checked=\{selected\}/);
   assert.match(choice, /minHeight:\s*44/);
   assert.match(choice, /outlineStyle:\s*focused \? 'solid'/);
+  assert.match(choice, /onKeyDown=\{onKeyDown\}/);
+  assert.match(choice, /event\.key === ' ' \|\| event\.key === 'Spacebar'/);
 
   const exclusions = source('app/onboarding/exclusions.tsx');
   assert.match(exclusions, /mode="checkbox"/);
@@ -185,4 +187,69 @@ test('React Native Web emits radio group, checked state, and keyboard tab stop',
 
   assert.match(markup, /aria-label="Mass unit" role="radiogroup"/);
   assert.match(markup, /aria-checked="true" aria-label="Kilograms \(kg\)" role="radio" tabindex="0"/);
+});
+
+test('choice row Space key activates selection on web', async () => {
+  const outfile = join(bundleDir, 'ChoiceRow.mjs');
+  await build({
+    entryPoints: [join(softwareRoot, 'app/onboarding/ChoiceRow.tsx')],
+    outfile,
+    bundle: true,
+    format: 'esm',
+    platform: 'node',
+    jsx: 'automatic',
+    external: ['react', 'react/jsx-runtime'],
+    plugins: [{
+      name: 'choice-row-test-stubs',
+      setup(buildApi) {
+        buildApi.onResolve({ filter: /^(react-native|@\/design-system)$/ }, ({ path: resolved }) => ({
+          path: resolved,
+          namespace: 'choice-row-test-stub',
+        }));
+        buildApi.onLoad({ filter: /.*/, namespace: 'choice-row-test-stub' }, ({ path: resolved }) => {
+          if (resolved === 'react-native') {
+            return {
+              contents: `import React from 'react';
+                export const StyleSheet = { create(styles) { return styles; } };
+                export function View(props) { return React.createElement('div', props, props.children); }
+                export function Text(props) { return React.createElement('span', props, props.children); }
+                export function Pressable(props) {
+                  globalThis.__choiceRowOnKeyDown = props.onKeyDown;
+                  globalThis.__choiceRowOnPress = props.onPress;
+                  return React.createElement('div');
+                }`,
+              loader: 'js',
+            };
+          }
+          return {
+            contents: `export function useTheme() {
+              return {
+                colors: { ink: '#000', controlBorder: '#ccc', band: '#eee', raised: '#fff', muted: '#666' },
+                spacing: { sm: 8, md: 12 },
+                radius: { card: 8 },
+                typography: { body: {}, caption: {} },
+              };
+            }`,
+            loader: 'js',
+          };
+        });
+      },
+    }],
+  });
+  const { ChoiceRow } = await import(pathToFileURL(outfile).href + `?t=${Date.now()}`);
+  let presses = 0;
+  renderToStaticMarkup(React.createElement(ChoiceRow, {
+    label: 'Kilograms (kg)',
+    selected: false,
+    onPress() { presses += 1; },
+  }));
+  assert.equal(typeof globalThis.__choiceRowOnKeyDown, 'function');
+  globalThis.__choiceRowOnKeyDown({ key: ' ', preventDefault() {} });
+  assert.equal(presses, 1);
+  globalThis.__choiceRowOnKeyDown({ key: 'Spacebar', preventDefault() {} });
+  assert.equal(presses, 2);
+  globalThis.__choiceRowOnKeyDown({ key: 'Enter', preventDefault() {} });
+  assert.equal(presses, 2, 'Enter remains Pressable-native; Space handler must not double-fire Enter');
+  delete globalThis.__choiceRowOnKeyDown;
+  delete globalThis.__choiceRowOnPress;
 });
