@@ -65,7 +65,7 @@ export function createWeightSample(
   return mapRow(row);
 }
 
-/** Create the first onboarding weight once, preserving the original value and date on retries. */
+/** Keep one onboarding weight aligned with the latest biometrics submission. */
 export function ensureOnboardingWeightSample(
   db: SqlExecutor,
   input: { timestamp: string; kilograms: number },
@@ -75,10 +75,17 @@ export function ensureOnboardingWeightSample(
   }
   const ts = nowIso();
   db.run(
-    `INSERT OR IGNORE INTO weight_sample (
+    `INSERT INTO weight_sample (
       id, timestamp, kilograms, source, confirmed_outlier,
       created_at, updated_at, deleted_at, sync_revision
-    ) VALUES (?, ?, ?, 'manual', 0, ?, ?, NULL, 0)`,
+    ) VALUES (?, ?, ?, 'manual', 0, ?, ?, NULL, 0)
+    ON CONFLICT(id) DO UPDATE SET
+      timestamp = excluded.timestamp,
+      kilograms = excluded.kilograms,
+      updated_at = excluded.updated_at,
+      sync_revision = weight_sample.sync_revision + 1
+    WHERE weight_sample.timestamp <> excluded.timestamp
+       OR weight_sample.kilograms <> excluded.kilograms`,
     [ONBOARDING_WEIGHT_SAMPLE_ID, input.timestamp, input.kilograms, ts, ts],
   );
   const row = db.get(`SELECT * FROM weight_sample WHERE id = ?`, [ONBOARDING_WEIGHT_SAMPLE_ID]);

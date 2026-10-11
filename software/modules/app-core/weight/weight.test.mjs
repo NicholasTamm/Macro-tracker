@@ -88,7 +88,7 @@ test('convertWeightInput preserves a new-entry draft across unit changes', () =>
   assert.equal(weight.convertWeightInput('not-a-weight', 'kg', 'lb'), null);
 });
 
-test('onboarding biometrics creates one canonical manual weight sample on retries', async () => {
+test('onboarding biometrics keeps one canonical manual weight sample aligned with edits', async () => {
   const db = await freshDb();
   const biometrics = {
     sex: 'female',
@@ -97,12 +97,14 @@ test('onboarding biometrics creates one canonical manual weight sample on retrie
     weightKg: 68.25,
   };
   userData.saveBiometrics(db, biometrics);
-  userData.saveBiometrics(db, biometrics);
+  const profile = userData.saveBiometrics(db, { ...biometrics, weightKg: 72 });
 
   const samples = userData.listWeightSamples(db);
+  assert.equal(profile.weightKg, 72);
   assert.equal(samples.length, 1);
-  assert.equal(samples[0].kilograms, 68.25);
+  assert.equal(samples[0].kilograms, 72);
   assert.equal(samples[0].source, 'manual');
+  assert.equal(samples[0].syncRevision, 1);
   assert.match(samples[0].timestamp, /^\d{4}-\d{2}-\d{2}T12:00:00\.000Z$/);
   db.close();
 });
@@ -125,6 +127,53 @@ test('weight dates accept today and past, reject future and unsupported dates', 
   assert.match(weight.parseWeightDateInput('1899-12-31', today).error, /1900-01-01/);
   assert.match(weight.parseWeightDateInput('2025-02-29', today).error, /valid calendar date/);
   assert.match(weight.parseWeightDateInput('10\/11\/2026', today).error, /YYYY-MM-DD/);
+});
+
+test('legacy instant timestamps keep their local calendar date', () => {
+  const originalTimezone = process.env.TZ;
+  process.env.TZ = 'America/Vancouver';
+  try {
+    const timestamp = '2026-10-11T06:30:00.000Z';
+    assert.equal(
+      weight.weightDateKeyFromTimestamp(timestamp),
+      '2026-10-10',
+    );
+    assert.equal(
+      weight.formatWeightDate(timestamp),
+      new Date('2026-10-10T12:00:00.000Z').toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      }),
+    );
+    const legacySample = { id: 'legacy', timestamp, kilograms: 70, deletedAt: null };
+    const currentSample = {
+      id: 'current',
+      timestamp: '2026-10-11T12:00:00.000Z',
+      kilograms: 71,
+      deletedAt: null,
+    };
+    const windowed = weight.windowSamples(
+      [legacySample, currentSample],
+      new Date('2026-10-11T19:00:00.000Z'),
+      1,
+    );
+    assert.deepEqual(
+      weight
+        .chartPoints(windowed, new Date('2026-10-11T19:00:00.000Z'), 1)
+        .map((point) => point.x),
+      [0, 1],
+    );
+    assert.equal(
+      weight.weightDateKeyFromTimestamp('2026-10-11T12:00:00.000Z'),
+      '2026-10-11',
+      'UTC-noon timestamps are the new civil-date encoding',
+    );
+  } finally {
+    if (originalTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimezone;
+  }
 });
 
 test('create / edit / tombstone; deleted excluded from chart and summary', async () => {

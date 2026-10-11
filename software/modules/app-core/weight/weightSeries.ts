@@ -22,8 +22,14 @@ export function localDateKey(date: Date = new Date()): string {
 }
 
 export function weightDateKeyFromTimestamp(timestamp: string): string | null {
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(timestamp);
-  return match?.[1] ?? null;
+  const dateOnly = /^(\d{4}-\d{2}-\d{2})$/.exec(timestamp);
+  if (dateOnly) return dateOnly[1];
+
+  const civilDate = /^(\d{4}-\d{2}-\d{2})T12:00:00\.000Z$/.exec(timestamp);
+  if (civilDate) return civilDate[1];
+
+  const instant = new Date(timestamp);
+  return Number.isNaN(instant.getTime()) ? null : localDateKey(instant);
 }
 
 export type ParsedWeightDate =
