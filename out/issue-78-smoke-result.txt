@@ -1,0 +1,3 @@
+smoke-m1-issue-78 PASS 2026-10-11T19:03:51Z
+HEAD be36cf0300ea035233f8c6e3d10ba5e5b8c4379b
+browser Settings flow: JSON + CSV full fixture downloads validated

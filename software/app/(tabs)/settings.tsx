@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserData } from '@/components/UserDataProvider';
 import { buildUserDataExportFiles } from '@/modules/app-core/export';
 import { shareExportViaPlatform } from '@/modules/app-core/export/shareExport';
+import { downloadExportFileViaWeb, type WebExportFileFormat } from '@/modules/app-core/export/webExport';
+import type { ExportFiles } from '@/modules/app-core/export/types';
 import { useTheme } from '@/design-system';
 
 type FeatherName = ComponentProps<typeof Feather>['name'];
@@ -15,6 +17,7 @@ export default function Settings() {
   const { colors, spacing, typography } = useTheme();
   const [exporting, setExporting] = useState(false);
   const [exportMessage, setExportMessage] = useState<string | null>(null);
+  const [webDownloadFiles, setWebDownloadFiles] = useState<ExportFiles | null>(null);
 
   const onExport = async () => {
     if (!db) {
@@ -23,17 +26,34 @@ export default function Settings() {
     }
     setExporting(true);
     setExportMessage(null);
+    setWebDownloadFiles(null);
     try {
       const files = buildUserDataExportFiles(db);
       const result = await shareExportViaPlatform(files);
-      setExportMessage(result.ok
-        ? `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`
-        : result.reason);
+      if (result.ok && result.method === 'browser-download') {
+        setWebDownloadFiles(files);
+        setExportMessage('Choose each file below to download. You can retry either download.');
+      } else {
+        setExportMessage(result.ok
+          ? `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`
+          : result.reason);
+      }
     } catch (error) {
       setExportMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setExporting(false);
     }
+  };
+
+  const onWebDownload = (format: WebExportFileFormat) => {
+    if (!webDownloadFiles) return;
+    const result = downloadExportFileViaWeb(webDownloadFiles, format);
+    const filename = format === 'json'
+      ? webDownloadFiles.suggestedJsonName
+      : webDownloadFiles.suggestedCsvName;
+    setExportMessage(result.ok
+      ? `Started download: ${filename}. Use the button again to retry.`
+      : result.reason);
   };
 
   const profile = snapshot?.profile;
@@ -64,6 +84,12 @@ export default function Settings() {
           <Text accessibilityLiveRegion="polite" style={[typography.caption, { color: colors.muted, paddingHorizontal: spacing.xl, marginTop: spacing.sm }]}>
             {exportMessage}
           </Text>
+        ) : null}
+        {webDownloadFiles ? (
+          <>
+            <SettingsRow label="Download JSON" icon="download" onPress={() => onWebDownload('json')} />
+            <SettingsRow label="Download CSV" icon="download" onPress={() => onWebDownload('csv')} />
+          </>
         ) : null}
       </ScrollView>
     </SafeAreaView>

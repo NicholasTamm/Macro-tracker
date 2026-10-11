@@ -1,5 +1,17 @@
 # Docs demos
 
+## Issue #78 — M1-29 Web export download fallback
+
+Runs typecheck, focused export/share tests, the full suite, then a headless Chrome
+harness that triggers `exportFilesViaWeb` and validates downloaded JSON + CSV.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-78.sh
+```
+
+Writes `out/issue-78-smoke-result.txt` on success.
+
 ## Issue #71 — M1-22 Theme/diary integrity
 
 Validates that repeated system/light/dark saves, provider refreshes, Today reloads,
