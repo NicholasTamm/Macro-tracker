@@ -20,6 +20,8 @@ import {
 import type { LocalFoodRepository } from '../../food-catalog/local-food-repo';
 
 export type QuickAddInput = {
+  /** Stable ID for one quick-add UI intent. Replays return the original row. */
+  intentId?: string;
   foodKind: FoodKind;
   foodStableId: string;
   mealSlotId: string | null;
@@ -99,6 +101,7 @@ export function quickAddFood(
   const unit = unitFromRemembered(model, recent?.lastUnit ?? null);
 
   const result: LogFoodResult = logFoodToDiary(db, {
+    intentId: input.intentId,
     model,
     quantity,
     unit,

@@ -10,16 +10,15 @@ import React, {
 import {
   migrateUserStore,
   openSqlJsDatabase,
-  loadOnboardingSnapshot,
   type OnboardingSnapshot,
   type SqlExecutor,
   wrapExpoSqlite,
 } from '@/modules/app-core/user-data';
 import {
-  getThemePreference,
   saveThemePreference,
   type ThemePreference,
 } from '@/modules/app-core/settings';
+import { loadUserDataProviderState } from './userDataState';
 
 const SQLJS_STORAGE_KEY = 'macro-tracker:UserData.sqljs.b64';
 
@@ -124,9 +123,10 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         }
         persistSqlJsRef.current = opened.persistSqlJs;
         if (opened.persistSqlJs) writePersistedSqlJs(opened.db);
+        const state = loadUserDataProviderState(opened.db);
         setDb(opened.db);
-        setSnapshot(loadOnboardingSnapshot(opened.db));
-        setThemePreferenceState(getThemePreference(opened.db));
+        setSnapshot(state.snapshot);
+        setThemePreferenceState(state.themePreference);
         setReady(true);
       } catch (e) {
         if (!cancelled) {
@@ -142,8 +142,9 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(() => {
     if (!db) return;
-    setSnapshot(loadOnboardingSnapshot(db));
-    setThemePreferenceState(getThemePreference(db));
+    const state = loadUserDataProviderState(db);
+    setSnapshot(state.snapshot);
+    setThemePreferenceState(state.themePreference);
     if (persistSqlJsRef.current) writePersistedSqlJs(db);
   }, [db]);
 

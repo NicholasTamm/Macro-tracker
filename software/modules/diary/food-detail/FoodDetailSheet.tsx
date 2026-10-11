@@ -2,7 +2,7 @@
  * Food detail / log sheet UI (M1-13).
  * Modal over Search — does not implement edit/delete/undo (M1-14).
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   View,
@@ -39,6 +39,7 @@ import {
   toggleFavorite,
   type FoodKind,
 } from '../../app-core/user-data';
+import { newEntityId } from '../../app-core/user-data/ids';
 import {
   localDayKeyFromDate,
   localTimeHHMM,
@@ -101,6 +102,8 @@ export function FoodDetailSheet({
   const [logError, setLogError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [favorited, setFavorited] = useState(false);
+  const submitLockedRef = useRef(false);
+  const intentIdRef = useRef<string | null>(null);
 
   const showGrams = model ? gramsUnitAvailable(model) : false;
 
@@ -109,6 +112,8 @@ export function FoodDetailSheet({
     setTimeText(localTimeHHMM());
     setLogError(null);
     setSubmitting(false);
+    submitLockedRef.current = false;
+    intentIdRef.current = newEntityId();
 
     let qty = String(model.suggestedQuantity);
     let unitSel = initialUnitSelection(model);
@@ -214,18 +219,28 @@ export function FoodDetailSheet({
   };
 
   const onLog = () => {
-    if (!model || !db || !unit || !qtyParsed.ok || !timeParsed.ok) return;
+    if (
+      submitLockedRef.current ||
+      !model ||
+      !db ||
+      !unit ||
+      !qtyParsed.ok ||
+      !timeParsed.ok
+    ) return;
+    submitLockedRef.current = true;
     setSubmitting(true);
     setLogError(null);
     let timestamp: string;
     try {
       timestamp = timestampFromLocalDayAndTime(localDayKey, timeText);
     } catch (e) {
+      submitLockedRef.current = false;
       setSubmitting(false);
       setLogError(e instanceof Error ? e.message : String(e));
       return;
     }
     const result = logFoodToDiary(db, {
+      intentId: intentIdRef.current ?? (intentIdRef.current = newEntityId()),
       model,
       quantity: qtyParsed.value,
       unit,
@@ -233,8 +248,9 @@ export function FoodDetailSheet({
       timestamp,
       localDayKey,
     });
-    setSubmitting(false);
     if (!result.ok) {
+      submitLockedRef.current = false;
+      setSubmitting(false);
       setLogError(result.reason);
       return;
     }
