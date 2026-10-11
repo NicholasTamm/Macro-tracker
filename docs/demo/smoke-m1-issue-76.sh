@@ -11,7 +11,6 @@ TMP_DIR="$(mktemp -d)"
 SERVER_PID=""
 CHROME_PID=""
 CHROME="${CHROME_BIN:-$(command -v google-chrome || command -v google-chrome-stable || true)}"
-cd "$SOFTWARE"
 
 cleanup() {
   if [[ -n "$CHROME_PID" ]] && kill -0 "$CHROME_PID" 2>/dev/null; then
@@ -37,11 +36,26 @@ fail() {
 ok() { echo "OK: $*"; }
 
 test -n "$CHROME" || fail "Chrome is required for the browser smoke"
-test -d node_modules/ws || fail "the installed dependency tree is missing ws"
+test -d "$SOFTWARE/node_modules/ws" || fail "the installed dependency tree is missing ws"
+
+# Expo Router resolves dependency symlinks to their owning worktree, which can
+# point route discovery at the wrong app. Stage hard-linked dependencies when
+# this checkout intentionally shares node_modules with another worktree.
+RUNTIME_SOFTWARE="$SOFTWARE"
+if [[ -L "$SOFTWARE/node_modules" ]]; then
+  RUNTIME_SOFTWARE="$TMP_DIR/software"
+  mkdir -p "$RUNTIME_SOFTWARE"
+  cp -a "$SOFTWARE/." "$RUNTIME_SOFTWARE/"
+  rm "$RUNTIME_SOFTWARE/node_modules"
+  cp -al "$(readlink -f "$SOFTWARE/node_modules")" "$RUNTIME_SOFTWARE/node_modules"
+  rm -rf "$RUNTIME_SOFTWARE/.expo"
+fi
+cd "$RUNTIME_SOFTWARE"
 npm run sync-web-wasm >/dev/null
 
 echo "==> Expo web server"
-CI=1 setsid npx expo start --web --port "$PORT" --clear >"$TMP_DIR/expo.log" 2>&1 &
+CI=1 setsid npx expo start --web --port "$PORT" --clear \
+  >"$TMP_DIR/expo.log" 2>&1 &
 SERVER_PID="$!"
 for _attempt in {1..240}; do
   if curl --fail --silent "$BASE_URL/" >"$TMP_DIR/root.html" 2>/dev/null; then
@@ -70,7 +84,7 @@ done
 curl --fail --silent "http://127.0.0.1:$DEBUG_PORT/json/version" >/dev/null \
   || fail "Chrome DevTools endpoint did not become ready"
 
-BASE_URL="$BASE_URL" DEBUG_PORT="$DEBUG_PORT" NODE_PATH="$SOFTWARE/node_modules" node <<'NODE'
+BASE_URL="$BASE_URL" DEBUG_PORT="$DEBUG_PORT" NODE_PATH="$RUNTIME_SOFTWARE/node_modules" node <<'NODE'
 const http = require('http');
 const WebSocket = require('ws');
 
@@ -121,12 +135,13 @@ function connect(url) {
 }
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+let page;
 
 (async () => {
   const targets = await getJson(`http://127.0.0.1:${debugPort}/json/list`);
   const target = targets.find((candidate) => candidate.type === 'page');
   if (!target?.webSocketDebuggerUrl) throw new Error('Chrome page target missing');
-  const page = await connect(target.webSocketDebuggerUrl);
+  page = await connect(target.webSocketDebuggerUrl);
   await page.send('Page.enable');
   await page.send('Runtime.enable');
 
@@ -172,7 +187,12 @@ const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mil
   async function click(label) {
     const result = await evaluate(`(() => {
       const element = [...document.querySelectorAll('[aria-label]')]
-        .find((candidate) => candidate.getAttribute('aria-label') === ${JSON.stringify(label)});
+        .find((candidate) =>
+          candidate.getAttribute('aria-label') === ${JSON.stringify(label)} &&
+          candidate.getClientRects().length > 0 &&
+          !candidate.closest('[aria-hidden="true"]') &&
+          candidate.getAttribute('aria-disabled') !== 'true'
+        );
       if (!element) return { ok: false, labels: [...document.querySelectorAll('[aria-label]')]
         .map((candidate) => candidate.getAttribute('aria-label')) };
       element.click();
@@ -259,10 +279,11 @@ const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mil
   );
 
   console.log(JSON.stringify({ onboardingEntry, historicalEntry }));
-  page.ws.close();
 })().catch((error) => {
   console.error(error.stack || error);
   process.exitCode = 1;
+}).finally(() => {
+  page?.ws.close();
 });
 NODE
 ok "onboarding seed, Analytics navigation, historical submit/reload/date display, and historical-only state"
@@ -272,6 +293,6 @@ mkdir -p "$ROOT/out"
   echo "smoke-m1-issue-76 PASS $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "HEAD $(git -C "$ROOT" rev-parse HEAD)"
   echo "browser onboarding -> Analytics: 70.0 kg onboarding sample displayed"
-  echo "browser historical entry: 68.4 kg on Feb 3, 2001 persisted across reload"
+  echo "browser historical entry: 68.4 kg on local date 2001-02-03 persisted across reload"
   echo "browser historical-only state: No recent weights; historical entry retained after reload"
 } | tee "$ROOT/out/issue-76-smoke-result.txt"

@@ -1,0 +1,5 @@
+smoke-m1-issue-76 PASS 2026-10-11T22:23:22Z
+HEAD 607f63421aa579ff2b8c043aa47828a12674fb50
+browser onboarding -> Analytics: 70.0 kg onboarding sample displayed
+browser historical entry: 68.4 kg on local date 2001-02-03 persisted across reload
+browser historical-only state: No recent weights; historical entry retained after reload
