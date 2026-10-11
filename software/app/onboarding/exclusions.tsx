@@ -56,12 +56,14 @@ export default function ExclusionsScreen() {
             label={LABELS[key]}
             selected={selected.includes(key)}
             onPress={() => toggle(key)}
+            mode="checkbox"
           />
         ))}
         <ChoiceRow
           label="None of these apply"
           selected={selected.length === 0}
           onPress={() => setSelected([])}
+          mode="checkbox"
         />
       </View>
     </OnboardingShell>

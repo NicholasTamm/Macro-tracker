@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { TextInput, View, Text } from 'react-native';
 import { OnboardingShell } from './OnboardingShell';
-import { ChoiceRow } from './ChoiceRow';
+import { ChoiceGroup, ChoiceRow } from './ChoiceRow';
 import { useUserData } from '@/components/UserDataProvider';
 import {
   cmToIn,
@@ -93,14 +93,16 @@ export default function BiometricsScreen() {
       onSecondary={() => router.back()}
     >
       <View>
-        <ChoiceRow label="Female" selected={sex === 'female'} onPress={() => setSex('female')} />
-        <ChoiceRow label="Male" selected={sex === 'male'} onPress={() => setSex('male')} />
-        <ChoiceRow label="Other" selected={sex === 'other'} onPress={() => setSex('other')} />
-        <ChoiceRow
-          label="Prefer not to say"
-          selected={sex === 'unspecified'}
-          onPress={() => setSex('unspecified')}
-        />
+        <ChoiceGroup label="Sex">
+          <ChoiceRow label="Female" selected={sex === 'female'} onPress={() => setSex('female')} />
+          <ChoiceRow label="Male" selected={sex === 'male'} onPress={() => setSex('male')} />
+          <ChoiceRow label="Other" selected={sex === 'other'} onPress={() => setSex('other')} />
+          <ChoiceRow
+            label="Prefer not to say"
+            selected={sex === 'unspecified'}
+            onPress={() => setSex('unspecified')}
+          />
+        </ChoiceGroup>
         {field('Birth year', birthYear, setBirthYear, 'Birth year')}
         {field(
           `Height (${heightUnit})`,
