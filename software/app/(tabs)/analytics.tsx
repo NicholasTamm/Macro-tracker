@@ -276,7 +276,10 @@ export default function Analytics() {
           <View style={{ gap: spacing.md }}>
             <Text style={[typography.bodyStrong, { color: colors.ink }]}>Last 30 days</Text>
             {summary.state === 'empty' ? (
-              <EmptyState title="No weights yet" message={summaryText} />
+              <EmptyState
+                title={samples.length === 0 ? 'No weights yet' : 'No recent weights'}
+                message={summaryText}
+              />
             ) : (
               <>
                 <WeightChart

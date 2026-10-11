@@ -298,4 +298,9 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   assert.match(screen, /weightDateInputOnFocus\(current, hasFormDraft\.current\)/);
   assert.match(screen, /accessibilityLabel="Weight date"/);
   assert.match(screen, /dateChanged \? \{ timestamp: parsedDate\.timestamp \} : \{\}/);
+  assert.match(
+    screen,
+    /title=\{samples\.length === 0 \? 'No weights yet' : 'No recent weights'\}/,
+    'Historical-only history must not be labeled as no weight history',
+  );
 });
