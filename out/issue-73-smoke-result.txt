@@ -1,0 +1,6 @@
+smoke-m1-issue-73 PASS 2026-10-08T20:19:39Z
+commit=47faf40
+focused=node --test modules/sqlite/sqlJs.test.mjs
+routes=/,/settings/profile (direct+refresh),/settings/about,/settings/licenses,/settings/privacy,/settings/units
+wasm-url=http://127.0.0.1:18073/sql-wasm-browser.wasm
+web-verification=Chrome net logs contained the stable absolute WASM URL and no route-relative settings WASM request; no sql.js failure UI rendered
