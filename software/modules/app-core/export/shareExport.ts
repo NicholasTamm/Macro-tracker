@@ -6,9 +6,17 @@
 import { Share, Platform } from 'react-native';
 import type { ExportFiles } from './types';
 import { EXPO_FILE_SHARE_PATH_DOC } from './sharePathDoc';
+import { exportFilesViaWeb } from './webExport';
 
 export type ShareExportResult =
-  | { ok: true; method: 'react-native-share' | 'documented-file-path' }
+  | {
+      ok: true;
+      method:
+        | 'react-native-share'
+        | 'documented-file-path'
+        | 'web-share'
+        | 'browser-download';
+    }
   | { ok: false; reason: string };
 
 export { EXPO_FILE_SHARE_PATH_DOC };
@@ -20,6 +28,10 @@ export { EXPO_FILE_SHARE_PATH_DOC };
 export async function shareExportViaPlatform(
   files: ExportFiles,
 ): Promise<ShareExportResult> {
+  if (Platform.OS === 'web') {
+    return exportFilesViaWeb(files);
+  }
+
   try {
     const message = [
       `Macro-tracker offline export`,

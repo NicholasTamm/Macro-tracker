@@ -27,7 +27,7 @@ export default function Settings() {
       const files = buildUserDataExportFiles(db);
       const result = await shareExportViaPlatform(files);
       setExportMessage(result.ok
-        ? `Shared export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`
+        ? `${result.method === 'browser-download' ? 'Downloaded' : 'Shared'} export: ${files.suggestedJsonName} and ${files.suggestedCsvName}.`
         : result.reason);
     } catch (error) {
       setExportMessage(error instanceof Error ? error.message : String(error));
