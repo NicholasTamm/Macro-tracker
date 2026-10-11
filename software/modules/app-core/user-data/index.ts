@@ -130,6 +130,7 @@ export {
 
 export {
   createWeightSample,
+  ensureOnboardingWeightSample,
   getWeightSample,
   listWeightSamples,
   restoreWeightSample,

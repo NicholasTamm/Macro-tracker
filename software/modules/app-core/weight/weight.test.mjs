@@ -88,6 +88,100 @@ test('convertWeightInput preserves a new-entry draft across unit changes', () =>
   assert.equal(weight.convertWeightInput('not-a-weight', 'kg', 'lb'), null);
 });
 
+test('onboarding biometrics keeps one canonical manual weight sample aligned with edits', async () => {
+  const db = await freshDb();
+  const biometrics = {
+    sex: 'female',
+    birthYear: 1994,
+    heightCm: 165,
+    weightKg: 68.25,
+  };
+  userData.saveBiometrics(db, biometrics);
+  const profile = userData.saveBiometrics(db, { ...biometrics, weightKg: 72 });
+
+  const samples = userData.listWeightSamples(db);
+  assert.equal(profile.weightKg, 72);
+  assert.equal(samples.length, 1);
+  assert.equal(samples[0].kilograms, 72);
+  assert.equal(samples[0].source, 'manual');
+  assert.equal(samples[0].syncRevision, 1);
+  assert.match(samples[0].timestamp, /^\d{4}-\d{2}-\d{2}T12:00:00\.000Z$/);
+  db.close();
+});
+
+test('weight dates accept today and past, reject future and unsupported dates', () => {
+  const today = new Date(2026, 9, 11, 23, 30);
+  assert.equal(weight.localDateKey(today), '2026-10-11');
+
+  const todayResult = weight.parseWeightDateInput('2026-10-11', today);
+  assert.deepEqual(todayResult, {
+    ok: true,
+    dateKey: '2026-10-11',
+    timestamp: '2026-10-11T12:00:00.000Z',
+  });
+  const pastResult = weight.parseWeightDateInput('2024-02-29', today);
+  assert.equal(pastResult.ok, true);
+  assert.equal(weight.weightDateKeyFromTimestamp(pastResult.timestamp), '2024-02-29');
+
+  assert.match(weight.parseWeightDateInput('2026-10-12', today).error, /future/);
+  assert.match(weight.parseWeightDateInput('1899-12-31', today).error, /1900-01-01/);
+  assert.match(weight.parseWeightDateInput('2025-02-29', today).error, /valid calendar date/);
+  assert.match(weight.parseWeightDateInput('10\/11\/2026', today).error, /YYYY-MM-DD/);
+});
+
+test('weight entry date refreshes on focus only when the form has no draft', () => {
+  const nextDay = new Date(2026, 9, 12, 8);
+  assert.equal(weight.weightDateInputOnFocus('2026-10-11', false, nextDay), '2026-10-12');
+  assert.equal(weight.weightDateInputOnFocus('2026-10-10', true, nextDay), '2026-10-10');
+});
+
+test('legacy instant timestamps keep their local calendar date', () => {
+  const originalTimezone = process.env.TZ;
+  process.env.TZ = 'America/Vancouver';
+  try {
+    const timestamp = '2026-10-11T06:30:00.000Z';
+    assert.equal(
+      weight.weightDateKeyFromTimestamp(timestamp),
+      '2026-10-10',
+    );
+    assert.equal(
+      weight.formatWeightDate(timestamp),
+      new Date('2026-10-10T12:00:00.000Z').toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      }),
+    );
+    const legacySample = { id: 'legacy', timestamp, kilograms: 70, deletedAt: null };
+    const currentSample = {
+      id: 'current',
+      timestamp: '2026-10-11T12:00:00.000Z',
+      kilograms: 71,
+      deletedAt: null,
+    };
+    const windowed = weight.windowSamples(
+      [legacySample, currentSample],
+      new Date('2026-10-11T19:00:00.000Z'),
+      1,
+    );
+    assert.deepEqual(
+      weight
+        .chartPoints(windowed, new Date('2026-10-11T19:00:00.000Z'), 1)
+        .map((point) => point.x),
+      [0, 1],
+    );
+    assert.equal(
+      weight.weightDateKeyFromTimestamp('2026-10-11T12:00:00.000Z'),
+      '2026-10-11',
+      'UTC-noon timestamps are the new civil-date encoding',
+    );
+  } finally {
+    if (originalTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimezone;
+  }
+});
+
 test('create / edit / tombstone; deleted excluded from chart and summary', async () => {
   const db = await freshDb();
   const a = userData.createWeightSample(db, { timestamp: daysAgo(10), kilograms: 80 });
@@ -152,6 +246,7 @@ test('empty and sparse states have sensible copy', () => {
   assert.equal(one.changeKg, null);
   assert.match(weight.weightSummaryText(one, 'kg'), /^1 weight in the last 30 days: 72\.0 kg\. Log another/);
   const pts = weight.chartPoints([mk('a', 3, 72)], NOW);
+  assert.equal(pts[0].x, 0.5, 'single sample is centered instead of clipped at the chart edge');
   assert.equal(pts[0].y, 0.5);
 
   const two = weight.summarizeWeights([mk('a', 3, 72), mk('b', 1, 71.5)]);
@@ -199,4 +294,13 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   assert.match(screen, /if \(draftUnit === unit\) return;/);
   assert.match(screen, /convertWeightInput\(input, draftUnit, unit\) \?\? ''/);
   assert.match(screen, /const parsed = parseWeightInput\(input, draftUnit\);/);
+  assert.match(screen, /parseWeightDateInput\(dateInput\)/);
+  assert.match(screen, /weightDateInputOnFocus\(current, hasFormDraft\.current\)/);
+  assert.match(screen, /accessibilityLabel="Weight date"/);
+  assert.match(screen, /dateChanged \? \{ timestamp: parsedDate\.timestamp \} : \{\}/);
+  assert.match(
+    screen,
+    /title=\{samples\.length === 0 \? 'No weights yet' : 'No recent weights'\}/,
+    'Historical-only history must not be labeled as no weight history',
+  );
 });
