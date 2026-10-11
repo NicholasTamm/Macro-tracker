@@ -1,5 +1,18 @@
 # Docs demos
 
+## Issue #73 — sql.js WASM on direct web routes
+
+Runs focused and full tests, then uses headless Chrome network logs to verify
+root, direct settings routes, and a profile refresh request the stable sql.js
+WASM URL without a route-relative request or failure UI.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-73.sh
+```
+
+Writes `out/issue-73-smoke-result.txt` on success.
+
 ## Issue #74 — M1-25 Settings navigation and choice accessibility
 
 Validates 44×44 destination-labelled stack back controls, radio-group/checked semantics, keyboard focus treatment, typecheck, and the full serialized test suite. Manual VoiceOver, TalkBack, and browser keyboard steps are recorded in `docs/m1-25-settings-choice-a11y-qa.md`.
