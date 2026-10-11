@@ -7,6 +7,8 @@ export type WebExportResult =
   | { ok: true; method: 'web-share' | 'browser-download' }
   | { ok: false; reason: string };
 
+export type WebExportFileFormat = 'json' | 'csv';
+
 type WebExportEnvironment = {
   Blob: typeof Blob;
   File?: typeof File;
@@ -35,7 +37,7 @@ function errorReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-/** Share files when the browser supports file sharing, otherwise download both. */
+/** Share files when the browser supports file sharing, otherwise let the UI offer individual downloads. */
 export async function exportFilesViaWeb(
   files: ExportFiles,
   environment: WebExportEnvironment = browserEnvironment(),
@@ -65,45 +67,46 @@ export async function exportFilesViaWeb(
     }
   }
 
-  const objectUrls: string[] = [];
-  const anchors: HTMLAnchorElement[] = [];
+  return { ok: true, method: 'browser-download' };
+}
+
+/** Start one browser download from a dedicated user action. */
+export function downloadExportFileViaWeb(
+  files: ExportFiles,
+  format: WebExportFileFormat,
+  environment: WebExportEnvironment = browserEnvironment(),
+): WebExportResult {
+  let objectUrl: string | undefined;
+  let anchor: HTMLAnchorElement | undefined;
   try {
-    const downloads = [
-      {
-        content: files.json,
-        filename: files.suggestedJsonName,
-        mimeType: EXPORT_JSON_MIME_TYPE,
-      },
-      {
-        content: files.csv,
-        filename: files.suggestedCsvName,
-        mimeType: EXPORT_CSV_MIME_TYPE,
-      },
-    ];
+    const download = format === 'json'
+      ? {
+          content: files.json,
+          filename: files.suggestedJsonName,
+          mimeType: EXPORT_JSON_MIME_TYPE,
+        }
+      : {
+          content: files.csv,
+          filename: files.suggestedCsvName,
+          mimeType: EXPORT_CSV_MIME_TYPE,
+        };
+    const blob = new environment.Blob([download.content], {
+      type: download.mimeType,
+    });
+    objectUrl = environment.URL.createObjectURL(blob);
 
-    for (const download of downloads) {
-      const blob = new environment.Blob([download.content], {
-        type: download.mimeType,
-      });
-      const objectUrl = environment.URL.createObjectURL(blob);
-      objectUrls.push(objectUrl);
-
-      const anchor = environment.document.createElement('a');
-      anchors.push(anchor);
-      anchor.href = objectUrl;
-      anchor.download = download.filename;
-      anchor.style.display = 'none';
-      environment.document.body.appendChild(anchor);
-      anchor.click();
-    }
+    anchor = environment.document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = download.filename;
+    anchor.style.display = 'none';
+    environment.document.body.appendChild(anchor);
+    anchor.click();
     return { ok: true, method: 'browser-download' };
   } catch (error) {
     return { ok: false, reason: errorReason(error) };
   } finally {
-    for (const anchor of anchors) {
-      anchor.remove();
-    }
-    for (const objectUrl of objectUrls) {
+    anchor?.remove();
+    if (objectUrl) {
       environment.URL.revokeObjectURL(objectUrl);
     }
   }

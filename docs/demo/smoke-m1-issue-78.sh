@@ -58,7 +58,8 @@ mkdir -p modules/app-core/export/.smoke "$DOWNLOAD_DIR"
   --outfile=modules/app-core/export/.smoke/webExport.browser.js
 test -f modules/app-core/export/.smoke/index.html || fail "missing smoke harness html"
 
-# Chrome download prefs (belt-and-suspenders with CDP)
+# Chrome download prefs. Do not allow automatic multiple downloads: each file
+# must be initiated by its own user action.
 mkdir -p "$TMP_DIR/chrome-profile/Default"
 cat > "$TMP_DIR/chrome-profile/Default/Preferences" <<PREF
 {
@@ -67,7 +68,7 @@ cat > "$TMP_DIR/chrome-profile/Default/Preferences" <<PREF
     "prompt_for_download": false,
     "directory_upgrade": true
   },
-  "profile": { "default_content_setting_values": { "automatic_downloads": 1 } }
+  "profile": { "default_content_setting_values": { "automatic_downloads": 2 } }
 }
 PREF
 
@@ -201,8 +202,21 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
   }
   const value = evalResult.result?.value;
   if (!value?.ok) throw new Error('export failed: ' + JSON.stringify(value));
+  if (value.method !== 'browser-download') throw new Error('expected download fallback: ' + JSON.stringify(value));
 
-  // Poll for downloads (web-share may not write files; require browser-download)
+  for (const format of ['json', 'csv']) {
+    const downloadResult = await pageApi.send('Runtime.evaluate', {
+      expression: `window.__downloadSmoke(${JSON.stringify(format)})`,
+      userGesture: true,
+      returnByValue: true,
+    });
+    if (downloadResult.exceptionDetails || !downloadResult.result?.value?.ok) {
+      throw new Error(format + ' download failed: ' + JSON.stringify(downloadResult));
+    }
+    await sleep(200);
+  }
+
+  // Poll for the two independently initiated downloads.
   let files = [];
   for (let i = 0; i < 30; i++) {
     files = fs.existsSync(downloadDir) ? fs.readdirSync(downloadDir).filter((f) => !f.endsWith('.crdownload')) : [];
@@ -210,10 +224,7 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
     await sleep(200);
   }
 
-  if (value.method === 'web-share' && files.length === 0) {
-    // Headless often reports canShare=false and uses browser-download; if share was used, accept with title proof
-    console.log('web-share path taken in headless; downloads not expected');
-  } else {
+  {
     const jsonName = 'macro-tracker-export-smoke.json';
     const csvName = 'macro-tracker-export-smoke.csv';
     if (!files.includes(jsonName) || !files.includes(csvName)) {

@@ -3,7 +3,7 @@
 <head><meta charset="utf-8"><title>export-smoke</title></head>
 <body>
 <script type="module">
-import { exportFilesViaWeb } from './webExport.browser.js';
+import { downloadExportFileViaWeb, exportFilesViaWeb } from './webExport.browser.js';
 const files = {
   json: JSON.stringify({ profile: { id: 'smoke-profile' }, exportedAt: '2026-10-11T12:00:00.000Z' }, null, 2) + '\n',
   csv: '# section:profile\nid\nsmoke-profile\n',
@@ -15,6 +15,7 @@ window.__exportSmoke = async () => {
   document.title = result.ok ? `export-ok:${result.method}` : `export-fail:${result.reason}`;
   return result;
 };
+window.__downloadSmoke = (format) => downloadExportFileViaWeb(files, format);
 document.title = 'export-ready';
 </script>
 </body>

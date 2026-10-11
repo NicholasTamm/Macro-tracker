@@ -146,7 +146,7 @@ test('reports Web Share cancellation and allows a later retry', async () => {
   });
 });
 
-test('downloads JSON and CSV when Web Share file support is unavailable', async () => {
+test('offers separate JSON and CSV downloads when Web Share file support is unavailable', async () => {
   const state = makeEnvironment({
     navigator: {
       canShare: () => false,
@@ -159,6 +159,16 @@ test('downloads JSON and CSV when Web Share file support is unavailable', async 
   const result = await webExport.exportFilesViaWeb(files, state.environment);
 
   assert.deepEqual(result, { ok: true, method: 'browser-download' });
+  assert.equal(state.anchors.length, 0);
+
+  assert.deepEqual(webExport.downloadExportFileViaWeb(files, 'json', state.environment), {
+    ok: true,
+    method: 'browser-download',
+  });
+  assert.deepEqual(webExport.downloadExportFileViaWeb(files, 'csv', state.environment), {
+    ok: true,
+    method: 'browser-download',
+  });
   assert.deepEqual(state.anchors.map((anchor) => anchor.download), [
     files.suggestedJsonName,
     files.suggestedCsvName,
@@ -172,7 +182,7 @@ test('downloads JSON and CSV when Web Share file support is unavailable', async 
   assert.deepEqual(state.revokedUrls, ['blob:test-0', 'blob:test-1']);
 });
 
-test('cleans up a failed download and can retry', async () => {
+test('cleans up a failed individual download and can retry it', async () => {
   const state = makeEnvironment();
   let clicks = 0;
   const originalCreateElement = state.environment.document.createElement;
@@ -180,25 +190,20 @@ test('cleans up a failed download and can retry', async () => {
     const anchor = originalCreateElement(tag);
     anchor.click = () => {
       clicks += 1;
-      if (clicks === 2) throw new Error('download blocked');
+      if (clicks === 1) throw new Error('download blocked');
       anchor.clicked = true;
     };
     return anchor;
   };
 
-  assert.deepEqual(await webExport.exportFilesViaWeb(files, state.environment), {
+  assert.deepEqual(webExport.downloadExportFileViaWeb(files, 'csv', state.environment), {
     ok: false,
     reason: 'download blocked',
   });
   assert.ok(state.anchors.every((anchor) => anchor.removed));
-  assert.deepEqual(state.revokedUrls, ['blob:test-0', 'blob:test-1']);
+  assert.deepEqual(state.revokedUrls, ['blob:test-0']);
 
-  const retry = await webExport.exportFilesViaWeb(files, state.environment);
+  const retry = webExport.downloadExportFileViaWeb(files, 'csv', state.environment);
   assert.deepEqual(retry, { ok: true, method: 'browser-download' });
-  assert.deepEqual(state.revokedUrls, [
-    'blob:test-0',
-    'blob:test-1',
-    'blob:test-2',
-    'blob:test-3',
-  ]);
+  assert.deepEqual(state.revokedUrls, ['blob:test-0', 'blob:test-1']);
 });
