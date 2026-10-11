@@ -21,6 +21,7 @@ let scale;
 let resolve;
 let compute;
 let build;
+let labels;
 let logFood;
 let loadToday;
 let userData;
@@ -56,6 +57,7 @@ before(() => {
     'resolveAmount',
     'computeLiveNutrients',
     'buildFoodDetail',
+    'servingLabel',
     'logFoodEntry',
   ]) {
     bundle(join(__dirname, `${name}.ts`), `${name}.js`);
@@ -79,6 +81,7 @@ async function loadMods() {
   resolve = await import(pathToFileURL(join(bundleDir, 'resolveAmount.js')).href);
   compute = await import(pathToFileURL(join(bundleDir, 'computeLiveNutrients.js')).href);
   build = await import(pathToFileURL(join(bundleDir, 'buildFoodDetail.js')).href);
+  labels = await import(pathToFileURL(join(bundleDir, 'servingLabel.js')).href);
   logFood = await import(pathToFileURL(join(bundleDir, 'logFoodEntry.js')).href);
   loadToday = await import(pathToFileURL(join(bundleDir, 'loadTodayDay.js')).href);
   userData = await import(pathToFileURL(join(bundleDir, 'userData.js')).href);
@@ -197,6 +200,46 @@ test('resolveSeedAmount: grams and serving; rejects bad qty', async () => {
   assert.equal(s.grams, 100.6);
   assert.match(s.unitLabel, /egg/);
   assert.throws(() => resolve.resolveSeedAmount(-1, { kind: 'grams' }));
+});
+
+test('serving labels de-duplicate unit/modifier text and retain useful detail', async () => {
+  await loadMods();
+  const ounce = { quantity: 1, unit: 'oz', modifier: 'oz' };
+  assert.equal(labels.formatServingUnitLabel(ounce), 'oz');
+  assert.equal(labels.formatServingPickerLabel(ounce), 'oz');
+
+  const mashedCup = { quantity: 1, unit: 'cup, mashed', modifier: 'cup, mashed' };
+  assert.equal(labels.formatServingUnitLabel(mashedCup), 'cup, mashed');
+
+  const overlappingCup = { quantity: 2, unit: 'cup', modifier: 'cup, mashed' };
+  assert.equal(labels.formatServingUnitLabel(overlappingCup), 'cup (mashed)');
+  assert.equal(labels.formatServingPickerLabel(overlappingCup), '2 cup (mashed)');
+
+  const resolved = resolve.resolveSeedAmount(1, {
+    kind: 'serving',
+    serving: { servingId: 1, gramWeight: 28.35, ...ounce },
+  });
+  assert.equal(resolved.unitLabel, 'oz');
+});
+
+test('seed detail honors metric and imperial default-unit preferences', async () => {
+  await loadMods();
+  const repo = await openSeedRepo();
+  try {
+    const imperial = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'lb');
+    const metric = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'kg');
+    assert.ok(imperial);
+    assert.ok(metric);
+    assert.equal(imperial.defaultUnit.kind, 'serving');
+    assert.equal(imperial.suggestedQuantity, 1);
+    assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
+    const imperialServing = metric.servings.find(
+      (serving) => serving.servingId === imperial.defaultUnit.servingId,
+    );
+    assert.equal(metric.suggestedQuantity, imperialServing.gramWeight);
+  } finally {
+    repo.close();
+  }
 });
 
 test('computeLiveNutrients + buildSeedFoodDetail against fixture egg', async () => {

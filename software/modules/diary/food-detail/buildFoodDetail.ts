@@ -3,9 +3,10 @@
  */
 
 import type { LocalFoodRepository } from '../../food-catalog/local-food-repo';
-import type { CustomFood, NutrientMap } from '../../app-core/user-data';
+import type { CustomFood, MassUnit, NutrientMap } from '../../app-core/user-data';
 import { nutrientMapFromRows } from './scaleNutrients';
 import type { CustomBasis, ServingChoice } from './resolveAmount';
+import { formatServingUnitLabel } from './servingLabel';
 
 export type FoodDetailKind = 'seed' | 'custom';
 
@@ -35,6 +36,7 @@ function licenseForSeedSource(sourceId: string): string {
 export function buildSeedFoodDetail(
   repo: LocalFoodRepository,
   foodId: string,
+  massUnit: MassUnit = 'lb',
 ): FoodDetailModel | null {
   const food = repo.getFood(foodId);
   if (!food) return null;
@@ -64,11 +66,15 @@ export function buildSeedFoodDetail(
     sourceDisplayName: source?.displayName ?? food.sourceId,
     nutrients,
     servings,
-    defaultUnit: defaultRaw
-      ? { kind: 'serving', servingId: defaultRaw.servingId }
-      : { kind: 'grams' },
+    defaultUnit:
+      massUnit === 'kg' || !defaultRaw
+        ? { kind: 'grams' }
+        : { kind: 'serving', servingId: defaultRaw.servingId },
     customBasis: null,
-    suggestedQuantity: 1,
+    suggestedQuantity:
+      massUnit === 'kg' && defaultRaw?.gramWeight && defaultRaw.gramWeight > 0
+        ? defaultRaw.gramWeight
+        : 1,
   };
 }
 
@@ -127,4 +133,28 @@ export function unitChoiceFromSelection(
   const serving = model.servings.find((s) => s.servingId === servingId);
   if (!serving) return null;
   return { kind: 'serving', serving };
+}
+
+/** Map a persisted unit label/id back to a currently valid picker selection. */
+export function selectionFromRememberedUnit(
+  model: FoodDetailModel,
+  rememberedUnit: string | null | undefined,
+): string | null {
+  if (!rememberedUnit) return null;
+  const normalized = rememberedUnit.trim().toLocaleLowerCase();
+  if (normalized === 'g' || normalized === 'gram' || normalized === 'grams') {
+    return gramsUnitAvailable(model) ? 'grams' : null;
+  }
+  if (
+    /^\d+$/.test(rememberedUnit) &&
+    model.servings.some((serving) => String(serving.servingId) === rememberedUnit)
+  ) {
+    return rememberedUnit;
+  }
+  const serving = model.servings.find(
+    (candidate) =>
+      candidate.unit.trim().toLocaleLowerCase() === normalized ||
+      formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized,
+  );
+  return serving ? String(serving.servingId) : null;
 }

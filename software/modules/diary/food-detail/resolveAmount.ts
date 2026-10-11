@@ -2,6 +2,8 @@
  * Resolve logged quantity + unit choice → grams, unitLabel, and scale inputs.
  */
 
+import { formatServingUnitLabel } from './servingLabel';
+
 export type ServingChoice = {
   servingId: number;
   /** Source serving quantity (e.g. 1.0 for "1 egg"). */
@@ -34,12 +36,6 @@ export type CustomBasis = {
   gramWeightForBasis: number | null;
 };
 
-function servingUnitLabel(serving: ServingChoice): string {
-  const mod = serving.modifier?.trim();
-  if (mod) return `${serving.unit} (${mod})`;
-  return serving.unit;
-}
-
 /**
  * Seed foods: grams unit or a catalog serving.
  * grams = qty (grams mode) or qty * (serving.gramWeight / serving.quantity).
@@ -63,7 +59,7 @@ export function resolveSeedAmount(quantity: number, unit: UnitChoice): ResolvedA
   const grams = quantity * (serving.gramWeight / serving.quantity);
   return {
     quantity,
-    unitLabel: servingUnitLabel(serving),
+    unitLabel: formatServingUnitLabel(serving),
     grams,
     customBasisFactor: null,
   };

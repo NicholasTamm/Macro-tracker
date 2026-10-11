@@ -246,6 +246,60 @@ test('quick-add uses remembered last qty/unit', async () => {
   }
 });
 
+test('remembered formatted serving overrides metric quick-add default', async () => {
+  const db = await openDb();
+  const repo = await openSeedRepo();
+  try {
+    const model = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'kg');
+    assert.ok(model);
+    const serving = model.servings[0];
+    serving.modifier = serving.unit;
+    const remembered = quick.unitFromRemembered(model, serving.unit);
+    assert.equal(remembered.kind, 'serving');
+    assert.equal(remembered.serving.servingId, serving.servingId);
+
+    userData.recordRecentFood(db, {
+      foodKind: 'seed',
+      foodStableId: model.foodStableId,
+      foodDisplayName: model.displayName,
+      foodLicenseTag: model.licenseTag,
+      quantity: 2,
+      unit: serving.unit,
+      usedAt: '2026-10-04T10:00:00.000Z',
+    });
+    const result = quick.quickAddFood(db, repo, {
+      foodKind: 'seed',
+      foodStableId: model.foodStableId,
+      mealSlotId: null,
+      massUnit: 'kg',
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.quantity, 2);
+    assert.notEqual(result.unitLabel, 'g');
+  } finally {
+    repo.close();
+  }
+});
+
+test('quick-add uses metric grams when no remembered unit exists', async () => {
+  const db = await openDb();
+  const repo = await openSeedRepo();
+  try {
+    const model = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'kg');
+    const result = quick.quickAddFood(db, repo, {
+      foodKind: 'seed',
+      foodStableId: model.foodStableId,
+      mealSlotId: null,
+      massUnit: 'kg',
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.quantity, model.suggestedQuantity);
+    assert.equal(result.unitLabel, 'g');
+  } finally {
+    repo.close();
+  }
+});
+
 test('replayed quick-add intent creates one diary row and one recent use', async () => {
   const db = await openDb();
   const repo = await openSeedRepo();

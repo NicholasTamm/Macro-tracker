@@ -23,7 +23,12 @@ import {
   modalAnimationFor,
 } from '@/design-system';
 import type { FoodDetailModel } from './buildFoodDetail';
-import { gramsUnitAvailable, unitChoiceFromSelection } from './buildFoodDetail';
+import {
+  gramsUnitAvailable,
+  selectionFromRememberedUnit,
+  unitChoiceFromSelection,
+} from './buildFoodDetail';
+import { formatServingPickerLabel } from './servingLabel';
 import { computeLiveNutrients } from './computeLiveNutrients';
 import { logFoodToDiary } from './logFoodEntry';
 import {
@@ -58,12 +63,6 @@ export type FoodDetailSheetProps = {
   /** Called after a successful atomic log. */
   onLogged: (entryId: string) => void;
 };
-
-function servingLabel(unit: string, modifier?: string | null, qty?: number): string {
-  const base = qty != null && qty !== 1 ? `${qty} ${unit}` : unit;
-  const mod = modifier?.trim();
-  return mod ? `${base} (${mod})` : base;
-}
 
 function initialUnitSelection(model: FoodDetailModel): string {
   const gramsOk = gramsUnitAvailable(model);
@@ -125,15 +124,7 @@ export function FoodDetailSheet({
         qty = String(recent.lastQuantity);
       }
       if (recent?.lastUnit) {
-        const lu = recent.lastUnit.toLowerCase();
-        if (lu === 'g' || lu === 'grams' || lu === 'gram') {
-          if (gramsUnitAvailable(model)) unitSel = 'grams';
-        } else if (/^\d+$/.test(recent.lastUnit) && model.servings.some((s) => String(s.servingId) === recent.lastUnit)) {
-          unitSel = recent.lastUnit;
-        } else {
-          const match = model.servings.find((s) => s.unit === recent.lastUnit);
-          if (match) unitSel = String(match.servingId);
-        }
+        unitSel = selectionFromRememberedUnit(model, recent.lastUnit) ?? unitSel;
       }
     } else {
       setFavorited(false);
@@ -399,7 +390,7 @@ export function FoodDetailSheet({
                       key={id}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
-                      accessibilityLabel={`Unit ${servingLabel(s.unit, s.modifier, s.quantity)}`}
+                      accessibilityLabel={`Unit ${formatServingPickerLabel(s)}`}
                       onPress={() => setUnitSelection(id)}
                       style={[
                         styles.chip,
@@ -417,7 +408,7 @@ export function FoodDetailSheet({
                           { color: selected ? colors.raised : colors.ink },
                         ]}
                       >
-                        {servingLabel(s.unit, s.modifier, s.quantity)}
+                        {formatServingPickerLabel(s)}
                       </Text>
                     </Pressable>
                   );

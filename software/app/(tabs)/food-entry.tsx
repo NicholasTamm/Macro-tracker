@@ -82,6 +82,7 @@ export default function SearchScreen() {
   const quickAddLockedRef = useRef(false);
   const quickAddIntentIdRef = useRef<string | null>(null);
   const energyUnit = snapshot?.profile.energyUnit ?? 'kcal';
+  const massUnit = snapshot?.profile.massUnit ?? 'kg';
 
   useFocusEffect(
     useCallback(() => {
@@ -173,7 +174,7 @@ export default function SearchScreen() {
         setDetailError('Food catalog unavailable.');
         return;
       }
-      const model = buildSeedFoodDetail(repo, foodStableId);
+      const model = buildSeedFoodDetail(repo, foodStableId, massUnit);
       if (!model) {
         setDetailError('Food not found in catalog.');
         return;
@@ -236,6 +237,7 @@ export default function SearchScreen() {
       foodKind,
       foodStableId,
       mealSlotId,
+      massUnit,
     });
     if (!result.ok) {
       quickAddLockedRef.current = false;
