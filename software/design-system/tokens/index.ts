@@ -8,4 +8,10 @@ export {
 } from './colors';
 export { Spacing, type SpacingKey } from './spacing';
 export { Radius, type RadiusKey } from './radius';
-export { Typography, type TypographyRole } from './typography';
+export {
+  Typography,
+  FONT_DISPLAY,
+  FONT_UI,
+  DISPLAY_ROLES,
+  type TypographyRole,
+} from './typography';

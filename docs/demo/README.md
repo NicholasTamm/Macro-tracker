@@ -184,3 +184,17 @@ bash docs/demo/smoke-m1-21-qa.sh
 ```
 
 Writes `out/issue-66-smoke-result.txt` on success.
+
+## Issue #81 — M1-32 Compact product typography
+
+Bundles MacroSans for page-level display labels, expands typography roles to the
+measured compact product scale, loads fonts via expo-font without blocking first
+paint, and routes FoodRow / controls through named roles.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-81.sh
+```
+
+Writes `out/issue-81-smoke-result.txt` on success.
+
