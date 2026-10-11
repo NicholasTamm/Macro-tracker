@@ -51,11 +51,19 @@ test "${#TEST_FILES[@]}" -gt 0 || fail "could not read package test files"
 node --test --test-concurrency=1 "${TEST_FILES[@]}"
 ok "full test suite"
 
-echo "==> bundle webExport for browser harness"
+echo "==> bundle Settings export flow for browser harness"
 mkdir -p modules/app-core/export/.smoke "$DOWNLOAD_DIR"
-./node_modules/.bin/esbuild modules/app-core/export/webExport.ts \
-  --bundle --platform=browser --format=esm \
-  --outfile=modules/app-core/export/.smoke/webExport.browser.js
+cp public/sql-wasm-browser.wasm modules/app-core/export/.smoke/sql-wasm-browser.wasm
+./node_modules/.bin/esbuild modules/app-core/export/.smoke/settingsHarness.tsx \
+  --bundle --platform=browser --format=esm --jsx=automatic \
+  --alias:react-native=react-native-web \
+  --alias:@/components/UserDataProvider=./modules/app-core/export/.smoke/smokeUserDataProvider.tsx \
+  --alias:@/design-system=./modules/app-core/export/.smoke/uiMocks.tsx \
+  --alias:@expo/vector-icons=./modules/app-core/export/.smoke/uiMocks.tsx \
+  --alias:expo-router=./modules/app-core/export/.smoke/uiMocks.tsx \
+  --alias:react-native-safe-area-context=./modules/app-core/export/.smoke/uiMocks.tsx \
+  --define:process.env.EXPO_BASE_URL='""' \
+  --outfile=modules/app-core/export/.smoke/settings.browser.js
 test -f modules/app-core/export/.smoke/index.html || fail "missing smoke harness html"
 
 # Chrome download prefs. Do not allow automatic multiple downloads: each file
@@ -183,58 +191,89 @@ function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
   }).catch(() => {});
 
   await pageApi.send('Page.navigate', { url: baseUrl + '/index.html' });
+  let pageTitle = '';
   for (let i = 0; i < 50; i++) {
     const { result } = await pageApi.send('Runtime.evaluate', {
       expression: 'document.title',
       returnByValue: true,
     });
-    if (result?.value === 'export-ready') break;
+    pageTitle = result?.value ?? '';
+    if (pageTitle === 'export-ready' || pageTitle.startsWith('export-error:')) break;
     await sleep(100);
   }
+  if (pageTitle !== 'export-ready') throw new Error('Settings harness not ready: ' + pageTitle);
 
-  const evalResult = await pageApi.send('Runtime.evaluate', {
-    expression: 'window.__exportSmoke()',
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  if (evalResult.exceptionDetails) {
-    throw new Error('export smoke threw: ' + JSON.stringify(evalResult.exceptionDetails));
-  }
-  const value = evalResult.result?.value;
-  if (!value?.ok) throw new Error('export failed: ' + JSON.stringify(value));
-  if (value.method !== 'browser-download') throw new Error('expected download fallback: ' + JSON.stringify(value));
-
-  for (const format of ['json', 'csv']) {
-    const downloadResult = await pageApi.send('Runtime.evaluate', {
-      expression: `window.__downloadSmoke(${JSON.stringify(format)})`,
+  async function click(label) {
+    const selector = `[aria-label="${label}"]`;
+    const clickResult = await pageApi.send('Runtime.evaluate', {
+      expression: `(() => {
+        const element = document.querySelector(${JSON.stringify(selector)});
+        if (!element) return {
+          ok: false,
+          labels: [...document.querySelectorAll('[aria-label]')].map((node) => node.getAttribute('aria-label')),
+        };
+        element.click();
+        return { ok: true };
+      })()`,
       userGesture: true,
       returnByValue: true,
     });
-    if (downloadResult.exceptionDetails || !downloadResult.result?.value?.ok) {
-      throw new Error(format + ' download failed: ' + JSON.stringify(downloadResult));
+    if (clickResult.exceptionDetails || !clickResult.result?.value?.ok) {
+      throw new Error(label + ' click failed: ' + JSON.stringify(clickResult));
     }
-    await sleep(200);
   }
+
+  await click('Export data (CSV + JSON)');
+  let downloadButtonsReady = false;
+  for (let i = 0; i < 50; i++) {
+    const { result } = await pageApi.send('Runtime.evaluate', {
+      expression: `Boolean(document.querySelector('[aria-label="Download JSON"]') && document.querySelector('[aria-label="Download CSV"]'))`,
+      returnByValue: true,
+    });
+    downloadButtonsReady = Boolean(result?.value);
+    if (downloadButtonsReady) break;
+    await sleep(100);
+  }
+  if (!downloadButtonsReady) throw new Error('Settings did not offer browser download buttons');
+  await click('Download JSON');
+  await sleep(200);
+  await click('Download CSV');
 
   // Poll for the two independently initiated downloads.
   let files = [];
   for (let i = 0; i < 30; i++) {
     files = fs.existsSync(downloadDir) ? fs.readdirSync(downloadDir).filter((f) => !f.endsWith('.crdownload')) : [];
-    if (files.includes('macro-tracker-export-smoke.json') && files.includes('macro-tracker-export-smoke.csv')) break;
+    if (files.some((file) => file.endsWith('.json')) && files.some((file) => file.endsWith('.csv'))) break;
     await sleep(200);
   }
 
   {
-    const jsonName = 'macro-tracker-export-smoke.json';
-    const csvName = 'macro-tracker-export-smoke.csv';
-    if (!files.includes(jsonName) || !files.includes(csvName)) {
-      throw new Error('missing downloads; saw=' + JSON.stringify(files) + ' method=' + value.method);
+    const jsonName = files.find((file) => file.endsWith('.json'));
+    const csvName = files.find((file) => file.endsWith('.csv'));
+    if (!jsonName || !csvName) {
+      throw new Error('missing downloads; saw=' + JSON.stringify(files));
     }
     const json = fs.readFileSync(path.join(downloadDir, jsonName), 'utf8');
     const csv = fs.readFileSync(path.join(downloadDir, csvName), 'utf8');
-    if (!json.includes('smoke-profile')) throw new Error('json content mismatch');
-    if (!csv.includes('smoke-profile')) throw new Error('csv content mismatch');
-    console.log('downloads ok via', value.method);
+    const payload = JSON.parse(json);
+    if (payload.provenance?.appId !== 'macro-tracker' || payload.provenance?.formatVersion !== 1 || !payload.provenance?.exportedAt || !payload.provenance?.note) throw new Error('json provenance mismatch');
+    if (payload.profile?.id !== 'local-profile' || payload.profile?.birthYear !== 1995 || payload.profile?.heightCm !== 180 || payload.profile?.weightKg !== 80) throw new Error('json profile mismatch');
+    if (payload.targets?.length !== 1 || payload.targets[0].energyKcal !== 2500 || payload.targets[0].proteinG !== 150) throw new Error('json targets mismatch');
+    if (payload.diaryEntries?.length !== 1 || payload.diaryEntries[0].foodDisplayName !== 'Egg' || payload.diaryEntries[0].nutritionSnapshot?.energy_kcal !== 143 || payload.diaryEntries[0].licenseTag !== 'USDA') throw new Error('json diary mismatch');
+    if (payload.weights?.length !== 1 || payload.weights[0].kilograms !== 80.2 || payload.weights[0].source !== 'manual') throw new Error('json weights mismatch');
+    if (payload.customFoods?.length !== 1 || payload.customFoods[0].name !== 'Export Yogurt') throw new Error('json custom foods mismatch');
+
+    for (const marker of [
+      '# section:provenance', 'appId,macro-tracker', 'formatVersion,1',
+      '# section:profile', 'local-profile,true,kg,cm,kcal,male,1995,180,80',
+      '# section:targets', ',2500,150,250,80,starter,2026-10-04',
+      '# section:diary_entries', 'usda-foundation:748967,Egg,USDA,2,large,100', 'USDA FoodData Central,USDA',
+      '# section:weights', ',80.2,manual,false,',
+      '# section:custom_foods', 'Export Yogurt',
+    ]) {
+      if (!csv.includes(marker)) throw new Error('csv content mismatch: missing ' + marker);
+    }
+    console.log('Settings export downloads and full fixture contents validated');
   }
 
   pageApi.ws.close();
@@ -252,6 +291,6 @@ mkdir -p "$ROOT/out"
 {
   echo "smoke-m1-issue-78 PASS $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "HEAD $(git -C "$ROOT" rev-parse HEAD)"
-  echo "browser downloads: macro-tracker-export-smoke.json + .csv validated"
+  echo "browser Settings flow: JSON + CSV full fixture downloads validated"
 } >"$RESULT"
 ok "wrote $RESULT"

@@ -1,22 +1,8 @@
 <!doctype html>
 <html>
-<head><meta charset="utf-8"><title>export-smoke</title></head>
+<head><meta charset="utf-8"><title>export-loading</title></head>
 <body>
-<script type="module">
-import { downloadExportFileViaWeb, exportFilesViaWeb } from './webExport.browser.js';
-const files = {
-  json: JSON.stringify({ profile: { id: 'smoke-profile' }, exportedAt: '2026-10-11T12:00:00.000Z' }, null, 2) + '\n',
-  csv: '# section:profile\nid\nsmoke-profile\n',
-  suggestedJsonName: 'macro-tracker-export-smoke.json',
-  suggestedCsvName: 'macro-tracker-export-smoke.csv',
-};
-window.__exportSmoke = async () => {
-  const result = await exportFilesViaWeb(files);
-  document.title = result.ok ? `export-ok:${result.method}` : `export-fail:${result.reason}`;
-  return result;
-};
-window.__downloadSmoke = (format) => downloadExportFileViaWeb(files, format);
-document.title = 'export-ready';
-</script>
+<div id="root"></div>
+<script type="module" src="./settings.browser.js"></script>
 </body>
 </html>
