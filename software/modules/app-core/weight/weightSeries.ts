@@ -10,8 +10,67 @@ export const WEIGHT_WINDOW_DAYS = 30;
 /** Plausibility bounds (canonical kg) to catch typos like 7240. */
 export const MIN_WEIGHT_KG = 20;
 export const MAX_WEIGHT_KG = 400;
+export const MIN_WEIGHT_DATE_KEY = '1900-01-01';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+export function localDateKey(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function weightDateKeyFromTimestamp(timestamp: string): string | null {
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(timestamp);
+  return match?.[1] ?? null;
+}
+
+export type ParsedWeightDate =
+  | { ok: true; dateKey: string; timestamp: string }
+  | { ok: false; error: string };
+
+/** Validate a civil date and persist it at UTC noon so its YYYY-MM-DD stays stable. */
+export function parseWeightDateInput(text: string, today: Date = new Date()): ParsedWeightDate {
+  const dateKey = text.trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!match) return { ok: false, error: 'Enter a date as YYYY-MM-DD.' };
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(Date.UTC(year, month - 1, day, 12));
+  if (
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return { ok: false, error: 'Enter a valid calendar date.' };
+  }
+  if (dateKey < MIN_WEIGHT_DATE_KEY) {
+    return { ok: false, error: 'Date must be on or after 1900-01-01.' };
+  }
+  if (dateKey > localDateKey(today)) {
+    return { ok: false, error: 'Weight date cannot be in the future.' };
+  }
+  return { ok: true, dateKey, timestamp: `${dateKey}T12:00:00.000Z` };
+}
+
+export function formatWeightDate(timestamp: string): string {
+  const dateKey = weightDateKeyFromTimestamp(timestamp);
+  if (!dateKey) return timestamp;
+  return new Date(`${dateKey}T12:00:00.000Z`).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+function dayNumber(dateKey: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
+  if (!match) return null;
+  return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / DAY_MS;
+}
 
 export function toDisplayWeight(kg: number, unit: MassUnit): number {
   return round1(unit === 'lb' ? kgToLb(kg) : kg);
@@ -52,19 +111,20 @@ export function convertWeightInput(
   return parsed.ok ? String(toDisplayWeight(parsed.kilograms, toUnit)) : null;
 }
 
-/** Live samples within [now - days, now], ascending by timestamp. Tombstones excluded. */
+/** Live samples within the local civil-date window, ascending by timestamp. */
 export function windowSamples(
   samples: readonly WeightSample[],
   now: Date,
   days: number = WEIGHT_WINDOW_DAYS,
 ): WeightSample[] {
-  const end = now.getTime();
-  const start = end - days * DAY_MS;
+  const end = dayNumber(localDateKey(now))!;
+  const start = end - days;
   return samples
     .filter((s) => s.deletedAt == null)
     .filter((s) => {
-      const t = Date.parse(s.timestamp);
-      return Number.isFinite(t) && t >= start && t <= end;
+      const dateKey = weightDateKeyFromTimestamp(s.timestamp);
+      const date = dateKey ? dayNumber(dateKey) : null;
+      return date != null && date >= start && date <= end;
     })
     .slice()
     .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp));
@@ -147,14 +207,19 @@ export function chartPoints(
 ): ChartPoint[] {
   const live = windowed.filter((s) => s.deletedAt == null);
   if (live.length === 0) return [];
-  const end = now.getTime();
-  const start = end - days * DAY_MS;
+  const end = dayNumber(localDateKey(now))!;
+  const start = end - days;
   const kgs = live.map((s) => s.kilograms);
   const min = Math.min(...kgs);
   const max = Math.max(...kgs);
   const span = max - min;
   return live.map((s) => {
-    const x = Math.min(1, Math.max(0, (Date.parse(s.timestamp) - start) / (end - start)));
+    const dateKey = weightDateKeyFromTimestamp(s.timestamp);
+    const date = dateKey ? dayNumber(dateKey) : null;
+    const x =
+      live.length === 1 || date == null
+        ? 0.5
+        : Math.min(1, Math.max(0, (date - start) / days));
     const y = span === 0 ? 0.5 : (s.kilograms - min) / span;
     return { id: s.id, x, y, kilograms: s.kilograms };
   });

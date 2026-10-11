@@ -15,6 +15,9 @@ export type WeightSample = {
   syncRevision: number;
 };
 
+/** Stable local ID makes the onboarding seed safe to retry without schema changes. */
+const ONBOARDING_WEIGHT_SAMPLE_ID = '57c02c61-b61f-4f86-89e7-958b45c1bb84';
+
 function mapRow(row: Record<string, unknown>): WeightSample {
   return {
     id: String(row.id),
@@ -59,6 +62,27 @@ export function createWeightSample(
   );
   const row = db.get(`SELECT * FROM weight_sample WHERE id = ?`, [id]);
   if (!row) throw new Error('insert weight_sample failed');
+  return mapRow(row);
+}
+
+/** Create the first onboarding weight once, preserving the original value and date on retries. */
+export function ensureOnboardingWeightSample(
+  db: SqlExecutor,
+  input: { timestamp: string; kilograms: number },
+): WeightSample {
+  if (!(input.kilograms > 0) || !Number.isFinite(input.kilograms)) {
+    throw new Error('Weight must be greater than zero.');
+  }
+  const ts = nowIso();
+  db.run(
+    `INSERT OR IGNORE INTO weight_sample (
+      id, timestamp, kilograms, source, confirmed_outlier,
+      created_at, updated_at, deleted_at, sync_revision
+    ) VALUES (?, ?, ?, 'manual', 0, ?, ?, NULL, 0)`,
+    [ONBOARDING_WEIGHT_SAMPLE_ID, input.timestamp, input.kilograms, ts, ts],
+  );
+  const row = db.get(`SELECT * FROM weight_sample WHERE id = ?`, [ONBOARDING_WEIGHT_SAMPLE_ID]);
+  if (!row) throw new Error('insert onboarding weight_sample failed');
   return mapRow(row);
 }
 

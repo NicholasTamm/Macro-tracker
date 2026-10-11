@@ -23,18 +23,21 @@ import {
 import {
   chartPoints,
   convertWeightInput,
+  formatWeightDate,
   formatWeight,
+  localDateKey,
+  parseWeightDateInput,
   parseWeightInput,
   summarizeWeights,
   toDisplayWeight,
   weightSummaryText,
+  weightDateKeyFromTimestamp,
   windowSamples,
 } from '@/modules/app-core/weight';
 import { WeightChart } from '@/modules/app-core/weight/WeightChart';
 
 function formatSampleDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return formatWeightDate(iso);
 }
 
 /** M1-17 — Weight log + 30-day chart (Analytics tab). */
@@ -46,6 +49,7 @@ export default function Analytics() {
   const [samples, setSamples] = useState<WeightSample[]>([]);
   const [now, setNow] = useState(() => new Date());
   const [input, setInput] = useState('');
+  const [dateInput, setDateInput] = useState(() => localDateKey());
   const [editing, setEditing] = useState<WeightSample | null>(null);
   const [draftUnit, setDraftUnit] = useState<MassUnit>(unit);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +91,7 @@ export default function Analytics() {
     setEditing(null);
     setDraftUnit(unit);
     setInput('');
+    setDateInput(localDateKey());
   };
 
   const onSubmit = () => {
@@ -96,16 +101,31 @@ export default function Analytics() {
       setError(parsed.error);
       return;
     }
+    const parsedDate = parseWeightDateInput(dateInput);
+    if (!parsedDate.ok) {
+      setError(parsedDate.error);
+      return;
+    }
     try {
       if (editing) {
         // Unchanged display text → keep canonical kg as-is (no unit round-trip drift).
         const unchanged =
           toDisplayWeight(parsed.kilograms, draftUnit) ===
           toDisplayWeight(editing.kilograms, draftUnit);
-        if (!unchanged) updateWeightSample(db, editing.id, { kilograms: parsed.kilograms });
+        const originalDateKey = weightDateKeyFromTimestamp(editing.timestamp);
+        const dateChanged = parsedDate.dateKey !== originalDateKey;
+        if (!unchanged || dateChanged) {
+          updateWeightSample(db, editing.id, {
+            ...(!unchanged ? { kilograms: parsed.kilograms } : {}),
+            ...(dateChanged ? { timestamp: parsedDate.timestamp } : {}),
+          });
+        }
         setStatus(`Updated weight to ${formatWeight(parsed.kilograms, unit)}.`);
       } else {
-        createWeightSample(db, { timestamp: new Date().toISOString(), kilograms: parsed.kilograms });
+        createWeightSample(db, {
+          timestamp: parsedDate.timestamp,
+          kilograms: parsed.kilograms,
+        });
         setStatus(`Logged ${formatWeight(parsed.kilograms, unit)}.`);
       }
       setError(null);
@@ -131,6 +151,7 @@ export default function Analytics() {
     setEditing(s);
     setDraftUnit(unit);
     setInput(String(toDisplayWeight(s.kilograms, unit)));
+    setDateInput(weightDateKeyFromTimestamp(s.timestamp) ?? localDateKey());
     setError(null);
     setStatus(null);
     setUndoId(null);
@@ -198,6 +219,34 @@ export default function Analytics() {
                 ]}
               />
               <Text style={[typography.body, { color: colors.muted }]}>{unit}</Text>
+            </View>
+            <View>
+              <Text style={[typography.caption, { color: colors.muted, marginBottom: 4 }]}>Date</Text>
+              <TextInput
+                accessibilityLabel="Weight date"
+                accessibilityHint="Enter a date in year-month-day format. Today or an earlier date."
+                value={dateInput}
+                onChangeText={setDateInput}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.muted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[
+                  typography.body,
+                  styles.input,
+                  {
+                    minHeight: 44,
+                    borderColor: colors.controlBorder,
+                    borderRadius: radius.control,
+                    color: colors.ink,
+                    backgroundColor: colors.raised,
+                    paddingHorizontal: spacing.md,
+                  },
+                ]}
+              />
+              <Text style={[typography.micro, { color: colors.muted, marginTop: 4 }]}>
+                YYYY-MM-DD · 1900-01-01 through today
+              </Text>
             </View>
             <View style={[styles.row, { gap: spacing.sm }]}>
               <PrimaryButton

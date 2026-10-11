@@ -21,6 +21,14 @@ import {
 } from './profileTypes';
 import { computeStarterTarget } from './starterTarget';
 import { nowIso } from './ids';
+import { ensureOnboardingWeightSample } from './weightSampleRepo';
+
+function localDateNoonTimestamp(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}T12:00:00.000Z`;
+}
 
 export type OnboardingSnapshot = {
   profile: UserProfile;
@@ -74,7 +82,12 @@ export function saveBiometrics(
     weightKg: number;
   },
 ): UserProfile {
-  return updateProfile(db, { ...bio, onboardingStep: 'goal' });
+  const profile = updateProfile(db, { ...bio, onboardingStep: 'goal' });
+  ensureOnboardingWeightSample(db, {
+    timestamp: localDateNoonTimestamp(),
+    kilograms: bio.weightKg,
+  });
+  return profile;
 }
 
 export function saveGoalStep(
