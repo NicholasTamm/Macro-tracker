@@ -129,6 +129,12 @@ test('weight dates accept today and past, reject future and unsupported dates', 
   assert.match(weight.parseWeightDateInput('10\/11\/2026', today).error, /YYYY-MM-DD/);
 });
 
+test('weight entry date refreshes on focus only when the form has no draft', () => {
+  const nextDay = new Date(2026, 9, 12, 8);
+  assert.equal(weight.weightDateInputOnFocus('2026-10-11', false, nextDay), '2026-10-12');
+  assert.equal(weight.weightDateInputOnFocus('2026-10-10', true, nextDay), '2026-10-10');
+});
+
 test('legacy instant timestamps keep their local calendar date', () => {
   const originalTimezone = process.env.TZ;
   process.env.TZ = 'America/Vancouver';
@@ -289,6 +295,7 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   assert.match(screen, /convertWeightInput\(input, draftUnit, unit\) \?\? ''/);
   assert.match(screen, /const parsed = parseWeightInput\(input, draftUnit\);/);
   assert.match(screen, /parseWeightDateInput\(dateInput\)/);
+  assert.match(screen, /weightDateInputOnFocus\(current, hasFormDraft\.current\)/);
   assert.match(screen, /accessibilityLabel="Weight date"/);
   assert.match(screen, /dateChanged \? \{ timestamp: parsedDate\.timestamp \} : \{\}/);
 });

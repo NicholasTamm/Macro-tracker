@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, TextInput, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,7 @@ import {
   summarizeWeights,
   toDisplayWeight,
   weightSummaryText,
+  weightDateInputOnFocus,
   weightDateKeyFromTimestamp,
   windowSamples,
 } from '@/modules/app-core/weight';
@@ -55,6 +56,7 @@ export default function Analytics() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
+  const hasFormDraft = useRef(false);
 
   const reload = useCallback(() => {
     if (!db) return;
@@ -65,6 +67,7 @@ export default function Analytics() {
   useFocusEffect(
     useCallback(() => {
       reload();
+      setDateInput((current) => weightDateInputOnFocus(current, hasFormDraft.current));
     }, [reload]),
   );
 
@@ -88,6 +91,7 @@ export default function Analytics() {
   const newestFirst = useMemo(() => samples.slice().reverse(), [samples]);
 
   const resetForm = () => {
+    hasFormDraft.current = false;
     setEditing(null);
     setDraftUnit(unit);
     setInput('');
@@ -148,6 +152,7 @@ export default function Analytics() {
   };
 
   const onEdit = (s: WeightSample) => {
+    hasFormDraft.current = true;
     setEditing(s);
     setDraftUnit(unit);
     setInput(String(toDisplayWeight(s.kilograms, unit)));
@@ -200,7 +205,10 @@ export default function Analytics() {
               <TextInput
                 accessibilityLabel={`Weight in ${unit === 'lb' ? 'pounds' : 'kilograms'}`}
                 value={input}
-                onChangeText={setInput}
+                onChangeText={(value) => {
+                  hasFormDraft.current = true;
+                  setInput(value);
+                }}
                 keyboardType="decimal-pad"
                 placeholder={unit === 'lb' ? 'e.g. 160.4' : 'e.g. 72.4'}
                 placeholderTextColor={colors.muted}
@@ -226,7 +234,10 @@ export default function Analytics() {
                 accessibilityLabel="Weight date"
                 accessibilityHint="Enter a date in year-month-day format. Today or an earlier date."
                 value={dateInput}
-                onChangeText={setDateInput}
+                onChangeText={(value) => {
+                  hasFormDraft.current = true;
+                  setDateInput(value);
+                }}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.muted}
                 autoCapitalize="none"

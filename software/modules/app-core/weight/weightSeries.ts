@@ -21,6 +21,15 @@ export function localDateKey(date: Date = new Date()): string {
   return `${year}-${month}-${day}`;
 }
 
+/** Refresh an untouched new-entry date on focus without overwriting an intentional draft. */
+export function weightDateInputOnFocus(
+  currentDateInput: string,
+  hasDraft: boolean,
+  today: Date = new Date(),
+): string {
+  return hasDraft ? currentDateInput : localDateKey(today);
+}
+
 export function weightDateKeyFromTimestamp(timestamp: string): string | null {
   const dateOnly = /^(\d{4}-\d{2}-\d{2})$/.exec(timestamp);
   if (dateOnly) return dateOnly[1];
