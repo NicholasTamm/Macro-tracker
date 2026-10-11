@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { Card, PrimaryButton, useTheme } from '@/design-system';
-import { ChoiceRow } from '@/app/onboarding/ChoiceRow';
+import { ChoiceGroup, ChoiceRow } from '@/app/onboarding/ChoiceRow';
 import { useUserData } from '@/components/UserDataProvider';
 import { updateProfile, type EnergyUnit, type HeightUnit, type MassUnit } from '@/modules/app-core/user-data';
 import { unitPreferencePatch, type ThemePreference } from '@/modules/app-core/settings';
@@ -31,20 +31,28 @@ export default function UnitsScreen() {
     <SettingsShell title="Units & appearance" intro="Units change how values are displayed. Stored measurements and calorie targets are not converted or rewritten.">
       <Card style={{ gap: spacing.sm }}>
         <Text style={[typography.bodyStrong, { color: colors.ink }]}>Mass</Text>
-        <ChoiceRow label="Kilograms (kg)" selected={massUnit === 'kg'} onPress={() => setMassUnit('kg')} />
-        <ChoiceRow label="Pounds (lb)" selected={massUnit === 'lb'} onPress={() => setMassUnit('lb')} />
+        <ChoiceGroup label="Mass unit">
+          <ChoiceRow label="Kilograms (kg)" selected={massUnit === 'kg'} onPress={() => setMassUnit('kg')} />
+          <ChoiceRow label="Pounds (lb)" selected={massUnit === 'lb'} onPress={() => setMassUnit('lb')} />
+        </ChoiceGroup>
         <Text style={[typography.bodyStrong, { color: colors.ink }]}>Height</Text>
-        <ChoiceRow label="Centimetres (cm)" selected={heightUnit === 'cm'} onPress={() => setHeightUnit('cm')} />
-        <ChoiceRow label="Inches (in)" selected={heightUnit === 'in'} onPress={() => setHeightUnit('in')} />
+        <ChoiceGroup label="Height unit">
+          <ChoiceRow label="Centimetres (cm)" selected={heightUnit === 'cm'} onPress={() => setHeightUnit('cm')} />
+          <ChoiceRow label="Inches (in)" selected={heightUnit === 'in'} onPress={() => setHeightUnit('in')} />
+        </ChoiceGroup>
         <Text style={[typography.bodyStrong, { color: colors.ink }]}>Energy</Text>
-        <ChoiceRow label="Kilocalories (kcal)" selected={energyUnit === 'kcal'} onPress={() => setEnergyUnit('kcal')} />
-        <ChoiceRow label="Kilojoules (kJ)" selected={energyUnit === 'kJ'} onPress={() => setEnergyUnit('kJ')} />
+        <ChoiceGroup label="Energy unit">
+          <ChoiceRow label="Kilocalories (kcal)" selected={energyUnit === 'kcal'} onPress={() => setEnergyUnit('kcal')} />
+          <ChoiceRow label="Kilojoules (kJ)" selected={energyUnit === 'kJ'} onPress={() => setEnergyUnit('kJ')} />
+        </ChoiceGroup>
       </Card>
       <Card style={{ gap: spacing.sm }}>
         <Text style={[typography.bodyStrong, { color: colors.ink }]}>Theme</Text>
-        <ChoiceRow label="Use system theme" selected={theme === 'system'} onPress={() => setTheme('system')} />
-        <ChoiceRow label="Light theme" selected={theme === 'light'} onPress={() => setTheme('light')} />
-        <ChoiceRow label="Dark theme" selected={theme === 'dark'} onPress={() => setTheme('dark')} />
+        <ChoiceGroup label="Theme">
+          <ChoiceRow label="Use system theme" selected={theme === 'system'} onPress={() => setTheme('system')} />
+          <ChoiceRow label="Light theme" selected={theme === 'light'} onPress={() => setTheme('light')} />
+          <ChoiceRow label="Dark theme" selected={theme === 'dark'} onPress={() => setTheme('dark')} />
+        </ChoiceGroup>
       </Card>
       <PrimaryButton
         label="Save units and appearance"
