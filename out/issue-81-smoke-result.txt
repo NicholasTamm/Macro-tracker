@@ -1,0 +1,3 @@
+smoke-m1-issue-81 PASS 2026-10-11T19:17:42Z
+coverage: MacroSans bundled + expo-font loader, role scale (display/pageTitle/metric/section/control/foodName/body/caption/metadata/chartAxis), FoodRow roles, non-blocking root load
+note: light/dark screenshot parity vs gallery type specimens deferred to device/gallery pass
