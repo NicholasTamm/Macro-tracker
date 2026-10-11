@@ -20,3 +20,7 @@ import { ThemeProvider, PrimaryButton, MacroSummary } from '@/design-system';
 ```
 
 See `ROLLOUT-STATUS.md` for M1 checklist status.
+
+During development, the tab bar includes a **Gallery** tab for reviewing design-system
+components. It is also available directly at `/component-gallery`. Production builds
+hide the tab and redirect that route to Today.
