@@ -1,6 +1,6 @@
 # User-data export (M1-19)
 
-Offline CSV + JSON export of user-owned data via the platform share sheet.
+Offline CSV + JSON export of user-owned data via the platform share sheet or browser downloads.
 
 ## Contents
 - Provenance (exportedAt, schema/format versions)
@@ -13,4 +13,5 @@ Does **not** include shared `FoodSeed` catalog rows or remote provider caches.
 
 ## Share path
 - Default: React Native `Share` (`shareExportViaPlatform`)
+- Web: Web Share API when file sharing is supported, otherwise separate, retryable JSON and CSV download actions
 - Optional file URI: see `EXPO_FILE_SHARE_PATH_DOC` (expo-file-system + expo-sharing)

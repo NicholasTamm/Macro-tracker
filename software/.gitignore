@@ -50,3 +50,4 @@ modules/food-catalog/search/.bundle/
 modules/diary/.bundle/
 # esbuild test bundles
 **/.bundle/
+modules/app-core/export/.smoke/webExport.browser.js
