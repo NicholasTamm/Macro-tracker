@@ -152,9 +152,17 @@ export function selectionFromRememberedUnit(
     return rememberedUnit;
   }
   const serving = model.servings.find(
-    (candidate) =>
-      candidate.unit.trim().toLocaleLowerCase() === normalized ||
-      formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized,
+    (candidate) => {
+      const modifier = candidate.modifier?.trim();
+      const legacyLabel = modifier
+        ? `${candidate.unit} (${modifier})`
+        : candidate.unit;
+      return (
+        candidate.unit.trim().toLocaleLowerCase() === normalized ||
+        formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized ||
+        legacyLabel.trim().toLocaleLowerCase() === normalized
+      );
+    },
   );
   return serving ? String(serving.servingId) : null;
 }

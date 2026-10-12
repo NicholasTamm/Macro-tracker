@@ -33,11 +33,14 @@ export function formatServingUnitLabel(
   // e.g. unit="cup" and modifier="cup, mashed".
   if (modifierComparison.startsWith(`${unitComparison} `)) {
     const unitWords = unitComparison.split(' ').length;
-    const detail = modifier
+    let detail = modifier
       .split(/\s+/)
       .slice(unitWords)
       .join(' ')
-      .replace(/^[,;:()\-–—]+\s*/, '');
+      .replace(/^[,;:\-–—]+\s*/, '');
+    if (detail.startsWith('(') && detail.endsWith(')')) {
+      detail = detail.slice(1, -1).trim();
+    }
     if (detail) return `${unit} (${detail})`;
     return unit;
   }
@@ -45,10 +48,9 @@ export function formatServingUnitLabel(
   return `${unit} (${modifier})`;
 }
 
-/** Picker label includes a catalog quantity only when it is not one. */
+/** Use the same canonical unit label everywhere the serving is displayed. */
 export function formatServingPickerLabel(
-  serving: Pick<ServingChoice, 'quantity' | 'unit' | 'modifier'>,
+  serving: Pick<ServingChoice, 'unit' | 'modifier'>,
 ): string {
-  const unitLabel = formatServingUnitLabel(serving);
-  return serving.quantity !== 1 ? `${serving.quantity} ${unitLabel}` : unitLabel;
+  return formatServingUnitLabel(serving);
 }

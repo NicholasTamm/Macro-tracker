@@ -213,13 +213,42 @@ test('serving labels de-duplicate unit/modifier text and retain useful detail', 
 
   const overlappingCup = { quantity: 2, unit: 'cup', modifier: 'cup, mashed' };
   assert.equal(labels.formatServingUnitLabel(overlappingCup), 'cup (mashed)');
-  assert.equal(labels.formatServingPickerLabel(overlappingCup), '2 cup (mashed)');
+  assert.equal(labels.formatServingPickerLabel(overlappingCup), 'cup (mashed)');
+
+  const parenthesizedCup = { quantity: 2, unit: 'cup', modifier: 'cup (8 fl oz)' };
+  assert.equal(labels.formatServingUnitLabel(parenthesizedCup), 'cup (8 fl oz)');
+  assert.equal(labels.formatServingPickerLabel(parenthesizedCup), 'cup (8 fl oz)');
 
   const resolved = resolve.resolveSeedAmount(1, {
     kind: 'serving',
     serving: { servingId: 1, gramWeight: 28.35, ...ounce },
   });
   assert.equal(resolved.unitLabel, 'oz');
+
+  const resolvedCup = resolve.resolveSeedAmount(1, {
+    kind: 'serving',
+    serving: { servingId: 2, gramWeight: 480, ...parenthesizedCup },
+  });
+  assert.equal(resolvedCup.grams, 240);
+  assert.equal(resolvedCup.unitLabel, labels.formatServingPickerLabel(parenthesizedCup));
+});
+
+test('remembered legacy duplicated serving labels still resolve', async () => {
+  await loadMods();
+  const ounce = {
+    servingId: 1,
+    quantity: 1,
+    unit: 'oz',
+    modifier: 'oz',
+    gramWeight: 28.35,
+  };
+  const model = {
+    kind: 'seed',
+    servings: [ounce],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, 'oz (oz)'), '1');
 });
 
 test('seed detail honors metric and imperial default-unit preferences', async () => {
@@ -237,6 +266,23 @@ test('seed detail honors metric and imperial default-unit preferences', async ()
       (serving) => serving.servingId === imperial.defaultUnit.servingId,
     );
     assert.equal(metric.suggestedQuantity, imperialServing.gramWeight);
+  } finally {
+    repo.close();
+  }
+});
+
+test('fixture overlapping modifier keeps balanced parentheses', async () => {
+  await loadMods();
+  const repo = await openSeedRepo();
+  try {
+    const model = build.buildSeedFoodDetail(repo, 'usda-sr-legacy:171890');
+    assert.ok(model);
+    const serving = model.servings.find((candidate) => candidate.unit === 'cup');
+    assert.ok(serving);
+    assert.equal(serving.modifier, 'cup (8 fl oz)');
+    assert.equal(labels.formatServingPickerLabel(serving), 'cup (8 fl oz)');
+    const resolved = resolve.resolveSeedAmount(1, { kind: 'serving', serving });
+    assert.equal(resolved.unitLabel, 'cup (8 fl oz)');
   } finally {
     repo.close();
   }

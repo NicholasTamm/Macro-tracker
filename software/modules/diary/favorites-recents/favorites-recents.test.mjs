@@ -246,15 +246,15 @@ test('quick-add uses remembered last qty/unit', async () => {
   }
 });
 
-test('remembered formatted serving overrides metric quick-add default', async () => {
+test('remembered legacy duplicated serving label overrides metric quick-add default', async () => {
   const db = await openDb();
   const repo = await openSeedRepo();
   try {
-    const model = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'kg');
+    const model = build.buildSeedFoodDetail(repo, 'usda-sr-legacy:171077', 'kg');
     assert.ok(model);
-    const serving = model.servings[0];
-    serving.modifier = serving.unit;
-    const remembered = quick.unitFromRemembered(model, serving.unit);
+    const serving = model.servings.find((candidate) => candidate.unit === 'oz');
+    assert.ok(serving);
+    const remembered = quick.unitFromRemembered(model, 'oz (oz)');
     assert.equal(remembered.kind, 'serving');
     assert.equal(remembered.serving.servingId, serving.servingId);
 
@@ -264,7 +264,7 @@ test('remembered formatted serving overrides metric quick-add default', async ()
       foodDisplayName: model.displayName,
       foodLicenseTag: model.licenseTag,
       quantity: 2,
-      unit: serving.unit,
+      unit: 'oz (oz)',
       usedAt: '2026-10-04T10:00:00.000Z',
     });
     const result = quick.quickAddFood(db, repo, {
@@ -275,7 +275,9 @@ test('remembered formatted serving overrides metric quick-add default', async ()
     });
     assert.equal(result.ok, true);
     assert.equal(result.quantity, 2);
-    assert.notEqual(result.unitLabel, 'g');
+    assert.equal(result.unitLabel, 'oz');
+    const entry = userData.getDiaryEntry(db, result.entryId);
+    assert.equal(entry.grams, 56.7);
   } finally {
     repo.close();
   }
