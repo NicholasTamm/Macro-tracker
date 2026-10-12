@@ -3,9 +3,15 @@
  */
 
 import type { LocalFoodRepository } from '../../food-catalog/local-food-repo';
-import type { CustomFood, NutrientMap } from '../../app-core/user-data';
+import type { CustomFood, MassUnit, NutrientMap } from '../../app-core/user-data';
 import { nutrientMapFromRows } from './scaleNutrients';
 import type { CustomBasis, ServingChoice } from './resolveAmount';
+import {
+  formatServingUnitLabel,
+  isServingIdentityKey,
+  servingFromIdentityKey,
+  servingIdentityKey,
+} from './servingLabel';
 
 export type FoodDetailKind = 'seed' | 'custom';
 
@@ -35,6 +41,7 @@ function licenseForSeedSource(sourceId: string): string {
 export function buildSeedFoodDetail(
   repo: LocalFoodRepository,
   foodId: string,
+  massUnit: MassUnit = 'lb',
 ): FoodDetailModel | null {
   const food = repo.getFood(foodId);
   if (!food) return null;
@@ -64,15 +71,22 @@ export function buildSeedFoodDetail(
     sourceDisplayName: source?.displayName ?? food.sourceId,
     nutrients,
     servings,
-    defaultUnit: defaultRaw
-      ? { kind: 'serving', servingId: defaultRaw.servingId }
-      : { kind: 'grams' },
+    defaultUnit:
+      massUnit === 'kg' || !defaultRaw
+        ? { kind: 'grams' }
+        : { kind: 'serving', servingId: defaultRaw.servingId },
     customBasis: null,
-    suggestedQuantity: 1,
+    suggestedQuantity:
+      massUnit === 'kg' && defaultRaw?.gramWeight && defaultRaw.gramWeight > 0
+        ? defaultRaw.gramWeight
+        : 1,
   };
 }
 
-export function buildCustomFoodDetail(food: CustomFood): FoodDetailModel {
+export function buildCustomFoodDetail(
+  food: CustomFood,
+  massUnit: MassUnit = 'lb',
+): FoodDetailModel {
   const basis: CustomBasis = {
     basisKind: food.basisKind,
     basisAmount: food.basisAmount,
@@ -102,9 +116,17 @@ export function buildCustomFoodDetail(food: CustomFood): FoodDetailModel {
     sourceDisplayName: food.brand ? `My Foods · ${food.brand}` : 'My Foods',
     nutrients: food.nutrients,
     servings,
-    defaultUnit: { kind: 'serving', servingId: 0 },
+    defaultUnit:
+      massUnit === 'kg' && food.gramWeightForBasis != null && food.gramWeightForBasis > 0
+        ? { kind: 'grams' }
+        : { kind: 'serving', servingId: 0 },
     customBasis: basis,
-    suggestedQuantity: food.basisAmount > 0 ? food.basisAmount : 1,
+    suggestedQuantity:
+      massUnit === 'kg' && food.gramWeightForBasis != null && food.gramWeightForBasis > 0
+        ? food.gramWeightForBasis
+        : food.basisAmount > 0
+          ? food.basisAmount
+          : 1,
   };
 }
 
@@ -127,4 +149,62 @@ export function unitChoiceFromSelection(
   const serving = model.servings.find((s) => s.servingId === servingId);
   if (!serving) return null;
   return { kind: 'serving', serving };
+}
+
+/** Map a persisted unit label/id back to a currently valid picker selection. */
+export function selectionFromRememberedUnit(
+  model: FoodDetailModel,
+  rememberedUnit: string | null | undefined,
+): string | null {
+  if (!rememberedUnit) return null;
+  const normalized = rememberedUnit.trim().toLocaleLowerCase();
+  if (normalized === 'g' || normalized === 'gram' || normalized === 'grams') {
+    return gramsUnitAvailable(model) ? 'grams' : null;
+  }
+  const identityMatches = model.servings.filter(
+    (serving) => servingIdentityKey(serving) === rememberedUnit,
+  );
+  if (identityMatches.length > 0) {
+    return identityMatches.length === 1
+      ? String(identityMatches[0].servingId)
+      : null;
+  }
+  if (isServingIdentityKey(rememberedUnit)) {
+    const rememberedServing = servingFromIdentityKey(rememberedUnit);
+    if (!rememberedServing) return null;
+    const rememberedLabel = formatServingUnitLabel(rememberedServing).toLocaleLowerCase();
+    const semanticMatches = model.servings.filter(
+      (serving) =>
+        formatServingUnitLabel(serving).toLocaleLowerCase() === rememberedLabel,
+    );
+    return semanticMatches.length === 1
+      ? String(semanticMatches[0].servingId)
+      : null;
+  }
+  if (
+    model.kind === 'custom' &&
+    /^\d+$/.test(rememberedUnit) &&
+    model.servings.some((serving) => String(serving.servingId) === rememberedUnit)
+  ) {
+    return rememberedUnit;
+  }
+  if (/^\d+$/.test(rememberedUnit)) return null;
+  const labelMatches = model.servings.filter((candidate) => {
+    const modifier = candidate.modifier?.trim();
+    const legacyLabel = modifier
+      ? `${candidate.unit} (${modifier})`
+      : candidate.unit;
+    return (
+      formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized ||
+      legacyLabel.trim().toLocaleLowerCase() === normalized
+    );
+  });
+  if (labelMatches.length > 0) {
+    return labelMatches.length === 1 ? String(labelMatches[0].servingId) : null;
+  }
+
+  const unitMatches = model.servings.filter(
+    (candidate) => candidate.unit.trim().toLocaleLowerCase() === normalized,
+  );
+  return unitMatches.length === 1 ? String(unitMatches[0].servingId) : null;
 }

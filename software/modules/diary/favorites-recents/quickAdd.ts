@@ -12,12 +12,14 @@ import {
   buildCustomFoodDetail,
   buildSeedFoodDetail,
   logFoodToDiary,
+  selectionFromRememberedUnit,
   unitChoiceFromSelection,
   type FoodDetailModel,
   type LogFoodResult,
   type UnitChoice,
 } from '../food-detail';
 import type { LocalFoodRepository } from '../../food-catalog/local-food-repo';
+import type { MassUnit } from '../../app-core/user-data';
 
 export type QuickAddInput = {
   /** Stable ID for one quick-add UI intent. Replays return the original row. */
@@ -27,6 +29,8 @@ export type QuickAddInput = {
   mealSlotId: string | null;
   /** Optional override quantity; else last remembered or model suggested. */
   quantity?: number;
+  /** Profile preference used only when no valid remembered unit exists. */
+  massUnit?: MassUnit;
   localDayKey?: string;
   timestamp?: string;
   timezoneIdentifier?: string;
@@ -53,17 +57,8 @@ export function unitFromRemembered(
   lastUnit: string | null | undefined,
 ): UnitChoice {
   if (!lastUnit) return defaultUnitChoice(model);
-  const lower = lastUnit.toLowerCase();
-  if (lower === 'g' || lower === 'grams' || lower === 'gram') {
-    return unitChoiceFromSelection(model, 'grams') ?? defaultUnitChoice(model);
-  }
-  if (/^\d+$/.test(lastUnit) && model.servings.some((s) => String(s.servingId) === lastUnit)) {
-    return unitChoiceFromSelection(model, lastUnit) ?? defaultUnitChoice(model);
-  }
-  const byUnit = model.servings.find((s) => s.unit === lastUnit);
-  if (byUnit) {
-    return unitChoiceFromSelection(model, String(byUnit.servingId)) ?? defaultUnitChoice(model);
-  }
+  const selection = selectionFromRememberedUnit(model, lastUnit);
+  if (selection) return unitChoiceFromSelection(model, selection) ?? defaultUnitChoice(model);
   return defaultUnitChoice(model);
 }
 
@@ -72,15 +67,16 @@ export function resolveQuickAddModel(
   seedRepo: LocalFoodRepository | null,
   foodKind: FoodKind,
   foodStableId: string,
+  massUnit: MassUnit = 'lb',
 ): FoodDetailModel | null {
   if (foodKind === 'seed') {
     if (!seedRepo) return null;
-    return buildSeedFoodDetail(seedRepo, foodStableId);
+    return buildSeedFoodDetail(seedRepo, foodStableId, massUnit);
   }
   if (foodKind === 'custom') {
     const custom = getCustomFood(db, foodStableId);
     if (!custom) return null;
-    return buildCustomFoodDetail(custom);
+    return buildCustomFoodDetail(custom, massUnit);
   }
   return null;
 }
@@ -90,7 +86,13 @@ export function quickAddFood(
   seedRepo: LocalFoodRepository | null,
   input: QuickAddInput,
 ): QuickAddResult {
-  const model = resolveQuickAddModel(db, seedRepo, input.foodKind, input.foodStableId);
+  const model = resolveQuickAddModel(
+    db,
+    seedRepo,
+    input.foodKind,
+    input.foodStableId,
+    input.massUnit,
+  );
   if (!model) {
     return { ok: false, reason: 'Food not available for quick-add.' };
   }
