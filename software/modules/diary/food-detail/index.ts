@@ -26,10 +26,13 @@ export {
   buildSeedFoodDetail,
   buildCustomFoodDetail,
   unitChoiceFromSelection,
+  selectionFromRememberedUnit,
   gramsUnitAvailable,
   type FoodDetailKind,
   type FoodDetailModel,
 } from './buildFoodDetail';
+
+export { formatServingUnitLabel, formatServingPickerLabel } from './servingLabel';
 
 export { computeLiveNutrients, type LiveNutrientPreview } from './computeLiveNutrients';
 

@@ -21,6 +21,7 @@ let scale;
 let resolve;
 let compute;
 let build;
+let labels;
 let logFood;
 let loadToday;
 let userData;
@@ -56,6 +57,7 @@ before(() => {
     'resolveAmount',
     'computeLiveNutrients',
     'buildFoodDetail',
+    'servingLabel',
     'logFoodEntry',
   ]) {
     bundle(join(__dirname, `${name}.ts`), `${name}.js`);
@@ -79,6 +81,7 @@ async function loadMods() {
   resolve = await import(pathToFileURL(join(bundleDir, 'resolveAmount.js')).href);
   compute = await import(pathToFileURL(join(bundleDir, 'computeLiveNutrients.js')).href);
   build = await import(pathToFileURL(join(bundleDir, 'buildFoodDetail.js')).href);
+  labels = await import(pathToFileURL(join(bundleDir, 'servingLabel.js')).href);
   logFood = await import(pathToFileURL(join(bundleDir, 'logFoodEntry.js')).href);
   loadToday = await import(pathToFileURL(join(bundleDir, 'loadTodayDay.js')).href);
   userData = await import(pathToFileURL(join(bundleDir, 'userData.js')).href);
@@ -197,6 +200,281 @@ test('resolveSeedAmount: grams and serving; rejects bad qty', async () => {
   assert.equal(s.grams, 100.6);
   assert.match(s.unitLabel, /egg/);
   assert.throws(() => resolve.resolveSeedAmount(-1, { kind: 'grams' }));
+});
+
+test('serving labels de-duplicate unit/modifier text and retain useful detail', async () => {
+  await loadMods();
+  const ounce = { quantity: 1, unit: 'oz', modifier: 'oz' };
+  assert.equal(labels.formatServingUnitLabel(ounce), 'oz');
+  assert.equal(labels.formatServingPickerLabel(ounce), 'oz');
+
+  const mashedCup = { quantity: 1, unit: 'cup, mashed', modifier: 'cup, mashed' };
+  assert.equal(labels.formatServingUnitLabel(mashedCup), 'cup, mashed');
+
+  const overlappingCup = { quantity: 2, unit: 'cup', modifier: 'cup, mashed' };
+  assert.equal(labels.formatServingUnitLabel(overlappingCup), 'cup (mashed)');
+  assert.equal(labels.formatServingPickerLabel(overlappingCup), 'cup (mashed)');
+
+  const parenthesizedCup = { quantity: 2, unit: 'cup', modifier: 'cup (8 fl oz)' };
+  assert.equal(labels.formatServingUnitLabel(parenthesizedCup), 'cup (8 fl oz)');
+  assert.equal(labels.formatServingPickerLabel(parenthesizedCup), 'cup (8 fl oz)');
+
+  const drainedCup = {
+    quantity: 1,
+    unit: 'cup',
+    modifier: 'cup (8 fl oz), drained',
+  };
+  assert.equal(labels.formatServingUnitLabel(drainedCup), 'cup (8 fl oz, drained)');
+  assert.equal(labels.formatServingPickerLabel(drainedCup), 'cup (8 fl oz, drained)');
+
+  const resolved = resolve.resolveSeedAmount(1, {
+    kind: 'serving',
+    serving: { servingId: 1, gramWeight: 28.35, ...ounce },
+  });
+  assert.equal(resolved.unitLabel, 'oz');
+
+  const resolvedCup = resolve.resolveSeedAmount(1, {
+    kind: 'serving',
+    serving: { servingId: 2, gramWeight: 480, ...parenthesizedCup },
+  });
+  assert.equal(resolvedCup.grams, 240);
+  assert.equal(resolvedCup.unitLabel, labels.formatServingPickerLabel(parenthesizedCup));
+});
+
+test('remembered legacy duplicated serving labels still resolve', async () => {
+  await loadMods();
+  const ounce = {
+    servingId: 1,
+    quantity: 1,
+    unit: 'oz',
+    modifier: 'oz',
+    gramWeight: 28.35,
+  };
+  const model = {
+    kind: 'seed',
+    servings: [ounce],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, 'oz (oz)'), '1');
+});
+
+test('remembered canonical labels win before ambiguous raw serving units', async () => {
+  await loadMods();
+  const model = {
+    kind: 'seed',
+    servings: [
+      {
+        servingId: 1,
+        quantity: 1,
+        unit: 'cup',
+        modifier: 'chopped',
+        gramWeight: 120,
+      },
+      {
+        servingId: 2,
+        quantity: 1,
+        unit: 'cup',
+        modifier: 'cup',
+        gramWeight: 240,
+      },
+    ],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), '2');
+  assert.equal(build.selectionFromRememberedUnit(model, 'CUP (CHOPPED)'), '1');
+
+  model.servings[1].modifier = 'mashed';
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
+});
+
+test('remembered serving identity is unambiguous when canonical labels collide', async () => {
+  await loadMods();
+  const servings = [
+    {
+      servingId: 1,
+      quantity: 1,
+      unit: 'cup',
+      modifier: null,
+      gramWeight: 120,
+    },
+    {
+      servingId: 2,
+      quantity: 1,
+      unit: 'cup',
+      modifier: 'cup',
+      gramWeight: 240,
+    },
+  ];
+  const model = {
+    kind: 'seed',
+    foodStableId: 'canonical-label-collision',
+    displayName: 'Collision Food',
+    brand: null,
+    licenseTag: 'test',
+    sourceDisplayName: 'Test',
+    nutrients: { energy_kcal: 100 },
+    servings,
+    defaultUnit: { kind: 'serving', servingId: 1 },
+    customBasis: null,
+    suggestedQuantity: 1,
+  };
+
+  // A legacy display label cannot safely identify either serving.
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
+  // Catalog-global row IDs are not stable across seed rebuilds.
+  assert.equal(build.selectionFromRememberedUnit(model, '2'), null);
+
+  const db = await openUserDb();
+  try {
+    const logged = logFood.logFoodToDiary(db, {
+      model,
+      quantity: 1,
+      unit: { kind: 'serving', serving: servings[1] },
+      mealSlotId: null,
+      localDayKey: '2026-10-11',
+    });
+    assert.equal(logged.ok, true);
+    assert.equal(logged.entry.unitLabel, 'cup');
+    assert.equal(logged.entry.grams, 240);
+
+    const recent = userData.getRecentFood(db, 'seed', model.foodStableId);
+    assert.match(recent.lastUnit, /^serving:v1:/);
+
+    // Simulate a rebuilt catalog where unrelated inserted rows shifted IDs.
+    const rebuiltModel = {
+      ...model,
+      servings: servings.map((serving) => ({
+        ...serving,
+        servingId: serving.servingId + 100,
+      })),
+    };
+    const selection = build.selectionFromRememberedUnit(
+      rebuiltModel,
+      recent.lastUnit,
+    );
+    assert.equal(selection, '102');
+    const remembered = build.unitChoiceFromSelection(rebuiltModel, selection);
+    const preview = compute.computeLiveNutrients(rebuiltModel, 1, remembered);
+    assert.equal(preview.ok, true);
+    assert.equal(preview.grams, 240);
+  } finally {
+    db.close();
+  }
+});
+
+test('remembered serving identity survives catalog gram-weight drift when its label is unique', async () => {
+  await loadMods();
+  const previousServing = {
+    servingId: 1,
+    quantity: 1,
+    unit: 'oz',
+    modifier: 'oz',
+    gramWeight: 28.35,
+  };
+  const currentServing = {
+    ...previousServing,
+    servingId: 101,
+    gramWeight: 28.349,
+  };
+  const model = {
+    kind: 'seed',
+    servings: [currentServing],
+    customBasis: null,
+  };
+
+  const rememberedUnit = labels.servingIdentityKey(previousServing);
+  const selection = build.selectionFromRememberedUnit(model, rememberedUnit);
+  assert.equal(selection, '101');
+
+  const remembered = build.unitChoiceFromSelection(model, selection);
+  const preview = compute.computeLiveNutrients(
+    { ...model, nutrients: { energy_kcal: 100 } },
+    2,
+    remembered,
+  );
+  assert.equal(preview.ok, true);
+  assert.equal(preview.grams, 56.698);
+});
+
+test('stale serving identity stays unresolved when its semantic label is ambiguous', async () => {
+  await loadMods();
+  const rememberedUnit = labels.servingIdentityKey({
+    quantity: 1,
+    unit: 'cup',
+    modifier: null,
+    gramWeight: 120,
+  });
+  const model = {
+    kind: 'seed',
+    servings: [
+      { servingId: 10, quantity: 1, unit: 'cup', modifier: null, gramWeight: 121 },
+      { servingId: 11, quantity: 1, unit: 'cup', modifier: 'cup', gramWeight: 241 },
+    ],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, rememberedUnit), null);
+});
+
+test('seed detail honors metric and imperial default-unit preferences', async () => {
+  await loadMods();
+  const repo = await openSeedRepo();
+  try {
+    const imperial = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'lb');
+    const metric = build.buildSeedFoodDetail(repo, 'usda-foundation:748967', 'kg');
+    assert.ok(imperial);
+    assert.ok(metric);
+    assert.equal(imperial.defaultUnit.kind, 'serving');
+    assert.equal(imperial.suggestedQuantity, 1);
+    assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
+    const imperialServing = metric.servings.find(
+      (serving) => serving.servingId === imperial.defaultUnit.servingId,
+    );
+    assert.equal(metric.suggestedQuantity, imperialServing.gramWeight);
+  } finally {
+    repo.close();
+  }
+});
+
+test('custom detail honors metric and imperial default-unit preferences', async () => {
+  await loadMods();
+  const db = await openUserDb();
+  const custom = userData.createCustomFood(db, {
+    name: 'Preference Shake',
+    basisKind: 'serving',
+    basisAmount: 1,
+    basisUnit: 'bottle',
+    gramWeightForBasis: 250,
+    nutrients: { energy_kcal: 180, protein: 25, fat_total: 3, carbohydrate: 10 },
+  });
+
+  const imperial = build.buildCustomFoodDetail(custom, 'lb');
+  const metric = build.buildCustomFoodDetail(custom, 'kg');
+  assert.deepEqual(imperial.defaultUnit, { kind: 'serving', servingId: 0 });
+  assert.equal(imperial.suggestedQuantity, 1);
+  assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
+  assert.equal(metric.suggestedQuantity, 250);
+
+  db.close();
+});
+
+test('fixture overlapping modifier keeps balanced parentheses', async () => {
+  await loadMods();
+  const repo = await openSeedRepo();
+  try {
+    const model = build.buildSeedFoodDetail(repo, 'usda-sr-legacy:171890');
+    assert.ok(model);
+    const serving = model.servings.find((candidate) => candidate.unit === 'cup');
+    assert.ok(serving);
+    assert.equal(serving.modifier, 'cup (8 fl oz)');
+    assert.equal(labels.formatServingPickerLabel(serving), 'cup (8 fl oz)');
+    const resolved = resolve.resolveSeedAmount(1, { kind: 'serving', serving });
+    assert.equal(resolved.unitLabel, 'cup (8 fl oz)');
+  } finally {
+    repo.close();
+  }
 });
 
 test('computeLiveNutrients + buildSeedFoodDetail against fixture egg', async () => {
