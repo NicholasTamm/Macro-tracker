@@ -76,7 +76,7 @@ export function resolveQuickAddModel(
   if (foodKind === 'custom') {
     const custom = getCustomFood(db, foodStableId);
     if (!custom) return null;
-    return buildCustomFoodDetail(custom);
+    return buildCustomFoodDetail(custom, massUnit);
   }
   return null;
 }

@@ -301,6 +301,28 @@ test('seed detail honors metric and imperial default-unit preferences', async ()
   }
 });
 
+test('custom detail honors metric and imperial default-unit preferences', async () => {
+  await loadMods();
+  const db = await openUserDb();
+  const custom = userData.createCustomFood(db, {
+    name: 'Preference Shake',
+    basisKind: 'serving',
+    basisAmount: 1,
+    basisUnit: 'bottle',
+    gramWeightForBasis: 250,
+    nutrients: { energy_kcal: 180, protein: 25, fat_total: 3, carbohydrate: 10 },
+  });
+
+  const imperial = build.buildCustomFoodDetail(custom, 'lb');
+  const metric = build.buildCustomFoodDetail(custom, 'kg');
+  assert.deepEqual(imperial.defaultUnit, { kind: 'serving', servingId: 0 });
+  assert.equal(imperial.suggestedQuantity, 1);
+  assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
+  assert.equal(metric.suggestedQuantity, 250);
+
+  db.close();
+});
+
 test('fixture overlapping modifier keeps balanced parentheses', async () => {
   await loadMods();
   const repo = await openSeedRepo();

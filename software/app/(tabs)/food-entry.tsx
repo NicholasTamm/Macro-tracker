@@ -193,7 +193,7 @@ export default function SearchScreen() {
         setDetailError('Custom food not found.');
         return;
       }
-      setDetailModel(buildCustomFoodDetail(custom));
+      setDetailModel(buildCustomFoodDetail(custom, massUnit));
       setDetailOpen(true);
       return;
     }

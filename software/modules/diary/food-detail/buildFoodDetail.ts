@@ -78,7 +78,10 @@ export function buildSeedFoodDetail(
   };
 }
 
-export function buildCustomFoodDetail(food: CustomFood): FoodDetailModel {
+export function buildCustomFoodDetail(
+  food: CustomFood,
+  massUnit: MassUnit = 'lb',
+): FoodDetailModel {
   const basis: CustomBasis = {
     basisKind: food.basisKind,
     basisAmount: food.basisAmount,
@@ -108,9 +111,17 @@ export function buildCustomFoodDetail(food: CustomFood): FoodDetailModel {
     sourceDisplayName: food.brand ? `My Foods · ${food.brand}` : 'My Foods',
     nutrients: food.nutrients,
     servings,
-    defaultUnit: { kind: 'serving', servingId: 0 },
+    defaultUnit:
+      massUnit === 'kg' && food.gramWeightForBasis != null && food.gramWeightForBasis > 0
+        ? { kind: 'grams' }
+        : { kind: 'serving', servingId: 0 },
     customBasis: basis,
-    suggestedQuantity: food.basisAmount > 0 ? food.basisAmount : 1,
+    suggestedQuantity:
+      massUnit === 'kg' && food.gramWeightForBasis != null && food.gramWeightForBasis > 0
+        ? food.gramWeightForBasis
+        : food.basisAmount > 0
+          ? food.basisAmount
+          : 1,
   };
 }
 

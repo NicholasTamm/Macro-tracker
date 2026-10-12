@@ -302,6 +302,36 @@ test('quick-add uses metric grams when no remembered unit exists', async () => {
   }
 });
 
+test('custom quick-add honors metric and imperial defaults without a remembered unit', async () => {
+  const db = await openDb();
+  const custom = userData.createCustomFood(db, {
+    name: 'Quick Add Shake',
+    basisKind: 'serving',
+    basisAmount: 1,
+    basisUnit: 'bottle',
+    gramWeightForBasis: 250,
+    nutrients: { energy_kcal: 180, protein: 25, fat_total: 3, carbohydrate: 10 },
+  });
+
+  const imperial = quick.resolveQuickAddModel(db, null, 'custom', custom.id, 'lb');
+  const metric = quick.resolveQuickAddModel(db, null, 'custom', custom.id, 'kg');
+  assert.deepEqual(imperial.defaultUnit, { kind: 'serving', servingId: 0 });
+  assert.equal(imperial.suggestedQuantity, 1);
+  assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
+  assert.equal(metric.suggestedQuantity, 250);
+
+  const result = quick.quickAddFood(db, null, {
+    foodKind: 'custom',
+    foodStableId: custom.id,
+    mealSlotId: null,
+    massUnit: 'kg',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.quantity, 250);
+  assert.equal(result.unitLabel, 'g');
+  db.close();
+});
+
 test('replayed quick-add intent creates one diary row and one recent use', async () => {
   const db = await openDb();
   const repo = await openSeedRepo();
