@@ -151,18 +151,20 @@ export function selectionFromRememberedUnit(
   ) {
     return rememberedUnit;
   }
-  const serving = model.servings.find(
-    (candidate) => {
-      const modifier = candidate.modifier?.trim();
-      const legacyLabel = modifier
-        ? `${candidate.unit} (${modifier})`
-        : candidate.unit;
-      return (
-        candidate.unit.trim().toLocaleLowerCase() === normalized ||
-        formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized ||
-        legacyLabel.trim().toLocaleLowerCase() === normalized
-      );
-    },
+  const labelMatch = model.servings.find((candidate) => {
+    const modifier = candidate.modifier?.trim();
+    const legacyLabel = modifier
+      ? `${candidate.unit} (${modifier})`
+      : candidate.unit;
+    return (
+      formatServingUnitLabel(candidate).toLocaleLowerCase() === normalized ||
+      legacyLabel.trim().toLocaleLowerCase() === normalized
+    );
+  });
+  if (labelMatch) return String(labelMatch.servingId);
+
+  const unitMatches = model.servings.filter(
+    (candidate) => candidate.unit.trim().toLocaleLowerCase() === normalized,
   );
-  return serving ? String(serving.servingId) : null;
+  return unitMatches.length === 1 ? String(unitMatches[0].servingId) : null;
 }

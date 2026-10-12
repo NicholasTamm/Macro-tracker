@@ -251,6 +251,36 @@ test('remembered legacy duplicated serving labels still resolve', async () => {
   assert.equal(build.selectionFromRememberedUnit(model, 'oz (oz)'), '1');
 });
 
+test('remembered canonical labels win before ambiguous raw serving units', async () => {
+  await loadMods();
+  const model = {
+    kind: 'seed',
+    servings: [
+      {
+        servingId: 1,
+        quantity: 1,
+        unit: 'cup',
+        modifier: 'chopped',
+        gramWeight: 120,
+      },
+      {
+        servingId: 2,
+        quantity: 1,
+        unit: 'cup',
+        modifier: 'cup',
+        gramWeight: 240,
+      },
+    ],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), '2');
+  assert.equal(build.selectionFromRememberedUnit(model, 'CUP (CHOPPED)'), '1');
+
+  model.servings[1].modifier = 'mashed';
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
+});
+
 test('seed detail honors metric and imperial default-unit preferences', async () => {
   await loadMods();
   const repo = await openSeedRepo();
