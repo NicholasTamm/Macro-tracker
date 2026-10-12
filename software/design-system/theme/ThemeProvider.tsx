@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import { Platform, useColorScheme } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import {
   paletteFor,
   Spacing,
@@ -41,8 +43,20 @@ export function ThemeProvider({ children, forcedScheme }: Props) {
     [scheme],
   );
 
+  // Keep native status / navigation chrome in sync with the active palette
+  // so System/Light/Dark switches never leave mixed-theme surfaces (#80).
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(theme.colors.canvas);
+  }, [theme.colors.canvas]);
+
   return (
-    <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={theme}>
+      <StatusBar
+        style={scheme === 'dark' ? 'light' : 'dark'}
+        backgroundColor={Platform.OS === 'android' ? theme.colors.canvas : undefined}
+      />
+      {children}
+    </ThemeContext.Provider>
   );
 }
 

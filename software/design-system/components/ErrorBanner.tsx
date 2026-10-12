@@ -16,6 +16,7 @@ export type ErrorBannerProps = {
 /**
  * Matches HTML `.banner` (education / neutral / info / warning / success).
  * `tone="error"` is the product ErrorBanner used for blocking faults.
+ * All fills/accents come from named design-system tokens (M1-31 / #80).
  */
 export function ErrorBanner({
   title,
@@ -25,7 +26,7 @@ export function ErrorBanner({
   onAction,
   onDismiss,
 }: ErrorBannerProps) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography } = useTheme();
 
   const bg =
     tone === 'education'
@@ -33,12 +34,12 @@ export function ErrorBanner({
       : tone === 'neutral'
         ? colors.band
         : tone === 'info'
-          ? 'rgba(91,149,243,0.12)'
+          ? colors.infoFill
           : tone === 'success'
-            ? 'rgba(70,174,116,0.12)'
+            ? colors.successFill
             : tone === 'warning'
-              ? 'rgba(255,194,65,0.17)'
-              : 'rgba(223,76,76,0.12)';
+              ? colors.warningFill
+              : colors.dangerFill;
 
   const accent =
     tone === 'education'
@@ -50,7 +51,7 @@ export function ErrorBanner({
           : tone === 'success'
             ? colors.carbs
             : tone === 'warning'
-              ? '#a66d00'
+              ? colors.warningInk
               : colors.ink;
 
   const textColor = tone === 'education' ? colors.educationInk : colors.ink;
@@ -70,12 +71,7 @@ export function ErrorBanner({
         },
       ]}
     >
-      <View
-        style={[
-          styles.icon,
-          { borderColor: accent },
-        ]}
-      >
+      <View style={[styles.icon, { borderColor: accent }]}>
         <Text style={{ color: textColor, fontWeight: '800', fontSize: 9 }}>
           {tone === 'error' ? '!' : tone === 'success' ? '✓' : '●'}
         </Text>

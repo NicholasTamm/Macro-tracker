@@ -3,6 +3,7 @@ export {
   darkPalette,
   paletteFor,
   cssTokenMap,
+  DATA_DOMAIN_KEYS,
   type AppPalette,
   type ColorSchemeName,
 } from './colors';
