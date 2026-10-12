@@ -283,6 +283,47 @@ test('remembered legacy duplicated serving label overrides metric quick-add defa
   }
 });
 
+test('quick-add preserves remembered serving quantity after catalog gram-weight drift', async () => {
+  const db = await openDb();
+  const repo = await openSeedRepo();
+  try {
+    const model = build.buildSeedFoodDetail(repo, 'usda-sr-legacy:171077', 'kg');
+    assert.ok(model);
+    const serving = model.servings.find((candidate) => candidate.unit === 'oz');
+    assert.ok(serving);
+    const staleUnit = `serving:v1:${JSON.stringify([
+      serving.quantity,
+      serving.unit,
+      serving.modifier,
+      serving.gramWeight + 0.001,
+    ])}`;
+
+    userData.recordRecentFood(db, {
+      foodKind: 'seed',
+      foodStableId: model.foodStableId,
+      foodDisplayName: model.displayName,
+      foodLicenseTag: model.licenseTag,
+      quantity: 2,
+      unit: staleUnit,
+      usedAt: '2026-10-04T10:00:00.000Z',
+    });
+    const result = quick.quickAddFood(db, repo, {
+      foodKind: 'seed',
+      foodStableId: model.foodStableId,
+      mealSlotId: null,
+      massUnit: 'kg',
+    });
+
+    assert.equal(result.ok, true);
+    assert.equal(result.quantity, 2);
+    assert.equal(result.unitLabel, 'oz');
+    const entry = userData.getDiaryEntry(db, result.entryId);
+    assert.equal(entry.grams, (2 / serving.quantity) * serving.gramWeight);
+  } finally {
+    repo.close();
+  }
+});
+
 test('quick-add uses metric grams when no remembered unit exists', async () => {
   const db = await openDb();
   const repo = await openSeedRepo();

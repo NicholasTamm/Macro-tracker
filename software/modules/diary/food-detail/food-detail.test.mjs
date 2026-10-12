@@ -364,6 +364,60 @@ test('remembered serving identity is unambiguous when canonical labels collide',
   }
 });
 
+test('remembered serving identity survives catalog gram-weight drift when its label is unique', async () => {
+  await loadMods();
+  const previousServing = {
+    servingId: 1,
+    quantity: 1,
+    unit: 'oz',
+    modifier: 'oz',
+    gramWeight: 28.35,
+  };
+  const currentServing = {
+    ...previousServing,
+    servingId: 101,
+    gramWeight: 28.349,
+  };
+  const model = {
+    kind: 'seed',
+    servings: [currentServing],
+    customBasis: null,
+  };
+
+  const rememberedUnit = labels.servingIdentityKey(previousServing);
+  const selection = build.selectionFromRememberedUnit(model, rememberedUnit);
+  assert.equal(selection, '101');
+
+  const remembered = build.unitChoiceFromSelection(model, selection);
+  const preview = compute.computeLiveNutrients(
+    { ...model, nutrients: { energy_kcal: 100 } },
+    2,
+    remembered,
+  );
+  assert.equal(preview.ok, true);
+  assert.equal(preview.grams, 56.698);
+});
+
+test('stale serving identity stays unresolved when its semantic label is ambiguous', async () => {
+  await loadMods();
+  const rememberedUnit = labels.servingIdentityKey({
+    quantity: 1,
+    unit: 'cup',
+    modifier: null,
+    gramWeight: 120,
+  });
+  const model = {
+    kind: 'seed',
+    servings: [
+      { servingId: 10, quantity: 1, unit: 'cup', modifier: null, gramWeight: 121 },
+      { servingId: 11, quantity: 1, unit: 'cup', modifier: 'cup', gramWeight: 241 },
+    ],
+    customBasis: null,
+  };
+
+  assert.equal(build.selectionFromRememberedUnit(model, rememberedUnit), null);
+});
+
 test('seed detail honors metric and imperial default-unit preferences', async () => {
   await loadMods();
   const repo = await openSeedRepo();

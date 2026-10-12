@@ -75,3 +75,33 @@ export function servingIdentityKey(
 export function isServingIdentityKey(value: string): boolean {
   return value.startsWith(SERVING_IDENTITY_PREFIX);
 }
+
+/** Decode a persisted serving identity so stale catalog metadata can be matched safely. */
+export function servingFromIdentityKey(
+  value: string,
+): Pick<ServingChoice, 'quantity' | 'unit' | 'modifier' | 'gramWeight'> | null {
+  if (!isServingIdentityKey(value)) return null;
+  try {
+    const parsed: unknown = JSON.parse(value.slice(SERVING_IDENTITY_PREFIX.length));
+    if (
+      !Array.isArray(parsed) ||
+      parsed.length !== 4 ||
+      typeof parsed[0] !== 'number' ||
+      !Number.isFinite(parsed[0]) ||
+      typeof parsed[1] !== 'string' ||
+      (parsed[2] !== null && typeof parsed[2] !== 'string') ||
+      typeof parsed[3] !== 'number' ||
+      !Number.isFinite(parsed[3])
+    ) {
+      return null;
+    }
+    return {
+      quantity: parsed[0],
+      unit: parsed[1],
+      modifier: parsed[2],
+      gramWeight: parsed[3],
+    };
+  } catch {
+    return null;
+  }
+}

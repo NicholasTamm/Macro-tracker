@@ -9,6 +9,7 @@ import type { CustomBasis, ServingChoice } from './resolveAmount';
 import {
   formatServingUnitLabel,
   isServingIdentityKey,
+  servingFromIdentityKey,
   servingIdentityKey,
 } from './servingLabel';
 
@@ -168,7 +169,18 @@ export function selectionFromRememberedUnit(
       ? String(identityMatches[0].servingId)
       : null;
   }
-  if (isServingIdentityKey(rememberedUnit)) return null;
+  if (isServingIdentityKey(rememberedUnit)) {
+    const rememberedServing = servingFromIdentityKey(rememberedUnit);
+    if (!rememberedServing) return null;
+    const rememberedLabel = formatServingUnitLabel(rememberedServing).toLocaleLowerCase();
+    const semanticMatches = model.servings.filter(
+      (serving) =>
+        formatServingUnitLabel(serving).toLocaleLowerCase() === rememberedLabel,
+    );
+    return semanticMatches.length === 1
+      ? String(semanticMatches[0].servingId)
+      : null;
+  }
   if (
     model.kind === 'custom' &&
     /^\d+$/.test(rememberedUnit) &&
