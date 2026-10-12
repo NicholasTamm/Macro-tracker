@@ -219,6 +219,14 @@ test('serving labels de-duplicate unit/modifier text and retain useful detail', 
   assert.equal(labels.formatServingUnitLabel(parenthesizedCup), 'cup (8 fl oz)');
   assert.equal(labels.formatServingPickerLabel(parenthesizedCup), 'cup (8 fl oz)');
 
+  const drainedCup = {
+    quantity: 1,
+    unit: 'cup',
+    modifier: 'cup (8 fl oz), drained',
+  };
+  assert.equal(labels.formatServingUnitLabel(drainedCup), 'cup (8 fl oz, drained)');
+  assert.equal(labels.formatServingPickerLabel(drainedCup), 'cup (8 fl oz, drained)');
+
   const resolved = resolve.resolveSeedAmount(1, {
     kind: 'serving',
     serving: { servingId: 1, gramWeight: 28.35, ...ounce },
@@ -279,6 +287,68 @@ test('remembered canonical labels win before ambiguous raw serving units', async
 
   model.servings[1].modifier = 'mashed';
   assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
+});
+
+test('remembered serving identity is unambiguous when canonical labels collide', async () => {
+  await loadMods();
+  const servings = [
+    {
+      servingId: 1,
+      quantity: 1,
+      unit: 'cup',
+      modifier: null,
+      gramWeight: 120,
+    },
+    {
+      servingId: 2,
+      quantity: 1,
+      unit: 'cup',
+      modifier: 'cup',
+      gramWeight: 240,
+    },
+  ];
+  const model = {
+    kind: 'seed',
+    foodStableId: 'canonical-label-collision',
+    displayName: 'Collision Food',
+    brand: null,
+    licenseTag: 'test',
+    sourceDisplayName: 'Test',
+    nutrients: { energy_kcal: 100 },
+    servings,
+    defaultUnit: { kind: 'serving', servingId: 1 },
+    customBasis: null,
+    suggestedQuantity: 1,
+  };
+
+  // A legacy display label cannot safely identify either serving.
+  assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
+  assert.equal(build.selectionFromRememberedUnit(model, '2'), '2');
+
+  const db = await openUserDb();
+  try {
+    const logged = logFood.logFoodToDiary(db, {
+      model,
+      quantity: 1,
+      unit: { kind: 'serving', serving: servings[1] },
+      mealSlotId: null,
+      localDayKey: '2026-10-11',
+    });
+    assert.equal(logged.ok, true);
+    assert.equal(logged.entry.unitLabel, 'cup');
+    assert.equal(logged.entry.grams, 240);
+
+    const recent = userData.getRecentFood(db, 'seed', model.foodStableId);
+    assert.equal(recent.lastUnit, '2');
+    const selection = build.selectionFromRememberedUnit(model, recent.lastUnit);
+    assert.equal(selection, '2');
+    const remembered = build.unitChoiceFromSelection(model, selection);
+    const preview = compute.computeLiveNutrients(model, 1, remembered);
+    assert.equal(preview.ok, true);
+    assert.equal(preview.grams, 240);
+  } finally {
+    db.close();
+  }
 });
 
 test('seed detail honors metric and imperial default-unit preferences', async () => {

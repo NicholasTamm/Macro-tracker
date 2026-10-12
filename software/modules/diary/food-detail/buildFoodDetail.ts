@@ -162,7 +162,7 @@ export function selectionFromRememberedUnit(
   ) {
     return rememberedUnit;
   }
-  const labelMatch = model.servings.find((candidate) => {
+  const labelMatches = model.servings.filter((candidate) => {
     const modifier = candidate.modifier?.trim();
     const legacyLabel = modifier
       ? `${candidate.unit} (${modifier})`
@@ -172,7 +172,9 @@ export function selectionFromRememberedUnit(
       legacyLabel.trim().toLocaleLowerCase() === normalized
     );
   });
-  if (labelMatch) return String(labelMatch.servingId);
+  if (labelMatches.length > 0) {
+    return labelMatches.length === 1 ? String(labelMatches[0].servingId) : null;
+  }
 
   const unitMatches = model.servings.filter(
     (candidate) => candidate.unit.trim().toLocaleLowerCase() === normalized,

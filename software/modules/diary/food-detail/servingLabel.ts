@@ -38,9 +38,9 @@ export function formatServingUnitLabel(
       .slice(unitWords)
       .join(' ')
       .replace(/^[,;:\-–—]+\s*/, '');
-    if (detail.startsWith('(') && detail.endsWith(')')) {
-      detail = detail.slice(1, -1).trim();
-    }
+    // Unwrap a leading parenthesized segment before adding our outer pair.
+    // This also handles suffixes such as "(8 fl oz), drained".
+    detail = detail.replace(/^\(([^()]*)\)(.*)$/, '$1$2').trim();
     if (detail) return `${unit} (${detail})`;
     return unit;
   }

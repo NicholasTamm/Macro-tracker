@@ -108,7 +108,10 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
         foodLicenseTag: input.model.licenseTag,
         foodBrand: input.model.brand,
         quantity: preview.quantity,
-        unit: preview.unitLabel,
+        unit:
+          input.unit.kind === 'grams'
+            ? 'grams'
+            : String(input.unit.serving.servingId),
         usedAt: timestamp,
       });
       return created;
