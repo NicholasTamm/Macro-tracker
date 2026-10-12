@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { Platform, useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
 import * as SystemUI from 'expo-system-ui';
 import {
   paletteFor,
@@ -10,6 +11,7 @@ import {
   type AppPalette,
   type ColorSchemeName,
 } from '../tokens';
+import { syncNativeChrome } from './nativeChrome';
 
 export type Theme = {
   scheme: ColorSchemeName;
@@ -46,8 +48,11 @@ export function ThemeProvider({ children, forcedScheme }: Props) {
   // Keep native status / navigation chrome in sync with the active palette
   // so System/Light/Dark switches never leave mixed-theme surfaces (#80).
   useEffect(() => {
-    void SystemUI.setBackgroundColorAsync(theme.colors.canvas);
-  }, [theme.colors.canvas]);
+    void syncNativeChrome(Platform.OS, scheme, theme.colors.canvas, {
+      setRootBackgroundColor: SystemUI.setBackgroundColorAsync,
+      setNavigationButtonStyle: NavigationBar.setButtonStyleAsync,
+    });
+  }, [scheme, theme.colors.canvas]);
 
   return (
     <ThemeContext.Provider value={theme}>

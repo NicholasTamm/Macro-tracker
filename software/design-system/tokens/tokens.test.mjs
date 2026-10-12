@@ -1,22 +1,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
 import ts from 'typescript';
 
 const dir = dirname(fileURLToPath(import.meta.url));
-const bundleDir = join(dir, '.bundle-tokens');
 
 async function loadColors() {
-  mkdirSync(bundleDir, { recursive: true });
-  writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({ type: 'module' }));
-  const source = readFileSync(join(dir, 'colors.ts'), 'utf8');
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-  });
-  writeFileSync(join(bundleDir, 'colors.js'), compiled.outputText);
-  return import(pathToFileURL(join(bundleDir, 'colors.js')).href);
+  const bundleDir = mkdtempSync(join(tmpdir(), 'macro-tracker-tokens-'));
+  try {
+    writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({ type: 'module' }));
+    const source = readFileSync(join(dir, 'colors.ts'), 'utf8');
+    const compiled = ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+    });
+    writeFileSync(join(bundleDir, 'colors.js'), compiled.outputText);
+    return await import(pathToFileURL(join(bundleDir, 'colors.js')).href);
+  } finally {
+    rmSync(bundleDir, { recursive: true, force: true });
+  }
 }
 
 test('color tokens export light and dark palettes', () => {

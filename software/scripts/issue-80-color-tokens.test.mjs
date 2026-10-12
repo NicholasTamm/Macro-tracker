@@ -3,24 +3,28 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, readdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const softwareRoot = join(__dirname, '..');
-const bundleDir = join(__dirname, '.bundle-issue-80');
 
 async function loadColors() {
-  mkdirSync(bundleDir, { recursive: true });
-  writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({ type: 'module' }));
-  const source = readFileSync(join(softwareRoot, 'design-system/tokens/colors.ts'), 'utf8');
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
-  });
-  writeFileSync(join(bundleDir, 'colors.js'), compiled.outputText);
-  return import(pathToFileURL(join(bundleDir, 'colors.js')).href);
+  const bundleDir = mkdtempSync(join(tmpdir(), 'macro-tracker-issue-80-'));
+  try {
+    writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({ type: 'module' }));
+    const source = readFileSync(join(softwareRoot, 'design-system/tokens/colors.ts'), 'utf8');
+    const compiled = ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+    });
+    writeFileSync(join(bundleDir, 'colors.js'), compiled.outputText);
+    return await import(pathToFileURL(join(bundleDir, 'colors.js')).href);
+  } finally {
+    rmSync(bundleDir, { recursive: true, force: true });
+  }
 }
 
 function walk(dir) {
@@ -47,15 +51,49 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider syncs StatusBar + SystemUI to canvas', () => {
+test('ThemeProvider waits for hydration and syncs all native chrome', () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
   );
+  const layout = readFileSync(join(softwareRoot, 'app/_layout.tsx'), 'utf8');
   assert.match(src, /expo-status-bar/);
+  assert.match(src, /expo-navigation-bar/);
   assert.match(src, /expo-system-ui/);
-  assert.match(src, /setBackgroundColorAsync\(theme\.colors\.canvas\)/);
+  assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
+  assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
+  assert.match(layout, /if \(!ready\) return null/);
+  assert.match(layout, /if \(ready\) void SplashScreen\.hideAsync/);
+});
+
+test('native chrome uses contrasting Android navigation buttons at runtime', async () => {
+  const source = readFileSync(
+    join(softwareRoot, 'design-system/theme/nativeChrome.ts'),
+    'utf8',
+  );
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  });
+  const moduleUrl = `data:text/javascript;base64,${Buffer.from(compiled.outputText).toString('base64')}`;
+  const { syncNativeChrome } = await import(moduleUrl);
+  const calls = [];
+  const adapters = {
+    setRootBackgroundColor: async (color) => { calls.push(['root', color]); },
+    setNavigationButtonStyle: async (style) => { calls.push(['navigation', style]); },
+  };
+
+  await syncNativeChrome('android', 'dark', '#141414', adapters);
+  await syncNativeChrome('android', 'light', '#f6f6f6', adapters);
+  await syncNativeChrome('ios', 'dark', '#141414', adapters);
+
+  assert.deepEqual(calls, [
+    ['root', '#141414'],
+    ['navigation', 'light'],
+    ['root', '#f6f6f6'],
+    ['navigation', 'dark'],
+    ['root', '#141414'],
+  ]);
 });
 
 test('design-system components do not embed raw hex/rgba (tokens only)', () => {
