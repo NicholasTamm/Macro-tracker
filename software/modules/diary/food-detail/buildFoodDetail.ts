@@ -6,7 +6,11 @@ import type { LocalFoodRepository } from '../../food-catalog/local-food-repo';
 import type { CustomFood, MassUnit, NutrientMap } from '../../app-core/user-data';
 import { nutrientMapFromRows } from './scaleNutrients';
 import type { CustomBasis, ServingChoice } from './resolveAmount';
-import { formatServingUnitLabel } from './servingLabel';
+import {
+  formatServingUnitLabel,
+  isServingIdentityKey,
+  servingIdentityKey,
+} from './servingLabel';
 
 export type FoodDetailKind = 'seed' | 'custom';
 
@@ -156,12 +160,23 @@ export function selectionFromRememberedUnit(
   if (normalized === 'g' || normalized === 'gram' || normalized === 'grams') {
     return gramsUnitAvailable(model) ? 'grams' : null;
   }
+  const identityMatches = model.servings.filter(
+    (serving) => servingIdentityKey(serving) === rememberedUnit,
+  );
+  if (identityMatches.length > 0) {
+    return identityMatches.length === 1
+      ? String(identityMatches[0].servingId)
+      : null;
+  }
+  if (isServingIdentityKey(rememberedUnit)) return null;
   if (
+    model.kind === 'custom' &&
     /^\d+$/.test(rememberedUnit) &&
     model.servings.some((serving) => String(serving.servingId) === rememberedUnit)
   ) {
     return rememberedUnit;
   }
+  if (/^\d+$/.test(rememberedUnit)) return null;
   const labelMatches = model.servings.filter((candidate) => {
     const modifier = candidate.modifier?.trim();
     const legacyLabel = modifier

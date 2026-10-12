@@ -17,6 +17,7 @@ import type { FoodDetailModel } from './buildFoodDetail';
 import { computeLiveNutrients } from './computeLiveNutrients';
 import { isValidQuantity } from './parseQuantity';
 import type { UnitChoice } from './resolveAmount';
+import { servingIdentityKey } from './servingLabel';
 
 export type LogFoodInput = {
   /** Stable ID for one UI log intent. Replays return the original row. */
@@ -111,7 +112,7 @@ export function logFoodToDiary(db: SqlExecutor, input: LogFoodInput): LogFoodRes
         unit:
           input.unit.kind === 'grams'
             ? 'grams'
-            : String(input.unit.serving.servingId),
+            : servingIdentityKey(input.unit.serving),
         usedAt: timestamp,
       });
       return created;

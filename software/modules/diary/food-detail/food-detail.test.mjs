@@ -323,7 +323,8 @@ test('remembered serving identity is unambiguous when canonical labels collide',
 
   // A legacy display label cannot safely identify either serving.
   assert.equal(build.selectionFromRememberedUnit(model, 'cup'), null);
-  assert.equal(build.selectionFromRememberedUnit(model, '2'), '2');
+  // Catalog-global row IDs are not stable across seed rebuilds.
+  assert.equal(build.selectionFromRememberedUnit(model, '2'), null);
 
   const db = await openUserDb();
   try {
@@ -339,11 +340,23 @@ test('remembered serving identity is unambiguous when canonical labels collide',
     assert.equal(logged.entry.grams, 240);
 
     const recent = userData.getRecentFood(db, 'seed', model.foodStableId);
-    assert.equal(recent.lastUnit, '2');
-    const selection = build.selectionFromRememberedUnit(model, recent.lastUnit);
-    assert.equal(selection, '2');
-    const remembered = build.unitChoiceFromSelection(model, selection);
-    const preview = compute.computeLiveNutrients(model, 1, remembered);
+    assert.match(recent.lastUnit, /^serving:v1:/);
+
+    // Simulate a rebuilt catalog where unrelated inserted rows shifted IDs.
+    const rebuiltModel = {
+      ...model,
+      servings: servings.map((serving) => ({
+        ...serving,
+        servingId: serving.servingId + 100,
+      })),
+    };
+    const selection = build.selectionFromRememberedUnit(
+      rebuiltModel,
+      recent.lastUnit,
+    );
+    assert.equal(selection, '102');
+    const remembered = build.unitChoiceFromSelection(rebuiltModel, selection);
+    const preview = compute.computeLiveNutrients(rebuiltModel, 1, remembered);
     assert.equal(preview.ok, true);
     assert.equal(preview.grams, 240);
   } finally {

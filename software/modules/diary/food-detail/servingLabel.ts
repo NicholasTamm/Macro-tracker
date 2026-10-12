@@ -1,5 +1,7 @@
 import type { ServingChoice } from './resolveAmount';
 
+const SERVING_IDENTITY_PREFIX = 'serving:v1:';
+
 function cleanLabelPart(value: string): string {
   return value.trim().replace(/\s+/g, ' ');
 }
@@ -53,4 +55,23 @@ export function formatServingPickerLabel(
   serving: Pick<ServingChoice, 'unit' | 'modifier'>,
 ): string {
   return formatServingUnitLabel(serving);
+}
+
+/** Catalog-row-independent identity used to remember a serving choice safely. */
+export function servingIdentityKey(
+  serving: Pick<
+    ServingChoice,
+    'quantity' | 'unit' | 'modifier' | 'gramWeight'
+  >,
+): string {
+  return `${SERVING_IDENTITY_PREFIX}${JSON.stringify([
+    serving.quantity,
+    cleanLabelPart(serving.unit),
+    serving.modifier ? cleanLabelPart(serving.modifier) : null,
+    serving.gramWeight,
+  ])}`;
+}
+
+export function isServingIdentityKey(value: string): boolean {
+  return value.startsWith(SERVING_IDENTITY_PREFIX);
 }
