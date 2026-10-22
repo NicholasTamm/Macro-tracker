@@ -195,7 +195,7 @@ function DateSelector({
         },
       ]}
     >
-      <Text style={{ color: colors.ink, fontSize: 18, fontWeight: '700' }}>
+      <Text style={[typography.section, { color: colors.ink }]}>
         {(delta < 0) === I18nManager.isRTL ? '›' : '‹'}
       </Text>
     </Pressable>
@@ -222,7 +222,7 @@ function DateSelector({
 
 export default function TodayScreen() {
   const { ready, error, db, snapshot, refresh } = useUserData();
-  const { colors, spacing, typography } = useTheme();
+  const { colors, typography, spacing } = useTheme();
   const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<DiaryEntry | null>(null);
