@@ -5,6 +5,8 @@ export type BundledLicense = {
 
 export const BUNDLED_LICENSES: readonly BundledLicense[] = [
   { name: 'Expo', license: 'MIT' },
+  { name: 'Figtree font (Erik Kennedy)', license: 'OFL-1.1' },
+  { name: 'Nunito font (Vernon Adams et al.)', license: 'OFL-1.1' },
   { name: 'Expo Router', license: 'MIT' },
   { name: 'Expo SQLite', license: 'MIT' },
   { name: 'React', license: 'MIT' },

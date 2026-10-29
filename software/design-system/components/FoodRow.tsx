@@ -20,7 +20,7 @@ export function FoodRow({
   actionLabel = 'Add',
   onAction,
 }: FoodRowProps) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography, font, radius } = useTheme();
 
   return (
     <View
@@ -68,7 +68,7 @@ export function FoodRow({
           },
         ]}
       >
-        <Text style={{ color: colors.ink, fontSize: 17, fontWeight: '600' }}>＋</Text>
+        <Text style={{ color: colors.ink, fontSize: 17, ...font('600') }}>＋</Text>
       </Pressable>
     </View>
   );

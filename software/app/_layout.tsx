@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { ThemeProvider } from '@/design-system';
+import { ThemeProvider, useProductFonts } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
 
@@ -24,6 +24,8 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  // Start Figtree/Nunito loading during hydration; never gates render (issue 120).
+  useProductFonts();
   return (
     <UserDataProvider>
       <PersistedTheme>
