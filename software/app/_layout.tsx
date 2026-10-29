@@ -43,7 +43,10 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
     void SplashScreen.hideAsync();
   }, [ready, themePreference]);
 
-  if (!ready) return null;
+  // Native stays behind the configured splash while its persisted preference
+  // hydrates. The web splash API is a no-op, so render with the system theme
+  // there instead of showing an empty page during sql.js startup.
+  if (!ready && Platform.OS !== 'web') return null;
 
   return (
     <ThemeProvider forcedScheme={themePreference === 'system' ? undefined : themePreference}>

@@ -51,7 +51,7 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider applies persisted native appearance during startup and hides after hydration', async () => {
+test('ThemeProvider gates native startup without blanking web during hydration', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
@@ -68,7 +68,7 @@ test('ThemeProvider applies persisted native appearance during startup and hides
   assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
-  assert.match(layout, /if \(!ready\) return null/);
+  assert.match(layout, /if \(!ready && Platform\.OS !== 'web'\) return null/);
   assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
   assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
   assert.ok(
