@@ -407,6 +407,7 @@ export default function SearchScreen() {
         </View>
       ) : showEmptyBrowse ? (
         <EmptyState
+          mascotPose="think"
           title="Search USDA staples"
           message="Recent, Favorites, and My Foods appear here after you log foods. Start typing to search the offline catalog."
         />
