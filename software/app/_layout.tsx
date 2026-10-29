@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { Appearance, Platform } from 'react-native';
 import { ThemeProvider } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
@@ -11,8 +12,12 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
   const { ready, themePreference } = useUserData();
 
   useEffect(() => {
-    if (ready) void SplashScreen.hideAsync();
-  }, [ready]);
+    if (!ready) return;
+    if (Platform.OS !== 'web') {
+      Appearance.setColorScheme(themePreference === 'system' ? null : themePreference);
+    }
+    void SplashScreen.hideAsync();
+  }, [ready, themePreference]);
 
   if (!ready) return null;
 

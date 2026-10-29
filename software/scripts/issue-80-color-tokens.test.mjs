@@ -51,12 +51,17 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider waits for hydration and syncs all native chrome', () => {
+test('ThemeProvider themes the native splash before hiding it after hydration', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
   );
   const layout = readFileSync(join(softwareRoot, 'app/_layout.tsx'), 'utf8');
+  const appConfig = JSON.parse(readFileSync(join(softwareRoot, 'app.json'), 'utf8'));
+  const { darkPalette } = await loadColors();
+  const splashConfig = appConfig.expo.plugins.find(
+    (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen',
+  )[1];
   assert.match(src, /expo-status-bar/);
   assert.match(src, /expo-navigation-bar/);
   assert.match(src, /expo-system-ui/);
@@ -64,7 +69,32 @@ test('ThemeProvider waits for hydration and syncs all native chrome', () => {
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
   assert.match(layout, /if \(!ready\) return null/);
-  assert.match(layout, /if \(ready\) void SplashScreen\.hideAsync/);
+  assert.match(layout, /Appearance\.setColorScheme\(themePreference === 'system' \? null : themePreference\)/);
+  assert.ok(
+    layout.indexOf('Appearance.setColorScheme') < layout.indexOf('SplashScreen.hideAsync'),
+    'persisted appearance must be applied before the splash is hidden',
+  );
+  assert.equal(splashConfig.dark.backgroundColor, darkPalette.canvas);
+});
+
+test('screenshot parity rejects a collapsed surface role', async () => {
+  const { assertRoleParity } = await import('./issue-80-screenshot-parity.mjs');
+  const width = 390;
+  const height = 1200;
+  const solidImage = () => ({
+    width,
+    height,
+    rgb: new Uint8Array(width * height * 3).fill(255),
+  });
+  const app = solidImage();
+  const reference = solidImage();
+  const referenceBandOffset = (1070 * width + Math.floor(width / 2)) * 3;
+  reference.rgb.set([241, 241, 241], referenceBandOffset);
+
+  assert.throws(
+    () => assertRoleParity(width, 'light', app, reference),
+    /light band role diverged/,
+  );
 });
 
 test('native chrome uses contrasting Android navigation buttons at runtime', async () => {
