@@ -17,8 +17,10 @@ import {
   LoadingState,
   ErrorBanner,
   useTheme,
+  FoodIcon,
 } from '@/design-system';
 import { useUserData } from '@/components/UserDataProvider';
+import { foodIconFor } from '@/modules/food-catalog/foodIcon';
 import { formatEnergy } from '@/modules/app-core/settings';
 import type { EnergyUnit } from '@/modules/app-core/user-data';
 import {
@@ -68,6 +70,7 @@ function EntryRow({
         },
       ]}
     >
+      <FoodIcon icon={foodIconFor(entry.foodDisplayName)} size={24} />
       <View style={{ flex: 1, minWidth: 0, gap: spacing.xs }}>
         <Text numberOfLines={1} style={[typography.bodyStrong, { color: colors.ink }]}>
           {entry.foodDisplayName}
