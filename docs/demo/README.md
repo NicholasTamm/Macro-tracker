@@ -220,3 +220,9 @@ Checks no MacroFactor font ships, runs typecheck, lint, the font tests and the f
 Run `bash docs/demo/smoke-m1-issue-121.sh`. It checks that ≥30 Microsoft Fluent Emoji Flat SVGs and their MIT licence are in `software/assets/food-icons/`, then runs typecheck, lint, the keyword-mapping tests (`modules/food-catalog/foodIcon.test.mjs`) and the full suite. It also does a web export and confirms the SVGs are bundled. Result: `out/issue-121-smoke-result.txt`.
 
 Manual check: open Food entry and search "banana", then open Today. Each row shows a flat food icon (32 px in search results, 24 px in diary rows) in place of the system emoji. Unknown foods show the bowl. Screen readers skip the icon.
+
+## Issue #122 — M1-64 Placeholder mascot and EmptyState slot
+
+Run `bash docs/demo/smoke-m1-issue-122.sh`. It checks that the six placeholder poses are in `software/assets/mascot/`, then runs typecheck, lint, `scripts/issue-122-mascot.test.mjs` and the full suite. It also does a web export and confirms every pose is bundled. Result: `out/issue-122-smoke-result.txt`.
+
+Manual check: open the component gallery and toggle light/dark. "Mascot (placeholder art)" shows wave, think, cheer, sleep, scale and emptyPlate, followed by an empty state with the mascot and a brand CTA. The placeholder is hand-written SVG circles. Final art from #127 replaces the files with the same names and needs no code change.

@@ -8,3 +8,4 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { LoadingState } from './LoadingState';
 export { FoodIcon, type FoodIconProps } from './FoodIcon';
 export { FOOD_ICON_SOURCES, FALLBACK_FOOD_ICON, type FoodIconKey } from './foodIconAssets';
+export { Mascot, MASCOT_POSES, MASCOT_SOURCES, type MascotPose, type MascotProps } from './Mascot';

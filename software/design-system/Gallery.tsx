@@ -11,6 +11,8 @@ import {
   OfflinePill,
   EmptyState,
   LoadingState,
+  Mascot,
+  MASCOT_POSES,
 } from './components';
 import type { ColorSchemeName } from './tokens';
 
@@ -180,6 +182,29 @@ function GalleryBody() {
         </Card>
         <Card padded={false} style={{ marginTop: spacing.md }}>
           <LoadingState />
+        </Card>
+      </Section>
+
+      <Section title="Mascot (placeholder art)">
+        <Card>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md }}>
+            {MASCOT_POSES.map((pose) => (
+              <View key={pose} style={{ alignItems: 'center', gap: spacing.xs }}>
+                <Mascot pose={pose} size={72} />
+                <Text style={[typography.caption, { color: colors.muted }]}>{pose}</Text>
+              </View>
+            ))}
+          </View>
+        </Card>
+        <Card style={{ marginTop: spacing.md }}>
+          <EmptyState
+            mascotPose="emptyPlate"
+            actionVariant="brand"
+            title="Your plate is empty"
+            message="Log your first food and we'll keep count with you."
+            actionLabel="Add food"
+            onAction={() => {}}
+          />
         </Card>
       </Section>
     </ScrollView>
