@@ -129,16 +129,45 @@ test('native chrome uses contrasting Android navigation buttons at runtime', asy
   ]);
 });
 
-test('design-system components do not embed raw hex/rgba (tokens only)', () => {
-  const root = join(softwareRoot, 'design-system/components');
+const renderedSurfaceRoots = [
+  'app',
+  'modules',
+  'design-system/components',
+];
+
+test('rendered surfaces do not embed raw hex/rgba (tokens only)', () => {
   const offenders = [];
-  for (const p of walk(root)) {
-    if (!/\.(tsx|ts)$/.test(p)) continue;
-    if (p.includes('__tests__')) continue;
-    const source = readFileSync(p, 'utf8');
-    if (/#[0-9a-fA-F]{3,8}/.test(source) || /rgba?\(/.test(source)) {
-      offenders.push(p.replace(softwareRoot + '/', ''));
+  for (const root of renderedSurfaceRoots) {
+    for (const p of walk(join(softwareRoot, root))) {
+      if (!/\.(tsx|ts)$/.test(p)) continue;
+      if (p.includes('__tests__')) continue;
+      const source = readFileSync(p, 'utf8');
+      if (/#[0-9a-fA-F]{3,8}/.test(source) || /rgba?\(/.test(source)) {
+        offenders.push(p.replace(softwareRoot + '/', ''));
+      }
     }
   }
-  assert.deepEqual(offenders, [], `raw colors in components: ${offenders.join(', ')}`);
+  assert.deepEqual(offenders, [], `raw colors in rendered surfaces: ${offenders.join(', ')}`);
+});
+
+test('danger text is reserved for errors and destructive actions', () => {
+  const expectedUses = {
+    'app/(tabs)/today.tsx': 1,
+    'app/onboarding/adult.tsx': 1,
+    'app/settings/profile.tsx': 1,
+    'design-system/components/ErrorBanner.tsx': 1,
+    'design-system/components/PrimaryButton.tsx': 1,
+    'modules/diary/entry-edit/DiaryEntryEditSheet.tsx': 1,
+    'modules/diary/food-detail/FoodDetailSheet.tsx': 2,
+  };
+  const actualUses = {};
+  for (const root of renderedSurfaceRoots) {
+    for (const p of walk(join(softwareRoot, root))) {
+      if (!/\.(tsx|ts)$/.test(p)) continue;
+      if (p.includes('__tests__')) continue;
+      const count = [...readFileSync(p, 'utf8').matchAll(/colors\.danger\b/g)].length;
+      if (count > 0) actualUses[p.replace(softwareRoot + '/', '')] = count;
+    }
+  }
+  assert.deepEqual(actualUses, expectedUses);
 });
