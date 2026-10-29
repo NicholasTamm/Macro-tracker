@@ -30,16 +30,21 @@ export function PrimaryButton({
 }: PrimaryButtonProps) {
   const { colors, radius, typography, spacing } = useTheme();
 
-  const bg =
-    variant === 'primary'
+  // Issue 126: a disabled brand CTA swaps to the gated muted-on-control pair
+  // at full opacity, so its label stays readable (not faded orange).
+  const brandDisabled = variant === 'brand' && !!disabled;
+  const bg = brandDisabled
+    ? colors.control
+    : variant === 'primary'
       ? colors.ink
       : variant === 'brand'
         ? colors.brand
         : variant === 'destructive'
           ? colors.control
           : colors.raised;
-  const fg =
-    variant === 'primary'
+  const fg = brandDisabled
+    ? colors.muted
+    : variant === 'primary'
       ? colors.raised
       : variant === 'brand'
         ? colors.onBrand
@@ -62,7 +67,7 @@ export function PrimaryButton({
           borderRadius: radius.pill,
           backgroundColor: bg,
           borderColor,
-          opacity: disabled ? 0.35 : state.pressed ? 0.88 : 1,
+          opacity: brandDisabled ? 1 : disabled ? 0.35 : state.pressed ? 0.88 : 1,
         },
         typeof style === 'function' ? style(state) : style,
       ]}

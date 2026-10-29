@@ -28,6 +28,7 @@ export default function TargetScreen() {
 
   return (
     <OnboardingShell
+      mascotPose="cheer"
       title="Starter target"
       subtitle="Transparent estimate for personal tracking — not medical advice. You can edit targets later."
       primaryLabel="Finish onboarding"

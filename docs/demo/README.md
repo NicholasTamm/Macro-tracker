@@ -259,3 +259,13 @@ Manual check on a device:
 3. Delete or undo so you drop below the target. The card hides.
 4. Past days never celebrate.
 5. With Reduce Motion on, the card appears without animation.
+
+## Issue #126 — M1-68 Onboarding mascot
+
+Run `bash docs/demo/smoke-m1-issue-126.sh`. It runs typecheck, lint, the onboarding-mascot and contrast (qa-m1-21) tests, and the full suite. It also does a web export and confirms the wave and cheer art are bundled. Result: `out/issue-126-smoke-result.txt`.
+
+Manual check on a fresh profile:
+1. The first step ("Confirm you are an adult") shows the wave mascot above a Nunito display title.
+2. Middle steps are plain.
+3. "Starter target" shows the cheer mascot.
+4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.

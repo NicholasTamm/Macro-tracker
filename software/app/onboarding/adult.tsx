@@ -13,6 +13,7 @@ export default function AdultGateScreen() {
 
   return (
     <OnboardingShell
+      mascotPose="wave"
       title="Confirm you are an adult"
       subtitle="This app is for adults 18+. Adaptive coaching (later) stays off until clinical review; exclusions can disable the coaching shell."
       primaryLabel="I am 18 or older"
