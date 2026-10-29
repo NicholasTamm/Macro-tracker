@@ -1,6 +1,7 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import {
   View,
   Text,
@@ -8,6 +9,7 @@ import {
   ScrollView,
   Pressable,
   I18nManager,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -38,6 +40,12 @@ import {
   type UndoAction,
 } from '@/modules/diary';
 import { DiaryEntryEditSheet } from '@/modules/diary/entry-edit/DiaryEntryEditSheet';
+import { GoalHitCard } from '@/modules/diary/GoalHitCard';
+import {
+  claimGoalHitCelebration,
+  isDailyGoalHit,
+  shouldShowGoalHitCard,
+} from '@/modules/diary/goalHit';
 
 function EntryRow({
   entry,
@@ -252,6 +260,27 @@ export default function TodayScreen() {
     return loadTodayDay(db, dayKey);
   }, [db, dayKey, tick]);
 
+  // Issue 125: goal-hit card on the real current day; haptic at most once per day.
+  const todayKey = localDayKeyFromDate();
+  const goalHitArgs = {
+    viewDayKey: dayKey,
+    todayKey,
+    hit: view != null && isDailyGoalHit(view.totals, view.goals),
+  };
+  const showGoalHit = shouldShowGoalHitCard(goalHitArgs);
+  useEffect(() => {
+    if (!db || !showGoalHit) return;
+    let fire = false;
+    try {
+      fire = claimGoalHitCelebration(db, { viewDayKey: todayKey, todayKey, hit: true });
+    } catch {
+      return;
+    }
+    if (fire && Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+  }, [db, showGoalHit, todayKey]);
+
   const onEdit = useCallback((entry: DiaryEntry) => {
     setActionError(null);
     setEditing(entry);
@@ -386,6 +415,8 @@ export default function TodayScreen() {
             />
           </View>
         ) : null}
+
+        {showGoalHit ? <GoalHitCard /> : null}
 
         {view.entryCount === 0 ? (
           <EmptyState
