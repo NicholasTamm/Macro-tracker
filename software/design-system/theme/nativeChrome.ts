@@ -11,8 +11,10 @@ export async function syncNativeChrome(
   canvas: string,
   adapters: NativeChromeAdapters,
 ): Promise<void> {
-  await adapters.setRootBackgroundColor(canvas);
-  if (platform === 'android') {
-    await adapters.setNavigationButtonStyle(scheme === 'dark' ? 'light' : 'dark');
-  }
+  await Promise.all([
+    adapters.setRootBackgroundColor(canvas),
+    platform === 'android'
+      ? adapters.setNavigationButtonStyle(scheme === 'dark' ? 'light' : 'dark')
+      : Promise.resolve(),
+  ]);
 }

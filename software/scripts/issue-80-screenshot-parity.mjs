@@ -105,6 +105,7 @@ function correlation(a, b) {
 }
 
 for (const width of [390, 414, 430]) {
+  const images = {};
   for (const target of ['app', 'reference']) {
     const light = decodePng(join(matrixDir, `${target}-${width}-light.png`));
     const dark = decodePng(join(matrixDir, `${target}-${width}-dark.png`));
@@ -120,6 +121,7 @@ for (const width of [390, 414, 430]) {
     );
     const lightStats = stats(light);
     const darkStats = stats(dark);
+    images[target] = { light, dark, lightStats, darkStats };
     assert.ok(lightStats.deviation > 20, `${target} ${width}px light screenshot is blank`);
     assert.ok(darkStats.deviation > 20, `${target} ${width}px dark screenshot is blank`);
     assert.ok(
@@ -135,4 +137,23 @@ for (const width of [390, 414, 430]) {
       `OK: ${target} ${width}px light/dark pair (luma ${lightStats.mean.toFixed(1)}/${darkStats.mean.toFixed(1)}, hierarchy ${structure.toFixed(3)})`,
     );
   }
+  for (const scheme of ['light', 'dark']) {
+    const lumaDelta = Math.abs(
+      images.app[`${scheme}Stats`].mean - images.reference[`${scheme}Stats`].mean,
+    );
+    assert.ok(
+      lumaDelta < 12,
+      `${width}px ${scheme} app/reference surface hierarchy diverged (${lumaDelta.toFixed(1)} luma)`,
+    );
+    console.log(
+      `OK: app/reference ${width}px ${scheme} surface parity (luma ${images.app[`${scheme}Stats`].mean.toFixed(1)}/${images.reference[`${scheme}Stats`].mean.toFixed(1)})`,
+    );
+  }
+  const appThemeDelta = images.app.lightStats.mean - images.app.darkStats.mean;
+  const referenceThemeDelta =
+    images.reference.lightStats.mean - images.reference.darkStats.mean;
+  assert.ok(
+    Math.abs(appThemeDelta - referenceThemeDelta) < 15,
+    `${width}px app/reference light-dark contrast diverged`,
+  );
 }

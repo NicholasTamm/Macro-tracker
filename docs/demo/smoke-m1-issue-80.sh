@@ -58,19 +58,22 @@ ok "full test suite"
 
 echo "==> paired gallery screenshot matrix + reference parity"
 test -n "$CHROME" || fail "Chrome is required for screenshot verification"
-for file in index.html styles.css MacroSans-VF.ttf; do
+for file in index.html styles.css assets/MacroSans-VF.ttf; do
   test -f "$REFERENCE_DIR/$file" || fail "missing design-system reference: $REFERENCE_DIR/$file"
 done
 mkdir -p "$TMP_DIR/gallery" "$TMP_DIR/reference/light" "$TMP_DIR/reference/dark" "$TMP_DIR/screenshots"
 ./node_modules/.bin/esbuild scripts/issue-80-gallery-smoke.mjs \
   --bundle --platform=browser --format=esm --jsx=automatic \
   --alias:react-native=react-native-web \
+  --alias:expo-navigation-bar=./scripts/issue-80-native-chrome-stub.mjs \
+  --alias:expo-system-ui=./scripts/issue-80-native-chrome-stub.mjs \
   --define:process.env.NODE_ENV='"production"' \
   --outfile="$TMP_DIR/gallery/gallery.browser.js"
 cp scripts/issue-80-gallery-smoke.html "$TMP_DIR/gallery/index.html"
 for scheme in light dark; do
-  cp "$REFERENCE_DIR/index.html" "$REFERENCE_DIR/styles.css" "$REFERENCE_DIR/MacroSans-VF.ttf" \
-    "$TMP_DIR/reference/$scheme/"
+  cp "$REFERENCE_DIR/index.html" "$REFERENCE_DIR/styles.css" "$TMP_DIR/reference/$scheme/"
+  mkdir -p "$TMP_DIR/reference/$scheme/assets"
+  cp "$REFERENCE_DIR/assets/MacroSans-VF.ttf" "$TMP_DIR/reference/$scheme/assets/"
   sed -i "s/data-theme=\"light\"/data-theme=\"$scheme\"/" "$TMP_DIR/reference/$scheme/index.html"
   sed -i '/<script src="scripts.js"><\/script>/d' "$TMP_DIR/reference/$scheme/index.html"
 done
@@ -86,15 +89,14 @@ capture() {
   local name="$1"
   local width="$2"
   local url="$3"
-  "$CHROME" \
-    --headless=new \
+  timeout 30s "$CHROME" \
+    --headless=old \
     --no-sandbox \
     --disable-gpu \
     --hide-scrollbars \
     --force-device-scale-factor=1 \
     --window-size="$width,1200" \
-    --virtual-time-budget=5000 \
-    --user-data-dir="$TMP_DIR/profile-$name" \
+    --ozone-override-screen-size="$width,1200" \
     --screenshot="$TMP_DIR/screenshots/$name.png" \
     "$url" >>"$TMP_DIR/chrome.log" 2>&1 \
     || fail "Chrome failed to capture $name"
@@ -104,7 +106,7 @@ capture() {
 for width in 390 414 430; do
   for scheme in light dark; do
     capture "app-$width-$scheme" "$width" "$BASE_URL/gallery/index.html?theme=$scheme"
-    capture "reference-$width-$scheme" "$width" "$BASE_URL/reference/$scheme/index.html#parity"
+    capture "reference-$width-$scheme" "$width" "$BASE_URL/reference/$scheme/index.html"
   done
 done
 node scripts/issue-80-screenshot-parity.mjs "$TMP_DIR/screenshots"
