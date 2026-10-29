@@ -51,14 +51,14 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider themes the native splash before hiding it after hydration', async () => {
+test('ThemeProvider applies persisted native appearance during startup and hides after hydration', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
   );
   const layout = readFileSync(join(softwareRoot, 'app/_layout.tsx'), 'utf8');
   const appConfig = JSON.parse(readFileSync(join(softwareRoot, 'app.json'), 'utf8'));
-  const { darkPalette } = await loadColors();
+  const { lightPalette, darkPalette } = await loadColors();
   const splashConfig = appConfig.expo.plugins.find(
     (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen',
   )[1];
@@ -69,11 +69,14 @@ test('ThemeProvider themes the native splash before hiding it after hydration', 
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
   assert.match(layout, /if \(!ready\) return null/);
-  assert.match(layout, /Appearance\.setColorScheme\(themePreference === 'system' \? null : themePreference\)/);
+  assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
+  assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
   assert.ok(
-    layout.indexOf('Appearance.setColorScheme') < layout.indexOf('SplashScreen.hideAsync'),
-    'persisted appearance must be applied before the splash is hidden',
+    layout.indexOf('initializeNativeThemePreference(SQLite.openDatabaseSync')
+      < layout.indexOf('SplashScreen.preventAutoHideAsync'),
+    'persisted appearance must be applied during module startup, before hydration',
   );
+  assert.equal(splashConfig.backgroundColor, lightPalette.canvas);
   assert.equal(splashConfig.dark.backgroundColor, darkPalette.canvas);
 });
 

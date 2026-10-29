@@ -5,7 +5,33 @@ import { Appearance, Platform } from 'react-native';
 import { ThemeProvider } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
+import {
+  initializeNativeThemePreference,
+  readStartupThemePreference,
+  type ThemePreference,
+} from '@/modules/app-core/settings';
 
+let appliedThemePreference: ThemePreference | null = null;
+
+function applyNativeThemePreference(themePreference: ThemePreference) {
+  if (Platform.OS === 'web' || appliedThemePreference === themePreference) return;
+  Appearance.setColorScheme(themePreference === 'system' ? null : themePreference);
+  appliedThemePreference = themePreference;
+}
+
+if (Platform.OS !== 'web') {
+  try {
+    // Read the small persisted setting synchronously so a forced scheme is in
+    // place while the native splash is still covering startup hydration.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SQLite = require('expo-sqlite') as {
+      openDatabaseSync: Parameters<typeof readStartupThemePreference>[0];
+    };
+    initializeNativeThemePreference(SQLite.openDatabaseSync, applyNativeThemePreference);
+  } catch {
+    applyNativeThemePreference('system');
+  }
+}
 void SplashScreen.preventAutoHideAsync();
 
 function PersistedTheme({ children }: { children: React.ReactNode }) {
@@ -13,9 +39,7 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    if (Platform.OS !== 'web') {
-      Appearance.setColorScheme(themePreference === 'system' ? null : themePreference);
-    }
+    applyNativeThemePreference(themePreference);
     void SplashScreen.hideAsync();
   }, [ready, themePreference]);
 

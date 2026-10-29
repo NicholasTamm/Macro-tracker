@@ -47,6 +47,36 @@ test('v3 migration persists and safely parses theme preference', async () => {
   db.close();
 });
 
+test('startup theme reads the persisted preference synchronously and closes the database', () => {
+  let closed = false;
+  const applied = [];
+  const preference = settings.initializeNativeThemePreference((name) => {
+    assert.equal(name, 'UserData.sqlite');
+    return {
+      getFirstSync(sql, params) {
+        assert.match(sql, /SELECT value FROM app_setting/);
+        assert.deepEqual(params, ['theme_preference']);
+        return { value: 'dark' };
+      },
+      closeSync() { closed = true; },
+    };
+  }, (value) => applied.push(value));
+
+  assert.equal(preference, 'dark');
+  assert.equal(closed, true);
+  assert.deepEqual(applied, ['dark']);
+});
+
+test('startup theme safely follows the system when persistence is invalid or unavailable', () => {
+  assert.equal(settings.readStartupThemePreference(() => ({
+    getFirstSync: () => ({ value: 'unexpected' }),
+    closeSync() {},
+  })), 'system');
+  assert.equal(settings.readStartupThemePreference(() => {
+    throw new Error('database unavailable');
+  }), 'system');
+});
+
 test('existing v2 user store upgrades to the v3 settings table', async () => {
   const db = await userData.openSqlJsDatabase();
   db.exec(userData.USER_STORE_V1_SQL);
