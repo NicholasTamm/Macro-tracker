@@ -237,3 +237,12 @@ Manual check:
 3. Log one food and return to Today. The mascot is gone.
 
 Slot cards and the macro summary never show art. A search with no matches stays plain.
+
+## Issue #124 — M1-66 No-weigh-ins mascot
+
+Run `bash docs/demo/smoke-m1-issue-124.sh`. Result: `out/issue-124-smoke-result.txt`.
+
+Manual check:
+1. With no weights logged, open Analytics. "Last 30 days" shows the scale mascot above "No weights yet".
+2. Log one weight. The mascot is replaced by the chart.
+3. If every weight is older than 30 days, the "No recent weights" state shows no art.
