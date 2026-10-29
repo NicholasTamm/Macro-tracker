@@ -48,6 +48,21 @@ export type AppPalette = {
    * Uses expenditure coral so overage stays in the data-domain family.
    */
   overage: string;
+  /**
+   * Gentle companion illustration roles (issue #119). Art-only fills for
+   * onboarding, empty states and goal-hit moments — never inside the data zone
+   * (numbers, rings, charts). See docs/design/gentle-companion.md.
+   */
+  illoProteinTint: string;
+  illoCarbsTint: string;
+  illoFatTint: string;
+  illoEnergyTint: string;
+  /** Mascot body fill. */
+  mascotTint: string;
+  /** Mascot accent (cheeks) — same value as brand orange. */
+  mascot: string;
+  /** Ink for text/icons on a brand-orange fill (white on #ff8b41 fails contrast). */
+  onBrand: string;
 };
 
 /** Fixed light values from --app-light-* and nutrient roles in styles.css */
@@ -82,6 +97,13 @@ export const lightPalette: AppPalette = {
   dangerFill: 'rgba(223,76,76,0.12)',
   warningInk: '#a66d00',
   overage: '#e98063',
+  illoProteinTint: '#ffebe5',
+  illoCarbsTint: '#e1f2e9',
+  illoFatTint: '#fff5e1',
+  illoEnergyTint: '#e5eefd',
+  mascotTint: '#ffece1',
+  mascot: '#ff8b41',
+  onBrand: '#1f1b16',
 };
 
 /** Dark theme remaps --app-* to --app-dark-* (nutrient / data roles stay shared). */
@@ -102,6 +124,12 @@ export const darkPalette: AppPalette = {
   danger: '#ff8080',
   overlayStage: '#141414',
   warningInk: '#ffc241',
+  // Low-alpha tints so illustrations sit quietly on #141414 / #252525.
+  illoProteinTint: 'rgba(255,130,91,0.16)',
+  illoCarbsTint: 'rgba(70,174,116,0.16)',
+  illoFatTint: 'rgba(255,194,65,0.16)',
+  illoEnergyTint: 'rgba(91,149,243,0.16)',
+  mascotTint: 'rgba(255,139,65,0.2)',
 };
 
 export function paletteFor(scheme: ColorSchemeName): AppPalette {
@@ -116,6 +144,17 @@ export const DATA_DOMAIN_KEYS = [
   'carbs',
   'expenditure',
   'weightTrend',
+] as const;
+
+/** Gentle companion illustration keys (issue #119) — art only, never data zone. */
+export const ILLUSTRATION_KEYS = [
+  'illoProteinTint',
+  'illoCarbsTint',
+  'illoFatTint',
+  'illoEnergyTint',
+  'mascotTint',
+  'mascot',
+  'onBrand',
 ] as const;
 
 /** CSS custom-property → token mapping (documentation for audits). */

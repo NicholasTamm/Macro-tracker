@@ -26,6 +26,8 @@ const TEXT_SURFACE_TOKENS = ['ink', 'muted', 'danger'];
 const TEXT_PAIRED_TOKENS = [
   ['raised', 'ink'],
   ['educationInk', 'education'],
+  // Issue 119: brand-variant button label on brand orange.
+  ['onBrand', 'brand'],
 ];
 const BANNER_TINT_KEYS = [
   ['info', 'infoFill'],

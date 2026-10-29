@@ -52,6 +52,43 @@ function GalleryBody() {
           <PrimaryButton label="Destructive" variant="destructive" onPress={() => {}} />
           <PrimaryButton label="Disabled" disabled onPress={() => {}} />
         </View>
+        <View style={[styles.row, { marginTop: spacing.sm }]}>
+          <PrimaryButton label="Brand" variant="brand" onPress={() => {}} />
+          <PrimaryButton label="Brand disabled" variant="brand" disabled onPress={() => {}} />
+        </View>
+      </Section>
+
+      <Section title="Illustration tokens (art only)">
+        <Text style={[typography.micro, { color: colors.muted }]}>
+          Gentle companion fills for onboarding, empty states and goal hits. Never used in
+          numbers, rings or charts.
+        </Text>
+        <View style={[styles.row, { marginTop: spacing.sm, flexWrap: 'wrap' }]}>
+          {(
+            [
+              ['illoProteinTint', colors.illoProteinTint],
+              ['illoCarbsTint', colors.illoCarbsTint],
+              ['illoFatTint', colors.illoFatTint],
+              ['illoEnergyTint', colors.illoEnergyTint],
+              ['mascotTint', colors.mascotTint],
+              ['mascot', colors.mascot],
+            ] as const
+          ).map(([name, fill]) => (
+            <View key={name} style={{ alignItems: 'center', gap: 4 }}>
+              <View
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: fill,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: colors.divider,
+                }}
+              />
+              <Text style={[typography.micro, { color: colors.muted }]}>{name}</Text>
+            </View>
+          ))}
+        </View>
       </Section>
 
       <Section title="Raised tile / card">
