@@ -124,19 +124,19 @@ function GalleryBody() {
           <FoodRow
             name="Greek Yogurt, Vanilla"
             detail="130 Cal · 17P · 0F · 14C · 170 g"
-            emoji="🥛"
+            icon="glass_of_milk"
             onAction={() => {}}
           />
           <FoodRow
             name="Chicken Breast, Grilled"
             detail="248 Cal · 46P · 5F · 0C · 150 g"
-            emoji="🍗"
+            icon="poultry_leg"
             onAction={() => {}}
           />
           <FoodRow
             name="Blueberries, Fresh"
             detail="84 Cal · 1P · 0F · 21C · 148 g"
-            emoji="🫐"
+            icon="blueberries"
             onAction={() => {}}
           />
         </Card>

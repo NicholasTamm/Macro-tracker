@@ -32,6 +32,7 @@ import {
   type EnrichedSearchResult,
   type SearchController,
 } from '@/modules/food-catalog';
+import { foodIconFor } from '@/modules/food-catalog/foodIcon';
 import {
   ensureDefaultMealSlots,
   getCustomFood,
@@ -443,6 +444,7 @@ export default function SearchScreen() {
               <FoodRow
                 name={item.name}
                 detail={item.detail}
+                icon={foodIconFor(item.name)}
                 actionLabel="Select"
                 onAction={() => openDetail(item.foodKind, item.foodStableId)}
               />

@@ -6,3 +6,5 @@ export { ErrorBanner, type ErrorBannerProps, type BannerTone } from './ErrorBann
 export { OfflinePill } from './OfflinePill';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { LoadingState } from './LoadingState';
+export { FoodIcon, type FoodIconProps } from './FoodIcon';
+export { FOOD_ICON_SOURCES, FALLBACK_FOOD_ICON, type FoodIconKey } from './foodIconAssets';

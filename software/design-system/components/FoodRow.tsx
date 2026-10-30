@@ -1,22 +1,29 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
+import { FoodIcon } from './FoodIcon';
+import type { FoodIconKey } from './foodIconAssets';
 
 export type FoodRowProps = {
   name: string;
   detail: string;
+  /** Fluent food icon key (see modules/food-catalog/foodIcon.ts). Defaults to the bowl. */
+  icon?: FoodIconKey;
+  /** @deprecated gallery-only override; rows render `icon` unless this is set. */
   emoji?: string;
   actionLabel?: string;
   onAction?: () => void;
 };
 
 /**
- * Matches HTML `.food-row` (emoji | copy | add/edit control).
+ * Matches HTML `.food-row` (icon | copy | add/edit control). Issue 121: a
+ * decorative Fluent food icon replaces the system emoji.
  */
 export function FoodRow({
   name,
   detail,
-  emoji = '🍽️',
+  icon,
+  emoji,
   actionLabel = 'Add',
   onAction,
 }: FoodRowProps) {
@@ -37,9 +44,15 @@ export function FoodRow({
         },
       ]}
     >
-      <Text style={styles.emoji} accessibilityElementsHidden>
-        {emoji}
-      </Text>
+      <View style={styles.icon}>
+        {emoji ? (
+          <Text style={styles.emoji} accessibilityElementsHidden importantForAccessibility="no">
+            {emoji}
+          </Text>
+        ) : (
+          <FoodIcon icon={icon} size={32} />
+        )}
+      </View>
       <View style={styles.copy}>
         <Text
           numberOfLines={1}
@@ -80,7 +93,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  emoji: { width: 34, fontSize: 24, textAlign: 'center' },
+  icon: { width: 34, alignItems: 'center', justifyContent: 'center' },
+  emoji: { fontSize: 24, textAlign: 'center' },
   copy: { flex: 1, minWidth: 0 },
   action: {
     width: 44,
