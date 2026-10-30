@@ -180,6 +180,16 @@ test('issue 120: components consume the semantic typography roles', async () => 
   );
 });
 
+test('issue 120: onboarding and profile inputs receive product typography', () => {
+  for (const path of [
+    'app/onboarding/biometrics.tsx',
+    'app/onboarding/goal.tsx',
+    'app/settings/profile.tsx',
+  ]) {
+    assert.match(read(path), /<TextInput[\s\S]*?style=\{\[\s*typography\.body,/, path);
+  }
+});
+
 test('issue 120: no MacroFactor font file and OFL licences listed', () => {
   const walk = (d) =>
     existsSync(d)
