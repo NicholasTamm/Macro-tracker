@@ -20,7 +20,7 @@ import type { ColorSchemeName } from './tokens';
  * (controls, macro summary, food rows, banners, empty/loading).
  */
 function GalleryBody() {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, font } = useTheme();
   const [dismissed, setDismissed] = useState(false);
 
   return (
@@ -29,7 +29,7 @@ function GalleryBody() {
       contentContainerStyle={{ padding: spacing.lg, gap: spacing.xl, paddingBottom: 48 }}
     >
       <View>
-        <Text style={[typography.caption, { color: colors.ink, fontWeight: '800' }]}>
+        <Text style={[typography.caption, { color: colors.ink, ...font('800') }]}>
           DESIGN SYSTEM
         </Text>
         <Text style={[typography.display, { color: colors.ink, marginTop: 8 }]}>
@@ -187,7 +187,7 @@ function GalleryBody() {
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, font } = useTheme();
   return (
     <View style={{ gap: spacing.sm }}>
       <Text style={[typography.section, { color: colors.ink }]}>{title}</Text>
@@ -220,7 +220,7 @@ function SchemeToggle({
   scheme?: ColorSchemeName;
   onChange: (s: ColorSchemeName | undefined) => void;
 }) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography, font, radius } = useTheme();
   const options: Array<{ id: ColorSchemeName | 'system'; label: string }> = [
     { id: 'system', label: 'System' },
     { id: 'light', label: 'Light' },
@@ -259,7 +259,7 @@ function SchemeToggle({
             <Text
               style={[
                 typography.caption,
-                { color: active ? colors.raised : colors.ink, fontWeight: '700' },
+                { color: active ? colors.raised : colors.ink, ...font('700') },
               ]}
             >
               {opt.label}

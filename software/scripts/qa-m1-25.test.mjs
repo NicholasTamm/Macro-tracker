@@ -228,6 +228,7 @@ test('choice row Space key activates selection on web', async () => {
                 spacing: { sm: 8, md: 12 },
                 radius: { card: 8 },
                 typography: { body: {}, caption: {} },
+                font: (fontWeight) => ({ fontWeight }),
               };
             }`,
             loader: 'js',

@@ -20,7 +20,7 @@ export function FoodRow({
   actionLabel = 'Add',
   onAction,
 }: FoodRowProps) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography, font, radius } = useTheme();
 
   return (
     <View
@@ -43,13 +43,13 @@ export function FoodRow({
       <View style={styles.copy}>
         <Text
           numberOfLines={1}
-          style={[typography.bodyStrong, { color: colors.ink }]}
+          style={[typography.foodName, { color: colors.ink }]}
         >
           {name}
         </Text>
         <Text
           numberOfLines={1}
-          style={[typography.micro, { color: colors.muted, marginTop: 2 }]}
+          style={[typography.metadata, { color: colors.muted, marginTop: 2 }]}
         >
           {detail}
         </Text>
@@ -68,7 +68,7 @@ export function FoodRow({
           },
         ]}
       >
-        <Text style={{ color: colors.ink, fontSize: 17, fontWeight: '600' }}>＋</Text>
+        <Text style={{ color: colors.ink, fontSize: 17, ...font('600') }}>＋</Text>
       </Pressable>
     </View>
   );

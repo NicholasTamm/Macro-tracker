@@ -6,7 +6,7 @@ import { useTheme } from '../theme';
  * Compact offline indicator (M1-04 OfflinePill).
  */
 export function OfflinePill({ label = 'Offline' }: { label?: string }) {
-  const { colors, spacing, typography, radius } = useTheme();
+  const { colors, spacing, typography, font, radius } = useTheme();
   return (
     <View
       accessibilityRole="text"
@@ -24,7 +24,7 @@ export function OfflinePill({ label = 'Offline' }: { label?: string }) {
       ]}
     >
       <View style={[styles.dot, { backgroundColor: colors.muted }]} />
-      <Text style={[typography.caption, { color: colors.ink, fontWeight: '700' }]}>
+      <Text style={[typography.caption, { color: colors.ink, ...font('700') }]}>
         {label}
       </Text>
     </View>

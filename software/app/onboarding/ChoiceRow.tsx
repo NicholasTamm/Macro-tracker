@@ -19,7 +19,7 @@ export function ChoiceGroup({ label, children }: { label: string; children: Reac
 }
 
 export function ChoiceRow({ label, selected, onPress, hint, mode = 'radio' }: Props) {
-  const { colors, spacing, radius, typography } = useTheme();
+  const { colors, spacing, radius, typography, font } = useTheme();
   const [focused, setFocused] = useState(false);
   // RN Web PressResponder only treats Space as a press for role=button; radios/checkboxes need explicit Space.
   const onKeyDown = (event: { key?: string; preventDefault?: () => void }) => {
@@ -57,7 +57,7 @@ export function ChoiceRow({ label, selected, onPress, hint, mode = 'radio' }: Pr
       ]}
     >
       <View style={{ flex: 1 }}>
-        <Text style={[typography.body, { color: colors.ink, fontWeight: selected ? '600' : '400' }]}>
+        <Text style={[typography.body, { color: colors.ink, ...font(selected ? '600' : '400') }]}>
           {label}
         </Text>
         {hint ? (

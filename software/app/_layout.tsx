@@ -2,7 +2,13 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Appearance, Platform, View } from 'react-native';
-import { lightPalette, paletteFor, ThemeProvider, type ColorSchemeName } from '@/design-system';
+import {
+  lightPalette,
+  paletteFor,
+  ThemeProvider,
+  useProductFonts,
+  type ColorSchemeName,
+} from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
 import {
@@ -70,6 +76,8 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  // Start Figtree/Nunito loading during hydration; never gates render (issue 120).
+  useProductFonts();
   return (
     <UserDataProvider>
       <PersistedTheme>

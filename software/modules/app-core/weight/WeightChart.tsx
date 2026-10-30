@@ -64,11 +64,11 @@ export function WeightChart({
           accessibilityElementsHidden
           style={styles.axis}
         >
-          <Text style={[typography.caption, { color: colors.muted }]}>30 days ago</Text>
-          <Text style={[typography.caption, { color: colors.muted }]}>
+          <Text style={[typography.chartAxis, { color: colors.muted }]}>30 days ago</Text>
+          <Text style={[typography.chartAxis, { color: colors.muted }]}>
             {minLabel} – {maxLabel}
           </Text>
-          <Text style={[typography.caption, { color: colors.muted }]}>Today</Text>
+          <Text style={[typography.chartAxis, { color: colors.muted }]}>Today</Text>
         </View>
       ) : null}
     </View>

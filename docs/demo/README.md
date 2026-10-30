@@ -206,3 +206,11 @@ bash docs/demo/smoke-m1-issue-119.sh
 ```
 
 Checks the illustration tokens, the `brand` button variant, light/dark gallery screenshots, and that the data zone has no illustration tokens; then runs typecheck, lint and the full test suite. Writes `out/issue-119-smoke-result.txt` on success.
+
+## Issue #120 — M1-63 Figtree + Nunito fonts
+
+```bash
+bash docs/demo/smoke-m1-issue-120.sh
+```
+
+Checks no MacroFactor font ships, runs typecheck, lint, the font tests and the full suite, then exports the web build and asserts exactly six faces are bundled (Figtree 400/500/600/700, Nunito 700/800). Writes `out/issue-120-smoke-result.txt`.

@@ -1,0 +1,2 @@
+smoke-m1-issue-120 PASS 2026-10-30T22:34:45Z
+faces: Figtree_400Regular Figtree_500Medium Figtree_600SemiBold Figtree_700Bold Nunito_700Bold Nunito_800ExtraBold 

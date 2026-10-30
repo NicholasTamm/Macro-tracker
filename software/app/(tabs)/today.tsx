@@ -47,7 +47,7 @@ function EntryRow({
   onEdit: (entry: DiaryEntry) => void;
   onDelete: (entry: DiaryEntry) => void;
 }) {
-  const { colors, typography, spacing, radius } = useTheme();
+  const { colors, typography, font, spacing, radius } = useTheme();
   const kcal = entry.nutritionSnapshot.energy_kcal;
   const kcalLabel =
     typeof kcal === 'number' && !Number.isNaN(kcal)
@@ -90,7 +90,7 @@ function EntryRow({
           },
         ]}
       >
-        <Text style={[typography.caption, { color: colors.ink, fontWeight: '700' }]}>Edit</Text>
+        <Text style={[typography.caption, { color: colors.ink, ...font('700') }]}>Edit</Text>
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -106,7 +106,7 @@ function EntryRow({
           },
         ]}
       >
-        <Text style={[typography.caption, { color: colors.danger, fontWeight: '700' }]}>Del</Text>
+        <Text style={[typography.caption, { color: colors.danger, ...font('700') }]}>Del</Text>
       </Pressable>
     </View>
   );
@@ -176,7 +176,7 @@ function DateSelector({
   dayKey: string;
   onChange: (next: string) => void;
 }) {
-  const { colors, typography, spacing, radius } = useTheme();
+  const { colors, typography, font, spacing, radius } = useTheme();
   const todayKey = localDayKeyFromDate();
   const label = formatDayLabel(dayKey, todayKey);
 
@@ -195,7 +195,7 @@ function DateSelector({
         },
       ]}
     >
-      <Text style={{ color: colors.ink, fontSize: 18, fontWeight: '700' }}>
+      <Text style={{ color: colors.ink, fontSize: 18, ...font('700') }}>
         {(delta < 0) === I18nManager.isRTL ? '›' : '‹'}
       </Text>
     </Pressable>

@@ -26,7 +26,7 @@ export function ErrorBanner({
   onAction,
   onDismiss,
 }: ErrorBannerProps) {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, font } = useTheme();
 
   const bg =
     tone === 'education'
@@ -72,7 +72,7 @@ export function ErrorBanner({
       ]}
     >
       <View style={[styles.icon, { borderColor: accent }]}>
-        <Text style={{ color: textColor, fontWeight: '800', fontSize: 9 }}>
+        <Text style={{ color: textColor, ...font('800'), fontSize: 9 }}>
           {tone === 'error' ? '!' : tone === 'success' ? '✓' : '●'}
         </Text>
       </View>
@@ -95,7 +95,7 @@ export function ErrorBanner({
             hitSlop={8}
             style={styles.hitTarget}
           >
-            <Text style={{ color: textColor, fontSize: 11, fontWeight: '700' }}>
+            <Text style={{ color: textColor, fontSize: 11, ...font('700') }}>
               {actionLabel}
             </Text>
           </Pressable>

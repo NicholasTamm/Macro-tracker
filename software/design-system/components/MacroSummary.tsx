@@ -57,7 +57,7 @@ export function MacroSummary({
   totals: MacroTotals;
   energyUnit?: EnergyUnit;
 }) {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, font } = useTheme();
   const energyValue = totals.calories == null ? null : Number(formatEnergy(totals.calories, energyUnit));
 
   const a11y = [
@@ -116,12 +116,15 @@ export function MacroSummary({
                 </Text>
               </View>
               <Text
-                style={[typography.bodyStrong, { color: colors.ink }]}
+                style={[typography.bodyStrong, { color: colors.ink, fontVariant: ['tabular-nums'] }]}
               >
                 {formatMacroValue(displayValue, unit)}
                 {displayGoal != null ? (
                   <Text
-                    style={{ color: colors.muted, fontWeight: '500' }}
+                    style={{
+                      color: colors.muted,
+                      ...font('500'),
+                    }}
                   >
                     {` / ${displayGoal}${unit}`}
                   </Text>

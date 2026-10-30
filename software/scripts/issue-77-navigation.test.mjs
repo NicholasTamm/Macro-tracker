@@ -50,7 +50,13 @@ async function bundleRoute(relativePath, development, name) {
               contents: `import React from 'react';
                 export function ComponentGallery() { return React.createElement('gallery'); }
                 export function useTheme() {
-                  return { colors: { ink: '#000', muted: '#666', raised: '#fff', divider: '#ddd', canvas: '#fff' } };
+                  return {
+                    colors: { ink: '#000', muted: '#666', raised: '#fff', divider: '#ddd', canvas: '#fff' },
+                    typography: {
+                      caption: { fontFamily: 'Figtree_500Medium' },
+                      pageTitle: { fontFamily: 'Nunito_700Bold' },
+                    },
+                  };
                 }`,
               loader: 'js',
             };
