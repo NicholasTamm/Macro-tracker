@@ -184,3 +184,17 @@ bash docs/demo/smoke-m1-21-qa.sh
 ```
 
 Writes `out/issue-66-smoke-result.txt` on success.
+
+## Issue #80 — M1-31 Semantic color tokens
+
+Expands surface/state/overlay/chart tokens, removes ErrorBanner raw fills, keeps
+data-domain colors theme-stable, reserves danger for errors only, and syncs
+StatusBar / SystemUI chrome with the active palette.
+
+```bash
+# from repo root
+bash docs/demo/smoke-m1-issue-80.sh
+```
+
+Writes `out/issue-80-smoke-result.txt` on success.
+

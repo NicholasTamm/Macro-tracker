@@ -27,11 +27,11 @@ const TEXT_PAIRED_TOKENS = [
   ['raised', 'ink'],
   ['educationInk', 'education'],
 ];
-const BANNER_TINTS = [
-  ['info', 'rgba(91,149,243,0.12)'],
-  ['success', 'rgba(70,174,116,0.12)'],
-  ['warning', 'rgba(255,194,65,0.17)'],
-  ['error', 'rgba(223,76,76,0.12)'],
+const BANNER_TINT_KEYS = [
+  ['info', 'infoFill'],
+  ['success', 'successFill'],
+  ['warning', 'warningFill'],
+  ['error', 'dangerFill'],
 ];
 const GATED_TEXT_TOKENS = new Set([
   ...TEXT_SURFACE_TOKENS,
@@ -296,7 +296,8 @@ test('WCAG AA text and non-text contrast for semantic tokens (light + dark)', ()
     }
     // ErrorBanner tint colors are translucent, so measure their rendered color
     // after compositing over the canvas where banners are placed.
-    for (const [tone, tint] of BANNER_TINTS) {
+    for (const [tone, key] of BANNER_TINT_KEYS) {
+      const tint = p[key];
       const background = composite(tint, p.canvas);
       const r = contrast(p.ink, background);
       if (r < 4.5) failures.push(`${scheme} ink on ${tone} banner: ${r.toFixed(2)}`);
@@ -321,8 +322,8 @@ test('ErrorBanner text uses the foregrounds gated for every banner background', 
   );
   assert.match(source, /const textColor = tone === 'education' \? colors\.educationInk : colors\.ink/);
   assert.match(source, /typography\.caption, \{ color: textColor, marginTop: 2 \}/);
-  for (const [tone, tint] of BANNER_TINTS) {
-    assert.ok(source.includes(`'${tint}'`), `${tone} banner tint is not contrast-gated`);
+  for (const [tone, key] of BANNER_TINT_KEYS) {
+    assert.ok(source.includes(`colors.${key}`), `${tone} banner tint token colors.${key} missing`);
   }
 });
 
