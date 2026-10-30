@@ -43,13 +43,13 @@ export function FoodRow({
       <View style={styles.copy}>
         <Text
           numberOfLines={1}
-          style={[typography.bodyStrong, { color: colors.ink }]}
+          style={[typography.foodName, { color: colors.ink }]}
         >
           {name}
         </Text>
         <Text
           numberOfLines={1}
-          style={[typography.micro, { color: colors.muted, marginTop: 2 }]}
+          style={[typography.metadata, { color: colors.muted, marginTop: 2 }]}
         >
           {detail}
         </Text>

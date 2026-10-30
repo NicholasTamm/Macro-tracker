@@ -4,19 +4,21 @@ import React from 'react';
 import { useTheme } from '@/design-system';
 
 export default function TabsLayout() {
-  const { colors } = useTheme();
+  const { colors, typography } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
+        tabBarLabelStyle: typography.caption,
         tabBarStyle: {
           backgroundColor: colors.raised,
           borderTopColor: colors.divider,
         },
         headerStyle: { backgroundColor: colors.canvas },
         headerTintColor: colors.ink,
+        headerTitleStyle: typography.pageTitle,
       }}
     >
       <Tabs.Screen

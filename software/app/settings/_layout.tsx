@@ -3,12 +3,17 @@ import { useTheme } from '@/design-system';
 import { HeaderBackButton } from '@/components/HeaderBackButton';
 
 export default function SettingsLayout() {
-  const { colors } = useTheme();
+  const { colors, typography } = useTheme();
   return (
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.canvas },
         headerTintColor: colors.ink,
+        headerTitleStyle: {
+          fontFamily: typography.pageTitle.fontFamily,
+          fontSize: typography.pageTitle.fontSize,
+          fontWeight: typography.pageTitle.fontWeight,
+        },
         headerBackVisible: false,
         headerLeft: ({ tintColor }) => (
           <HeaderBackButton
