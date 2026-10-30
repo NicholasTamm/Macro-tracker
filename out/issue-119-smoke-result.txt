@@ -1,1 +1,2 @@
-smoke-m1-issue-119 PASS 2026-10-29T02:16:26Z
+smoke-m1-issue-119 PASS 2026-10-30T11:50:04Z
+screenshots: light/dark gallery brand button and illustration swatches rendered with expected colors and without clipping
