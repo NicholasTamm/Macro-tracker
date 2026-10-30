@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { inflateSync } from 'node:zlib';
 
-function decodePng(path) {
+export function decodePng(path) {
   const png = readFileSync(path);
   assert.equal(png.subarray(1, 4).toString(), 'PNG', `${path}: not a PNG`);
   let offset = 8;

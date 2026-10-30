@@ -10,13 +10,15 @@ import { useTheme } from '../theme';
 
 export type PrimaryButtonProps = PressableProps & {
   label: string;
-  variant?: 'primary' | 'secondary' | 'destructive';
+  variant?: 'primary' | 'secondary' | 'destructive' | 'brand';
   compact?: boolean;
 };
 
 /**
  * Matches HTML `.button.primary` / `.secondary` / `.destructive`
  * (pill radius, ink-on-raised inverse primary).
+ * `brand` (issue 119): brand-orange fill with dark `onBrand` label — never
+ * white on orange. Reserve for Gentle companion CTAs (onboarding, empty states).
  */
 export function PrimaryButton({
   label,
@@ -31,15 +33,19 @@ export function PrimaryButton({
   const bg =
     variant === 'primary'
       ? colors.ink
-      : variant === 'destructive'
-        ? colors.control
-        : colors.raised;
+      : variant === 'brand'
+        ? colors.brand
+        : variant === 'destructive'
+          ? colors.control
+          : colors.raised;
   const fg =
     variant === 'primary'
       ? colors.raised
-      : variant === 'destructive'
-        ? colors.danger
-        : colors.ink;
+      : variant === 'brand'
+        ? colors.onBrand
+        : variant === 'destructive'
+          ? colors.danger
+          : colors.ink;
   const borderColor = variant === 'secondary' ? colors.controlBorder : 'transparent';
 
   return (
