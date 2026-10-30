@@ -61,15 +61,18 @@ export default function GoalScreen() {
               value={rate}
               onChangeText={setRate}
               keyboardType="decimal-pad"
-              style={{
-                minHeight: 44,
-                borderWidth: 1,
-                borderColor: colors.controlBorder,
-                borderRadius: radius.card,
-                paddingHorizontal: spacing.md,
-                color: colors.ink,
-                backgroundColor: colors.raised,
-              }}
+              style={[
+                typography.body,
+                {
+                  minHeight: 44,
+                  borderWidth: 1,
+                  borderColor: colors.controlBorder,
+                  borderRadius: radius.card,
+                  paddingHorizontal: spacing.md,
+                  color: colors.ink,
+                  backgroundColor: colors.raised,
+                },
+              ]}
             />
           </View>
         ) : null}

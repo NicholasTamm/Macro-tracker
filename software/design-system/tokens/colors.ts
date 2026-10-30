@@ -154,7 +154,6 @@ export const ILLUSTRATION_KEYS = [
   'illoEnergyTint',
   'mascotTint',
   'mascot',
-  'onBrand',
 ] as const;
 
 /** CSS custom-property → token mapping (documentation for audits). */

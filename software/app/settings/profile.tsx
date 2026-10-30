@@ -57,15 +57,18 @@ export default function ProfileScreen() {
         value={value}
         onChangeText={onChangeText}
         keyboardType="numeric"
-        style={{
-          minHeight: 44,
-          color: colors.ink,
-          backgroundColor: colors.raised,
-          borderColor: colors.controlBorder,
-          borderWidth: 1,
-          borderRadius: radius.card,
-          paddingHorizontal: spacing.md,
-        }}
+        style={[
+          typography.body,
+          {
+            minHeight: 44,
+            color: colors.ink,
+            backgroundColor: colors.raised,
+            borderColor: colors.controlBorder,
+            borderWidth: 1,
+            borderRadius: radius.card,
+            paddingHorizontal: spacing.md,
+          },
+        ]}
       />
     </View>
   );

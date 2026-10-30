@@ -24,8 +24,9 @@ icons and one abstract mascot. The art is only allowed outside the **data zone**
 
 Use the illustration roles in `software/design-system/tokens/colors.ts`
 (`illoProteinTint`, `illoCarbsTint`, `illoFatTint`, `illoEnergyTint`,
-`mascotTint`, `mascot`, `onBrand`) only for art. Data series keep their existing
+`mascotTint`, `mascot`) only for art. Data series keep their existing
 `energy` / `protein` / `fat` / `carbs` / `expenditure` / `weightTrend` tokens.
+`onBrand` is the foreground paired with `brand`, including for button-label text.
 
 ## Brand button
 
