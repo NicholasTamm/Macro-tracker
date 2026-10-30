@@ -1,17 +1,22 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { Appearance, Platform } from 'react-native';
-import { ThemeProvider } from '@/design-system';
+import { Appearance, Platform, View } from 'react-native';
+import { paletteFor, ThemeProvider, type ColorSchemeName } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
 import {
   initializeNativeThemePreference,
+  readWebStartupThemePreference,
   readStartupThemePreference,
+  writeWebStartupThemePreference,
   type ThemePreference,
 } from '@/modules/app-core/settings';
 
 let appliedThemePreference: ThemePreference | null = null;
+const webStartupThemePreference = Platform.OS === 'web'
+  ? readWebStartupThemePreference()
+  : 'system';
 
 function applyNativeThemePreference(themePreference: ThemePreference) {
   if (Platform.OS === 'web' || appliedThemePreference === themePreference) return;
@@ -39,13 +44,20 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
+    writeWebStartupThemePreference(themePreference);
     applyNativeThemePreference(themePreference);
     void SplashScreen.hideAsync();
   }, [ready, themePreference]);
 
-  // Do not render a themed surface until the persisted preference is known.
-  // Native remains behind its splash; web avoids flashing the system scheme.
-  if (!ready) return null;
+  if (!ready) {
+    // Native remains behind its theme-neutral splash. Web has no native splash,
+    // so synchronously paint the last persisted scheme while sql.js hydrates.
+    if (Platform.OS !== 'web') return null;
+    const startupScheme: ColorSchemeName = webStartupThemePreference === 'system'
+      ? (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light')
+      : webStartupThemePreference;
+    return <View style={{ flex: 1, backgroundColor: paletteFor(startupScheme).canvas }} />;
+  }
 
   return (
     <ThemeProvider forcedScheme={themePreference === 'system' ? undefined : themePreference}>

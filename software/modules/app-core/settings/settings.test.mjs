@@ -77,6 +77,27 @@ test('startup theme safely follows the system when persistence is invalid or una
   }), 'system');
 });
 
+test('web startup theme hint mirrors valid preferences and fails safely', () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+
+  settings.writeWebStartupThemePreference('dark', storage);
+  assert.equal(
+    values.get(settings.WEB_THEME_PREFERENCE_STORAGE_KEY),
+    'dark',
+  );
+  assert.equal(settings.readWebStartupThemePreference(storage), 'dark');
+  values.set(settings.WEB_THEME_PREFERENCE_STORAGE_KEY, 'unexpected');
+  assert.equal(settings.readWebStartupThemePreference(storage), 'system');
+  assert.doesNotThrow(() => settings.writeWebStartupThemePreference('light', {
+    getItem: () => null,
+    setItem: () => { throw new Error('quota exceeded'); },
+  }));
+});
+
 test('existing v2 user store upgrades to the v3 settings table', async () => {
   const db = await userData.openSqlJsDatabase();
   db.exec(userData.USER_STORE_V1_SQL);

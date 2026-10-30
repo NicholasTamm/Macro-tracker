@@ -59,10 +59,12 @@ export function ThemeProvider({ children, forcedScheme }: Props) {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <StatusBar
-        style={scheme === 'dark' ? 'light' : 'dark'}
-        backgroundColor={Platform.OS === 'android' ? theme.colors.canvas : undefined}
-      />
+      {!parentTheme && (
+        <StatusBar
+          style={scheme === 'dark' ? 'light' : 'dark'}
+          backgroundColor={Platform.OS === 'android' ? theme.colors.canvas : undefined}
+        />
+      )}
       {children}
     </ThemeContext.Provider>
   );

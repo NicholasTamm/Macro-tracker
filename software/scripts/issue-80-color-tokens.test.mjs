@@ -51,7 +51,7 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider waits for persisted theme hydration on every platform', async () => {
+test('startup surfaces cannot conflict with a persisted forced theme', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
@@ -68,7 +68,9 @@ test('ThemeProvider waits for persisted theme hydration on every platform', asyn
   assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
-  assert.match(layout, /if \(!ready\) return null/);
+  assert.match(layout, /readWebStartupThemePreference\(\)/);
+  assert.match(layout, /paletteFor\(startupScheme\)\.canvas/);
+  assert.match(layout, /writeWebStartupThemePreference\(themePreference\)/);
   assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
   assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
   assert.ok(
@@ -76,8 +78,9 @@ test('ThemeProvider waits for persisted theme hydration on every platform', asyn
       < layout.indexOf('SplashScreen.preventAutoHideAsync'),
     'persisted appearance must be applied during module startup, before hydration',
   );
-  assert.equal(splashConfig.backgroundColor, lightPalette.canvas);
-  assert.equal(splashConfig.dark.backgroundColor, darkPalette.canvas);
+  assert.equal(lightPalette.brand, darkPalette.brand);
+  assert.equal(splashConfig.backgroundColor, lightPalette.brand);
+  assert.equal(splashConfig.dark.backgroundColor, lightPalette.brand);
 });
 
 test('only the root ThemeProvider synchronizes global native chrome', () => {
@@ -88,6 +91,7 @@ test('only the root ThemeProvider synchronizes global native chrome', () => {
 
   assert.match(src, /const parentTheme = useContext\(ThemeContext\)/);
   assert.match(src, /if \(parentTheme\) return/);
+  assert.match(src, /\{!parentTheme && \(\s*<StatusBar/);
 });
 
 test('screenshot parity rejects a collapsed surface role', async () => {
