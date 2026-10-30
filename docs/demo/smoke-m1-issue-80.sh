@@ -37,7 +37,7 @@ rg -n "setBackgroundColorAsync|StatusBar" design-system/theme/ThemeProvider.tsx 
   || fail "ThemeProvider native chrome sync missing"
 rg -n "setButtonStyleAsync" design-system/theme/ThemeProvider.tsx >/dev/null \
   || fail "Android navigation button sync missing"
-rg -n "preventAutoHideAsync|if \(!ready\) return null|hideAsync" app/_layout.tsx >/dev/null \
+rg -n "preventAutoHideAsync|readWebStartupThemePreference|paletteFor\(startupScheme\)\.canvas|hideAsync" app/_layout.tsx >/dev/null \
   || fail "persisted theme hydration gate missing"
 node -e "const p=require('./package.json'); if (!p.scripts.test.includes('$TEST')) process.exit(1)" \
   || fail "focused test missing from package.json test script"
