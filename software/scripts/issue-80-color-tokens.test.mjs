@@ -100,6 +100,46 @@ test('screenshot parity rejects a collapsed surface role', async () => {
   );
 });
 
+test('screenshot parity rejects a surface that does not switch to dark', async () => {
+  const { assertSurfaceThemeParity } = await import('./issue-80-screenshot-parity.mjs');
+  const width = 390;
+  const height = 1200;
+  const image = () => ({
+    width,
+    height,
+    luma: new Float64Array(width * height),
+  });
+  const light = image();
+  const dark = image();
+  const points = {
+    canvas: [210, 381],
+    band: [width - 5, 30],
+    tile: [Math.floor(width / 2), 450],
+    control: [32, 10],
+    ink: [92, 293],
+  };
+  const fillRegion = (target, [centerX, centerY], value) => {
+    for (let y = centerY - 2; y <= centerY + 2; y += 1) {
+      for (let x = centerX - 2; x <= centerX + 2; x += 1) {
+        target.luma[y * width + x] = value;
+      }
+    }
+  };
+  const lightValues = { canvas: 249, band: 241, tile: 255, control: 236 };
+  const darkValues = { canvas: 20, band: 241, tile: 37, control: 56 };
+  for (const role of ['canvas', 'band', 'tile', 'control']) {
+    fillRegion(light, points[role], lightValues[role]);
+    fillRegion(dark, points[role], darkValues[role]);
+  }
+  light.luma[points.ink[1] * width + points.ink[0]] = 8;
+  dark.luma[points.ink[1] * width + points.ink[0]] = 246;
+
+  assert.throws(
+    () => assertSurfaceThemeParity(width, 'app', light, dark),
+    /390px app band surface did not switch light to dark/,
+  );
+});
+
 test('native chrome uses contrasting Android navigation buttons at runtime', async () => {
   const source = readFileSync(
     join(softwareRoot, 'design-system/theme/nativeChrome.ts'),

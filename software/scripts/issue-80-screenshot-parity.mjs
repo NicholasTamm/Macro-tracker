@@ -141,6 +141,75 @@ function sampleRgb(image, [x, y]) {
   return Array.from(image.rgb.subarray(offset, offset + 3));
 }
 
+function sampleLuma(image, [x, y]) {
+  assert.ok(
+    x >= 0 && x < image.width && y >= 0 && y < image.height,
+    `sample out of bounds: ${x},${y}`,
+  );
+  return image.luma[y * image.width + x];
+}
+
+const SURFACE_ROLES = ['canvas', 'band', 'tile', 'control'];
+
+function surfaceRegionMean(image, [centerX, centerY]) {
+  let sum = 0;
+  let count = 0;
+  for (let y = centerY - 2; y <= centerY + 2; y += 1) {
+    for (let x = centerX - 2; x <= centerX + 2; x += 1) {
+      assert.ok(
+        x >= 0 && x < image.width && y >= 0 && y < image.height,
+        `surface region out of bounds: ${centerX},${centerY}`,
+      );
+      sum += image.luma[y * image.width + x];
+      count += 1;
+    }
+  }
+  return sum / count;
+}
+
+export function assertSurfaceThemeParity(width, target, light, dark) {
+  const points = roleSamplePoints(target, width);
+  const lightSurfaces = Object.fromEntries(
+    SURFACE_ROLES.map((role) => [role, surfaceRegionMean(light, points[role])]),
+  );
+  const darkSurfaces = Object.fromEntries(
+    SURFACE_ROLES.map((role) => [role, surfaceRegionMean(dark, points[role])]),
+  );
+
+  for (const role of SURFACE_ROLES) {
+    assert.ok(
+      lightSurfaces[role] - darkSurfaces[role] > 35,
+      `${width}px ${target} ${role} surface did not switch light to dark`,
+    );
+  }
+
+  for (const role of ['band', 'tile', 'control']) {
+    assert.ok(
+      Math.abs(lightSurfaces[role] - lightSurfaces.canvas) > 3,
+      `${width}px ${target} light ${role} collapsed into canvas`,
+    );
+    assert.ok(
+      Math.abs(darkSurfaces[role] - darkSurfaces.canvas) > 3,
+      `${width}px ${target} dark ${role} collapsed into canvas`,
+    );
+  }
+
+  const lightInk = sampleLuma(light, points.ink);
+  const darkInk = sampleLuma(dark, points.ink);
+  for (const role of SURFACE_ROLES) {
+    assert.ok(
+      lightSurfaces[role] - lightInk > 50,
+      `${width}px ${target} light ink lacks contrast on ${role}`,
+    );
+    assert.ok(
+      darkInk - darkSurfaces[role] > 50,
+      `${width}px ${target} dark ink lacks contrast on ${role}`,
+    );
+  }
+
+  return { lightSurfaces, darkSurfaces, lightInk, darkInk };
+}
+
 function maxChannelDelta(a, b) {
   return Math.max(...a.map((value, index) => Math.abs(value - b[index])));
 }
@@ -185,17 +254,14 @@ function main(matrixDir) {
       images[target] = { light, dark, lightStats, darkStats };
       assert.ok(lightStats.deviation > 20, `${target} ${width}px light screenshot is blank`);
       assert.ok(darkStats.deviation > 20, `${target} ${width}px dark screenshot is blank`);
-      assert.ok(
-        lightStats.mean - darkStats.mean > 35,
-        `${target} ${width}px theme pair does not visibly switch light to dark`,
-      );
+      const surfaceTheme = assertSurfaceThemeParity(width, target, light, dark);
       const structure = correlation(rowEdgeProfile(light), rowEdgeProfile(dark));
       assert.ok(
         structure > 0.72,
         `${target} ${width}px light/dark hierarchy diverged (${structure.toFixed(3)})`,
       );
       console.log(
-        `OK: ${target} ${width}px light/dark pair (luma ${lightStats.mean.toFixed(1)}/${darkStats.mean.toFixed(1)}, hierarchy ${structure.toFixed(3)})`,
+        `OK: ${target} ${width}px light/dark surfaces (${SURFACE_ROLES.map((role) => `${role}=${surfaceTheme.lightSurfaces[role].toFixed(1)}/${surfaceTheme.darkSurfaces[role].toFixed(1)}`).join(' ')}, ink=${surfaceTheme.lightInk.toFixed(1)}/${surfaceTheme.darkInk.toFixed(1)}, hierarchy ${structure.toFixed(3)})`,
       );
     }
     for (const scheme of ['light', 'dark']) {
@@ -209,13 +275,6 @@ function main(matrixDir) {
         `OK: app/reference ${width}px ${scheme} role parity (${Object.entries(sampled).map(([role, color]) => `${role}=${color}`).join(' ')})`,
       );
     }
-    const appThemeDelta = images.app.lightStats.mean - images.app.darkStats.mean;
-    const referenceThemeDelta =
-      images.reference.lightStats.mean - images.reference.darkStats.mean;
-    assert.ok(
-      Math.abs(appThemeDelta - referenceThemeDelta) < 15,
-      `${width}px app/reference light-dark contrast diverged`,
-    );
   }
 }
 
