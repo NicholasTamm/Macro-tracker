@@ -205,4 +205,4 @@ Writes `out/issue-80-smoke-result.txt` on success.
 bash docs/demo/smoke-m1-issue-119.sh
 ```
 
-Checks the illustration tokens, the `brand` button variant, gallery specimens, and that the data zone has no illustration tokens; then runs typecheck, lint and the full test suite. Writes `out/issue-119-smoke-result.txt` on success.
+Checks the illustration tokens, the `brand` button variant, light/dark gallery screenshots, and that the data zone has no illustration tokens; then runs typecheck, lint and the full test suite. Writes `out/issue-119-smoke-result.txt` on success.
