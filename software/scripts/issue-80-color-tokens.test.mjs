@@ -51,20 +51,108 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider waits for hydration and syncs all native chrome', () => {
+test('startup surfaces cannot conflict with a persisted forced theme', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
   );
   const layout = readFileSync(join(softwareRoot, 'app/_layout.tsx'), 'utf8');
+  const appConfig = JSON.parse(readFileSync(join(softwareRoot, 'app.json'), 'utf8'));
+  const { lightPalette, darkPalette } = await loadColors();
+  const splashConfig = appConfig.expo.plugins.find(
+    (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen',
+  )[1];
   assert.match(src, /expo-status-bar/);
   assert.match(src, /expo-navigation-bar/);
   assert.match(src, /expo-system-ui/);
   assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
-  assert.match(layout, /if \(!ready\) return null/);
-  assert.match(layout, /if \(ready\) void SplashScreen\.hideAsync/);
+  assert.match(layout, /readWebStartupThemePreference\(\)/);
+  assert.match(layout, /paletteFor\(startupScheme\)\.canvas/);
+  assert.match(layout, /: lightPalette\.brand/);
+  assert.match(layout, /writeWebStartupThemePreference\(themePreference\)/);
+  assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
+  assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
+  assert.ok(
+    layout.indexOf('initializeNativeThemePreference(SQLite.openDatabaseSync')
+      < layout.indexOf('SplashScreen.preventAutoHideAsync'),
+    'persisted appearance must be applied during module startup, before hydration',
+  );
+  assert.equal(lightPalette.brand, darkPalette.brand);
+  assert.equal(splashConfig.backgroundColor, lightPalette.brand);
+  assert.equal(splashConfig.dark.backgroundColor, lightPalette.brand);
+});
+
+test('only the root ThemeProvider synchronizes global native chrome', () => {
+  const src = readFileSync(
+    join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
+    'utf8',
+  );
+
+  assert.match(src, /const parentTheme = useContext\(ThemeContext\)/);
+  assert.match(src, /if \(parentTheme\) return/);
+  assert.match(src, /\{!parentTheme && \(\s*<StatusBar/);
+});
+
+test('screenshot parity rejects a collapsed surface role', async () => {
+  const { assertRoleParity } = await import('./issue-80-screenshot-parity.mjs');
+  const width = 390;
+  const height = 1200;
+  const solidImage = () => ({
+    width,
+    height,
+    rgb: new Uint8Array(width * height * 3).fill(255),
+  });
+  const app = solidImage();
+  const reference = solidImage();
+  const referenceBandOffset = (1070 * width + Math.floor(width / 2)) * 3;
+  reference.rgb.set([241, 241, 241], referenceBandOffset);
+
+  assert.throws(
+    () => assertRoleParity(width, 'light', app, reference),
+    /light band role diverged/,
+  );
+});
+
+test('screenshot parity rejects a surface that does not switch to dark', async () => {
+  const { assertSurfaceThemeParity } = await import('./issue-80-screenshot-parity.mjs');
+  const width = 390;
+  const height = 1200;
+  const image = () => ({
+    width,
+    height,
+    luma: new Float64Array(width * height),
+  });
+  const light = image();
+  const dark = image();
+  const points = {
+    canvas: [210, 381],
+    band: [width - 5, 30],
+    tile: [Math.floor(width / 2), 450],
+    control: [32, 10],
+    ink: [92, 293],
+  };
+  const fillRegion = (target, [centerX, centerY], value) => {
+    for (let y = centerY - 2; y <= centerY + 2; y += 1) {
+      for (let x = centerX - 2; x <= centerX + 2; x += 1) {
+        target.luma[y * width + x] = value;
+      }
+    }
+  };
+  const lightValues = { canvas: 249, band: 241, tile: 255, control: 236 };
+  const darkValues = { canvas: 20, band: 241, tile: 37, control: 56 };
+  for (const role of ['canvas', 'band', 'tile', 'control']) {
+    fillRegion(light, points[role], lightValues[role]);
+    fillRegion(dark, points[role], darkValues[role]);
+  }
+  light.luma[points.ink[1] * width + points.ink[0]] = 8;
+  dark.luma[points.ink[1] * width + points.ink[0]] = 246;
+
+  assert.throws(
+    () => assertSurfaceThemeParity(width, 'app', light, dark),
+    /390px app band surface did not switch light to dark/,
+  );
 });
 
 test('native chrome uses contrasting Android navigation buttons at runtime', async () => {
@@ -96,16 +184,45 @@ test('native chrome uses contrasting Android navigation buttons at runtime', asy
   ]);
 });
 
-test('design-system components do not embed raw hex/rgba (tokens only)', () => {
-  const root = join(softwareRoot, 'design-system/components');
+const renderedSurfaceRoots = [
+  'app',
+  'modules',
+  'design-system/components',
+];
+
+test('rendered surfaces do not embed raw hex/rgba (tokens only)', () => {
   const offenders = [];
-  for (const p of walk(root)) {
-    if (!/\.(tsx|ts)$/.test(p)) continue;
-    if (p.includes('__tests__')) continue;
-    const source = readFileSync(p, 'utf8');
-    if (/#[0-9a-fA-F]{3,8}/.test(source) || /rgba?\(/.test(source)) {
-      offenders.push(p.replace(softwareRoot + '/', ''));
+  for (const root of renderedSurfaceRoots) {
+    for (const p of walk(join(softwareRoot, root))) {
+      if (!/\.(tsx|ts)$/.test(p)) continue;
+      if (p.includes('__tests__')) continue;
+      const source = readFileSync(p, 'utf8');
+      if (/#[0-9a-fA-F]{3,8}/.test(source) || /rgba?\(/.test(source)) {
+        offenders.push(p.replace(softwareRoot + '/', ''));
+      }
     }
   }
-  assert.deepEqual(offenders, [], `raw colors in components: ${offenders.join(', ')}`);
+  assert.deepEqual(offenders, [], `raw colors in rendered surfaces: ${offenders.join(', ')}`);
+});
+
+test('danger text is reserved for errors and destructive actions', () => {
+  const expectedUses = {
+    'app/(tabs)/today.tsx': 1,
+    'app/onboarding/adult.tsx': 1,
+    'app/settings/profile.tsx': 1,
+    'design-system/components/ErrorBanner.tsx': 1,
+    'design-system/components/PrimaryButton.tsx': 1,
+    'modules/diary/entry-edit/DiaryEntryEditSheet.tsx': 1,
+    'modules/diary/food-detail/FoodDetailSheet.tsx': 2,
+  };
+  const actualUses = {};
+  for (const root of renderedSurfaceRoots) {
+    for (const p of walk(join(softwareRoot, root))) {
+      if (!/\.(tsx|ts)$/.test(p)) continue;
+      if (p.includes('__tests__')) continue;
+      const count = [...readFileSync(p, 'utf8').matchAll(/colors\.danger\b/g)].length;
+      if (count > 0) actualUses[p.replace(softwareRoot + '/', '')] = count;
+    }
+  }
+  assert.deepEqual(actualUses, expectedUses);
 });
