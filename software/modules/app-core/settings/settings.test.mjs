@@ -47,6 +47,59 @@ test('v3 migration persists and safely parses theme preference', async () => {
   db.close();
 });
 
+test('startup theme reads the persisted preference synchronously and closes the database', () => {
+  let closed = false;
+  const applied = [];
+  const preference = settings.initializeNativeThemePreference((name) => {
+    assert.equal(name, 'UserData.sqlite');
+    return {
+      getFirstSync(sql, params) {
+        assert.match(sql, /SELECT value FROM app_setting/);
+        assert.deepEqual(params, ['theme_preference']);
+        return { value: 'dark' };
+      },
+      closeSync() { closed = true; },
+    };
+  }, (value) => applied.push(value));
+
+  assert.equal(preference, 'dark');
+  assert.equal(closed, true);
+  assert.deepEqual(applied, ['dark']);
+});
+
+test('startup theme safely follows the system when persistence is invalid or unavailable', () => {
+  assert.equal(settings.readStartupThemePreference(() => ({
+    getFirstSync: () => ({ value: 'unexpected' }),
+    closeSync() {},
+  })), 'system');
+  assert.equal(settings.readStartupThemePreference(() => {
+    throw new Error('database unavailable');
+  }), 'system');
+});
+
+test('web startup theme hint mirrors valid preferences and fails safely', () => {
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+
+  settings.writeWebStartupThemePreference('dark', storage);
+  assert.equal(
+    values.get(settings.WEB_THEME_PREFERENCE_STORAGE_KEY),
+    'dark',
+  );
+  assert.equal(settings.readWebStartupThemePreference(storage), 'dark');
+  values.set(settings.WEB_THEME_PREFERENCE_STORAGE_KEY, 'unexpected');
+  assert.equal(settings.readWebStartupThemePreference(storage), null);
+  values.delete(settings.WEB_THEME_PREFERENCE_STORAGE_KEY);
+  assert.equal(settings.readWebStartupThemePreference(storage), null);
+  assert.doesNotThrow(() => settings.writeWebStartupThemePreference('light', {
+    getItem: () => null,
+    setItem: () => { throw new Error('quota exceeded'); },
+  }));
+});
+
 test('existing v2 user store upgrades to the v3 settings table', async () => {
   const db = await userData.openSqlJsDatabase();
   db.exec(userData.USER_STORE_V1_SQL);
