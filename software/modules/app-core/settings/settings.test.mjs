@@ -91,7 +91,9 @@ test('web startup theme hint mirrors valid preferences and fails safely', () => 
   );
   assert.equal(settings.readWebStartupThemePreference(storage), 'dark');
   values.set(settings.WEB_THEME_PREFERENCE_STORAGE_KEY, 'unexpected');
-  assert.equal(settings.readWebStartupThemePreference(storage), 'system');
+  assert.equal(settings.readWebStartupThemePreference(storage), null);
+  values.delete(settings.WEB_THEME_PREFERENCE_STORAGE_KEY);
+  assert.equal(settings.readWebStartupThemePreference(storage), null);
   assert.doesNotThrow(() => settings.writeWebStartupThemePreference('light', {
     getItem: () => null,
     setItem: () => { throw new Error('quota exceeded'); },

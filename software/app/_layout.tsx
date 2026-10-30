@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Appearance, Platform, View } from 'react-native';
-import { paletteFor, ThemeProvider, type ColorSchemeName } from '@/design-system';
+import { lightPalette, paletteFor, ThemeProvider, type ColorSchemeName } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
 import {
@@ -53,10 +53,13 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
     // Native remains behind its theme-neutral splash. Web has no native splash,
     // so synchronously paint the last persisted scheme while sql.js hydrates.
     if (Platform.OS !== 'web') return null;
-    const startupScheme: ColorSchemeName = webStartupThemePreference === 'system'
+    const startupScheme: ColorSchemeName | null = webStartupThemePreference === 'system'
       ? (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light')
       : webStartupThemePreference;
-    return <View style={{ flex: 1, backgroundColor: paletteFor(startupScheme).canvas }} />;
+    const backgroundColor = startupScheme
+      ? paletteFor(startupScheme).canvas
+      : lightPalette.brand;
+    return <View style={{ flex: 1, backgroundColor }} />;
   }
 
   return (

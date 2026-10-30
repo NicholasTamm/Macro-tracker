@@ -31,11 +31,12 @@ export function parseThemePreference(value: unknown): ThemePreference {
 
 export function readWebStartupThemePreference(
   storage: ThemePreferenceStorage | null = getWebStorage(),
-): ThemePreference {
+): ThemePreference | null {
   try {
-    return parseThemePreference(storage?.getItem(WEB_THEME_PREFERENCE_STORAGE_KEY));
+    const value = storage?.getItem(WEB_THEME_PREFERENCE_STORAGE_KEY);
+    return value === 'light' || value === 'dark' || value === 'system' ? value : null;
   } catch {
-    return DEFAULT_THEME_PREFERENCE;
+    return null;
   }
 }
 
