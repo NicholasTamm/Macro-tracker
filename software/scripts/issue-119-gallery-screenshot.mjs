@@ -5,6 +5,8 @@ import { decodePng } from './issue-80-screenshot-parity.mjs';
 const MIN_SWATCH_PIXELS = 700;
 const MIN_LABEL_PIXELS = 20;
 
+const SWATCH_REGION = { left: 0, top: 500, right: 430, bottom: 590 };
+
 const LIGHT_COLORS = {
   illoProteinTint: [255, 235, 229],
   illoCarbsTint: [225, 242, 233],
@@ -23,15 +25,23 @@ const DARK_COLORS = {
   mascot: [255, 139, 65],
 };
 
-function countColor(image, expected, tolerance = 1) {
+function countColor(
+  image,
+  expected,
+  tolerance = 1,
+  { left = 0, top = 0, right = image.width, bottom = image.height } = {},
+) {
   let count = 0;
-  for (let offset = 0; offset < image.rgb.length; offset += 3) {
-    if (
-      Math.abs(image.rgb[offset] - expected[0]) <= tolerance
-      && Math.abs(image.rgb[offset + 1] - expected[1]) <= tolerance
-      && Math.abs(image.rgb[offset + 2] - expected[2]) <= tolerance
-    ) {
-      count += 1;
+  for (let y = top; y < bottom; y += 1) {
+    for (let x = left; x < right; x += 1) {
+      const offset = (y * image.width + x) * 3;
+      if (
+        Math.abs(image.rgb[offset] - expected[0]) <= tolerance
+        && Math.abs(image.rgb[offset + 1] - expected[1]) <= tolerance
+        && Math.abs(image.rgb[offset + 2] - expected[2]) <= tolerance
+      ) {
+        count += 1;
+      }
     }
   }
   return count;
@@ -41,7 +51,7 @@ export function assertGalleryScreenshot(image, scheme) {
   assert.deepEqual([image.width, image.height], [430, 1200], `${scheme} screenshot dimensions`);
   const colors = scheme === 'dark' ? DARK_COLORS : LIGHT_COLORS;
   for (const [role, rgb] of Object.entries(colors)) {
-    const count = countColor(image, rgb);
+    const count = countColor(image, rgb, 1, SWATCH_REGION);
     assert.ok(
       count >= MIN_SWATCH_PIXELS,
       `${scheme} ${role} is missing, clipped, or rendered with the wrong tint (${count} pixels)`,

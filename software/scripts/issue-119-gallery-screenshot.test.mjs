@@ -21,18 +21,31 @@ const PALETTES = {
   ],
 };
 
-function screenshot(scheme) {
-  const rgb = new Uint8Array(430 * 1200 * 3);
-  let pixel = 0;
-  for (const color of PALETTES[scheme]) {
-    for (let count = 0; count < 700; count += 1, pixel += 1) {
-      rgb.set(color, pixel * 3);
+const SWATCH_POSITIONS = [
+  [24, 533],
+  [88, 533],
+  [146, 533],
+  [206, 533],
+  [266, 533],
+  [322, 533],
+];
+
+function fillRect(image, color, left, top, width, height) {
+  for (let y = top; y < top + height; y += 1) {
+    for (let x = left; x < left + width; x += 1) {
+      image.rgb.set(color, (y * image.width + x) * 3);
     }
   }
-  for (let count = 0; count < 20; count += 1, pixel += 1) {
-    rgb.set([31, 27, 22], pixel * 3);
+}
+
+function screenshot(scheme) {
+  const rgb = new Uint8Array(430 * 1200 * 3);
+  const image = { width: 430, height: 1200, rgb };
+  for (const [index, color] of PALETTES[scheme].entries()) {
+    fillRect(image, color, ...SWATCH_POSITIONS[index], 40, 40);
   }
-  return { width: 430, height: 1200, rgb };
+  fillRect(image, [31, 27, 22], 40, 400, 20, 1);
+  return image;
 }
 
 test('issue #119 gallery screenshot verifier accepts complete light and dark specimens', () => {
@@ -42,16 +55,26 @@ test('issue #119 gallery screenshot verifier accepts complete light and dark spe
 
 test('issue #119 gallery screenshot verifier rejects a clipped or wrong-theme swatch', () => {
   const image = screenshot('dark');
-  image.rgb.fill(0, 0, 700 * 3);
+  fillRect(image, [0, 0, 0], ...SWATCH_POSITIONS[0], 40, 40);
   assert.throws(
     () => assertGalleryScreenshot(image, 'dark'),
     /dark illoProteinTint is missing, clipped, or rendered with the wrong tint/,
   );
 });
 
+test('issue #119 gallery screenshot verifier does not substitute brand pixels for mascot', () => {
+  const image = screenshot('light');
+  fillRect(image, [0, 0, 0], ...SWATCH_POSITIONS[5], 40, 40);
+  fillRect(image, PALETTES.light[5], 20, 390, 100, 30);
+  assert.throws(
+    () => assertGalleryScreenshot(image, 'light'),
+    /light mascot is missing, clipped, or rendered with the wrong tint/,
+  );
+});
+
 test('issue #119 gallery screenshot verifier rejects a missing onBrand label', () => {
   const image = screenshot('light');
-  image.rgb.fill(0, 6 * 700 * 3, (6 * 700 + 20) * 3);
+  fillRect(image, [0, 0, 0], 40, 400, 20, 1);
   assert.throws(
     () => assertGalleryScreenshot(image, 'light'),
     /light onBrand label is missing or rendered with the wrong color/,
