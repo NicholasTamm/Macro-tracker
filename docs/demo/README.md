@@ -223,6 +223,6 @@ Manual check: open Food entry and search "banana", then open Today. Each row sho
 
 ## Issue #122 — M1-64 Placeholder mascot and EmptyState slot
 
-Run `bash docs/demo/smoke-m1-issue-122.sh`. It checks that the six placeholder poses are in `software/assets/mascot/`, then runs typecheck, lint, `scripts/issue-122-mascot.test.mjs` and the full suite. It also does a web export and confirms every pose is bundled. Result: `out/issue-122-smoke-result.txt`.
+Run `bash docs/demo/smoke-m1-issue-122.sh`. It checks that the six placeholder poses are in `software/assets/mascot/`, then runs typecheck, lint, `scripts/issue-122-mascot.test.mjs` and the full suite. It also confirms every pose is bundled in a web export and validates light/dark gallery screenshots for all six poses and the mascot empty state. Result: `out/issue-122-smoke-result.txt`.
 
 Manual check: open the component gallery and toggle light/dark. "Mascot (placeholder art)" shows wave, think, cheer, sleep, scale and emptyPlate, followed by an empty state with the mascot and a brand CTA. The placeholder is hand-written SVG circles. Final art from #127 replaces the files with the same names and needs no code change.
