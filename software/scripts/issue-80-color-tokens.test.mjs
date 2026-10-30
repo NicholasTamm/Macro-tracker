@@ -51,7 +51,7 @@ test('palette exposes surface + state + overage tokens', async () => {
   assert.notEqual(lightPalette.overage, lightPalette.danger);
 });
 
-test('ThemeProvider gates native startup without blanking web during hydration', async () => {
+test('ThemeProvider waits for persisted theme hydration on every platform', async () => {
   const src = readFileSync(
     join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
     'utf8',
@@ -68,7 +68,7 @@ test('ThemeProvider gates native startup without blanking web during hydration',
   assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
-  assert.match(layout, /if \(!ready && Platform\.OS !== 'web'\) return null/);
+  assert.match(layout, /if \(!ready\) return null/);
   assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
   assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
   assert.ok(
@@ -78,6 +78,16 @@ test('ThemeProvider gates native startup without blanking web during hydration',
   );
   assert.equal(splashConfig.backgroundColor, lightPalette.canvas);
   assert.equal(splashConfig.dark.backgroundColor, darkPalette.canvas);
+});
+
+test('only the root ThemeProvider synchronizes global native chrome', () => {
+  const src = readFileSync(
+    join(softwareRoot, 'design-system/theme/ThemeProvider.tsx'),
+    'utf8',
+  );
+
+  assert.match(src, /const parentTheme = useContext\(ThemeContext\)/);
+  assert.match(src, /if \(parentTheme\) return/);
 });
 
 test('screenshot parity rejects a collapsed surface role', async () => {
