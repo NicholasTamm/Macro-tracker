@@ -7,12 +7,11 @@ import { useReduceMotion } from '@/design-system/theme/useReduceMotion';
 /**
  * Compact goal-hit celebration (issue 125). Sits above the meal slots,
  * outside MacroSummary (art zone, not data zone). Animates in only when
- * Reduce Motion is known to be off; waits until the preference is known.
+ * Reduce Motion is known to be off; otherwise renders statically.
  */
 export function GoalHitCard() {
   const { colors, spacing, typography } = useTheme();
   const reduceMotion = useReduceMotion();
-  if (reduceMotion === null) return null;
   return (
     <Animated.View
       entering={reduceMotion === false ? FadeInDown.duration(260) : undefined}
