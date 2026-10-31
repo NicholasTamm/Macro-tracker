@@ -1,0 +1,13 @@
+smoke-m1-issue-138 PASS 2026-10-31T07:27:23Z
+Code commit: 5f9985a7e6433c4838786f73e15c56d2c759714b
+PASS: typecheck; lint; focused tests; full suite with --test-concurrency=1.
+PASS: fixture chicken (28.35 g/oz), egg (50.3 g/egg), rice (195 g/cup), banana (225 g/cup) default to 100 g in metric.
+PASS: no-portion seed and weighable custom foods use 100 g; custom foods without grams retain their serving.
+PASS: imperial serving defaults preserved; favorite quick-add without history uses 100 g; remembered grams and ounce quantities win.
+Web manual check: metric profile -> Food entry -> search chicken breast -> open cooked, roasted -> Quantity 100, Grams selected. Log a different quantity/unit, reopen, and verify it is remembered.
+Browser execution is separate from this model/store smoke; record any completed browser verification below.
+Browser PASS: Expo web export served locally, headless Google Chrome with a 390x844 viewport via CDP. Seeded an onboarded metric profile with no recents in localStorage, searched each fixture food, and opened its actual Log food sheet. Chicken breast cooked/roasted, egg, cooked brown rice, and banana each showed Quantity 100 and the Grams chip selected.
+Browser PASS: logged chicken at 2.5 oz, returned from Today to Food entry, and reopened the sheet. Quantity 2.5 and the oz chip were restored after the page reload.
+Regression proof: new tests against the original buildFoodDetail.ts fail 7 cases; remembered grams and ounces pass. With the fix all 9 new cases pass.
+Initial default parallel npm test hit two SQLite database-is-locked failures in existing catalog/search tests; the required serialized full suite passes all 259 tests.
+PASS: npm test retried on the final code commit without other build/test processes; all 259 tests passed with the default package.json command as well.
