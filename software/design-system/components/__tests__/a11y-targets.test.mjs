@@ -36,5 +36,5 @@ test('Gallery scheme toggle has 44 min height and labels', () => {
 test('MacroSummary includes the selected energy unit in its accessibility summary', () => {
   const src = readFileSync(join(componentsDir, 'MacroSummary.tsx'), 'utf8');
   assert.match(src, /energyUnitForSpeech\(unit\)/);
-  assert.match(src, /a11yValue\('Energy', energyValue, energyUnit\)/);
+  assert.match(src, /a11yValue\(label, displayValue, isEnergy \? energyUnit : row.unit\)/);
 });
