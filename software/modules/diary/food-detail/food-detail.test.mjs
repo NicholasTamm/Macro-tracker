@@ -429,10 +429,7 @@ test('seed detail honors metric and imperial default-unit preferences', async ()
     assert.equal(imperial.defaultUnit.kind, 'serving');
     assert.equal(imperial.suggestedQuantity, 1);
     assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
-    const imperialServing = metric.servings.find(
-      (serving) => serving.servingId === imperial.defaultUnit.servingId,
-    );
-    assert.equal(metric.suggestedQuantity, imperialServing.gramWeight);
+    assert.equal(metric.suggestedQuantity, 100);
   } finally {
     repo.close();
   }
@@ -455,7 +452,7 @@ test('custom detail honors metric and imperial default-unit preferences', async 
   assert.deepEqual(imperial.defaultUnit, { kind: 'serving', servingId: 0 });
   assert.equal(imperial.suggestedQuantity, 1);
   assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
-  assert.equal(metric.suggestedQuantity, 250);
+  assert.equal(metric.suggestedQuantity, 100);
 
   db.close();
 });
