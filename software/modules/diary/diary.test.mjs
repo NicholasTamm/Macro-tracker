@@ -16,6 +16,7 @@ let dayKey;
 let macroTotals;
 let loadToday;
 let userData;
+let goalHit;
 
 before(() => {
   mkdirSync(bundleDir, { recursive: true });
@@ -25,6 +26,7 @@ before(() => {
     ['dayKey.ts', 'dayKey.js'],
     ['macroTotals.ts', 'macroTotals.js'],
     ['loadTodayDay.ts', 'loadTodayDay.js'],
+    ['goalHit.ts', 'goalHit.js'],
     [join(softwareRoot, 'modules/app-core/user-data/index.ts'), 'userData.js'],
   ];
   for (const [src, out] of entries) {
@@ -53,6 +55,7 @@ async function loadMods() {
   macroTotals = await import(pathToFileURL(join(bundleDir, 'macroTotals.js')).href);
   loadToday = await import(pathToFileURL(join(bundleDir, 'loadTodayDay.js')).href);
   userData = await import(pathToFileURL(join(bundleDir, 'userData.js')).href);
+  goalHit = await import(pathToFileURL(join(bundleDir, 'goalHit.js')).href);
 }
 
 async function openDb() {
@@ -245,4 +248,33 @@ test('Today screen + smoke paths exist', () => {
   assert.ok(
     readFileSync(join(softwareRoot, '../docs/demo/smoke-m1-11-today.sh'), 'utf8').includes('smoke-m1-11'),
   );
+});
+
+
+test('goal hit uses unrounded diary totals while display totals remain rounded', async () => {
+  const db = await openDb();
+  userData.ensureProfile(db);
+  userData.saveStarterTarget(db, { energyKcal: 2000, proteinG: 150, carbohydrateG: 200, fatG: 70 }, undefined, '2026-10-01');
+  const cases = [
+    ['2026-10-03', 1799.6, 135, false],
+    ['2026-10-04', 1800, 134.96, false],
+    ['2026-10-05', 2200.4, 135, false],
+    ['2026-10-06', 1800, 135, true],
+  ];
+  for (const [day, calories, protein, expected] of cases) {
+    userData.createDiaryEntry(db, {
+      timestamp: `${day}T18:00:00.000Z`, localDayKey: day, timezoneIdentifier: 'America/Vancouver',
+      mealSlotId: null, foodKind: 'seed', foodStableId: `food-${day}`, foodDisplayName: 'Food',
+      foodLicenseTag: 'USDA', quantity: 1, unitLabel: 'serving', grams: 100,
+      nutritionSnapshot: { energy_kcal: calories, protein }, sourceDisplayName: 'USDA', licenseTag: 'USDA',
+    });
+    const view = loadToday.loadTodayDay(db, day);
+    assert.equal(view.totals.calories, Math.round(calories));
+    assert.equal(view.totals.protein, Math.round(protein * 10) / 10);
+    const hit = goalHit.isDailyGoalHit(view.rawTotals, view.goals);
+    assert.equal(hit, expected, day);
+    assert.equal(goalHit.shouldShowGoalHitCard({ viewDayKey: day, todayKey: day, hit }), expected);
+    assert.equal(goalHit.claimGoalHitCelebration(db, { viewDayKey: day, todayKey: day, hit }), expected);
+  }
+  db.close();
 });

@@ -14,11 +14,13 @@ export function useReduceMotion(): boolean | null {
   const [reduce, setReduce] = useState<boolean | null>(null);
   useEffect(() => {
     let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled?.()
+    (AccessibilityInfo.isReduceMotionEnabled?.() ?? Promise.resolve(true))
       .then((v) => {
         if (mounted) setReduce(!!v);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (mounted) setReduce(true);
+      });
     const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (v: boolean) =>
       setReduce(!!v),
     );

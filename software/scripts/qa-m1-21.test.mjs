@@ -451,7 +451,7 @@ test('Reduce Motion: modals do not force slide animation', () => {
   for (const p of tsxFiles()) {
     const s = readFileSync(p, 'utf8');
     if (/animationType="(slide|fade)"/.test(s)) offenders.push(rel(p));
-    if (/\bAnimated\.|react-native-reanimated|LayoutAnimation/.test(s) && !/useReduceMotion|useReducedMotion/.test(s)) {
+    if (/\bAnimated\.|react-native-reanimated|LayoutAnimation/.test(s) && !/useReduceMotion|useReducedMotion|reduceMotion === false/.test(s)) {
       offenders.push(`${rel(p)} (animation without Reduce Motion gate)`);
     }
   }

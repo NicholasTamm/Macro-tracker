@@ -246,3 +246,16 @@ Manual check:
 1. With no weights logged, open Analytics. "Last 30 days" shows the scale mascot above "No weights yet".
 2. Log one weight. The mascot is replaced by the chart.
 3. If every weight is older than 30 days, the "No recent weights" state shows no art.
+
+## Issue #125 — M1-67 Goal-hit celebration
+
+The rule was approved by the owner on Oct 28: calories within ±10% of the calorie goal and protein at or above 90% of the protein goal. Both goals must exist.
+
+Run `bash docs/demo/smoke-m1-issue-125.sh`. It runs typecheck, lint, `modules/diary/goalHit.test.mjs` and the full suite. Then `scripts/smoke-issue-125.mjs` uses a real sql.js store to log food up to the target, reload from the exported bytes, and confirm that the card condition holds and that `goal_hit_celebrated_day` is claimed exactly once. A web export confirms the card copy and the cheer art are bundled. Result: `out/issue-125-smoke-result.txt`.
+
+Manual check on a device:
+1. Log food to the target. A compact card with the cheer mascot appears above the meal slots, and one success haptic fires.
+2. Reload. The card stays and there is no second haptic.
+3. Delete or undo so you drop below the target. The card hides.
+4. Past days never celebrate.
+5. With Reduce Motion on, the card appears without animation.
