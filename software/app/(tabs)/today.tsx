@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import {
   View,
   Text,
@@ -388,8 +389,12 @@ export default function TodayScreen() {
 
         {view.entryCount === 0 ? (
           <EmptyState
-            title="No foods logged"
-            message="This day is empty. Open Search, pick a food, and log it here offline."
+            mascotPose="emptyPlate"
+            title="Nothing on your plate yet"
+            message="Log a food when you're ready and we'll keep count with you."
+            actionLabel="Log food"
+            actionVariant="brand"
+            onAction={() => router.push('/food-entry')}
           />
         ) : null}
 

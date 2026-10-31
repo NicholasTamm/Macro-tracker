@@ -226,3 +226,14 @@ Manual check: open Food entry and search "banana", then open Today. Each row sho
 Run `bash docs/demo/smoke-m1-issue-122.sh`. It checks that the six placeholder poses are in `software/assets/mascot/`, then runs typecheck, lint, `scripts/issue-122-mascot.test.mjs` and the full suite. It also confirms every pose is bundled in a web export and validates light/dark gallery screenshots for all six poses and the mascot empty state. Result: `out/issue-122-smoke-result.txt`.
 
 Manual check: open the component gallery and toggle light/dark. "Mascot (placeholder art)" shows wave, think, cheer, sleep, scale and emptyPlate, followed by an empty state with the mascot and a brand CTA. The placeholder is hand-written SVG circles. Final art from #127 replaces the files with the same names and needs no code change.
+
+## Issue #123 — M1-65 Mascot empty states
+
+Run `bash docs/demo/smoke-m1-issue-123.sh`. It runs typecheck, lint, the empty-state and mascot tests, and the full suite. It also does a web export and confirms the emptyPlate and think art, the new copy, and the `/food-entry` route are bundled. Result: `out/issue-123-smoke-result.txt`.
+
+Manual check:
+1. On a fresh profile, open Today. The emptyPlate mascot shows with "Nothing on your plate yet" and a brand "Log food" button.
+2. Tap "Log food". It opens Food entry, which shows the think mascot above "Search USDA staples".
+3. Log one food and return to Today. The mascot is gone.
+
+Slot cards and the macro summary never show art. A search with no matches stays plain.
