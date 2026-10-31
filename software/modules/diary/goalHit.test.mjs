@@ -98,17 +98,18 @@ test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, red
   assert.doesNotMatch(read('design-system/components/MacroSummary.tsx'), /Mascot|GoalHit/);
 });
 
-test('issue 125: card renders statically while motion preference is pending', () => {
+test('issue 125: card mounts with the resolved motion preference', () => {
   const source = read('modules/diary/GoalHitCard.tsx');
   const body = source.slice(source.indexOf('export function GoalHitCard()')).replace('export function', 'function');
   const js = ts.transpileModule(body, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 } }).outputText;
   const render = new Function('React', 'useTheme', 'useReduceMotion', 'Animated', 'FadeInDown', 'Card', 'View', 'Mascot', 'Text', `${js}; return GoalHitCard();`);
   const run = (motion) => render({ createElement: (type, props) => ({ type, props }) }, () => ({ colors: {}, spacing: {}, typography: {} }), () => motion, { View: 'animated' }, { duration: (ms) => ms }, 'card', 'view', 'mascot', 'text');
-  const pending = run(null);
-  assert.equal(pending.type, 'animated', 'card mounts while preference is pending');
-  assert.equal(pending.props.entering, undefined, 'no entrance animation while preference is pending');
-  assert.equal(run(false).props.entering, 260);
-  assert.equal(run(true).props.entering, undefined);
+  for (const [motion, entering] of [[false, 260], [true, undefined]]) {
+    assert.equal(run(null), null, 'animated view does not mount while preference is pending');
+    const mounted = run(motion);
+    assert.equal(mounted.type, 'animated');
+    assert.equal(mounted.props.entering, entering, 'entrance is selected on mount');
+  }
 });
 
 test('issue 125: midnight and foreground update the day and clean up', () => {
