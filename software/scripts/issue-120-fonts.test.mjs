@@ -5,6 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import ts from 'typescript';
+import { build } from 'esbuild';
 
 const softwareRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(softwareRoot, p), 'utf8');
@@ -18,6 +19,69 @@ async function loadTypography() {
     }).outputText;
     writeFileSync(join(dir, 'typography.js'), out);
     return await import(pathToFileURL(join(dir, 'typography.js')).href);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+async function renderLayoutOptions(relativePath) {
+  const dir = mkdtempSync(join(softwareRoot, '.issue-120-layout-'));
+  const outfile = join(dir, 'layout.mjs');
+  try {
+    await build({
+      entryPoints: [join(softwareRoot, relativePath)],
+      outfile,
+      bundle: true,
+      format: 'esm',
+      platform: 'node',
+      jsx: 'automatic',
+      define: { __DEV__: 'false' },
+      external: ['react', 'react/jsx-runtime'],
+      plugins: [{
+        name: 'issue-120-layout-stubs',
+        setup(buildApi) {
+          buildApi.onResolve(
+            { filter: /^(expo-router|@expo\/vector-icons|@\/design-system|@\/components\/HeaderBackButton)$/ },
+            ({ path }) => ({ path, namespace: 'layout-stub' }),
+          );
+          buildApi.onLoad({ filter: /.*/, namespace: 'layout-stub' }, ({ path }) => {
+            if (path === 'expo-router') {
+              return {
+                contents: `import React from 'react';
+                  export function Tabs(props) { return React.createElement('tabs', props); }
+                  Tabs.Screen = function Screen(props) { return React.createElement('screen', props); };
+                  export function Stack(props) { return React.createElement('stack', props); }
+                  Stack.Screen = function Screen(props) { return React.createElement('screen', props); };`,
+                loader: 'js',
+              };
+            }
+            if (path === '@/design-system') {
+              return {
+                contents: `export function useTheme() {
+                  return {
+                    colors: { ink: '#000', muted: '#666', raised: '#fff', divider: '#ddd', canvas: '#fff' },
+                    typography: {
+                      caption: { fontFamily: 'Figtree_500Medium', fontSize: 11, lineHeight: 14 },
+                      pageTitle: { fontFamily: 'Nunito_700Bold', fontSize: 28, lineHeight: 32 },
+                    },
+                  };
+                }`,
+                loader: 'js',
+              };
+            }
+            if (path === '@/components/HeaderBackButton') {
+              return { contents: 'export function HeaderBackButton() { return null; }', loader: 'js' };
+            }
+            return {
+              contents: 'export function Feather() { return null; } export function MaterialIcons() { return null; }',
+              loader: 'js',
+            };
+          });
+        },
+      }],
+    });
+    const { default: Layout } = await import(pathToFileURL(outfile).href);
+    return Layout().props.screenOptions;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -83,6 +147,47 @@ test('issue 120: fonts load without blocking render and fall back on failure', (
   const layout = read('app/_layout.tsx');
   assert.match(layout, /useProductFonts\(\)/);
   assert.doesNotMatch(layout, /if \(!fontsLoaded\)|fontsLoaded \? null/);
+});
+
+test('issue 120: router-rendered labels and headers receive product typography', async () => {
+  const [tabs, onboarding, settings] = await Promise.all([
+    renderLayoutOptions('app/(tabs)/_layout.tsx'),
+    renderLayoutOptions('app/onboarding/_layout.tsx'),
+    renderLayoutOptions('app/settings/_layout.tsx'),
+  ]);
+
+  assert.equal(tabs.tabBarLabelStyle.fontFamily, 'Figtree_500Medium');
+  assert.equal(tabs.tabBarLabelStyle.fontSize, 11);
+  for (const [name, options] of Object.entries({ tabs, onboarding, settings })) {
+    assert.equal(options.headerTitleStyle.fontFamily, 'Nunito_700Bold', name);
+    assert.equal(options.headerTitleStyle.fontSize, 28, name);
+  }
+});
+
+test('issue 120: components consume the semantic typography roles', async () => {
+  const t = await loadTypography();
+  const button = read('design-system/components/PrimaryButton.tsx');
+  const foodRow = read('design-system/components/FoodRow.tsx');
+
+  assert.match(button, /typography\.control/);
+  assert.doesNotMatch(button, /typography\.button/);
+  assert.match(foodRow, /typography\.foodName/);
+  assert.match(foodRow, /typography\.metadata/);
+  assert.doesNotMatch(foodRow, /typography\.(?:bodyStrong|micro)/);
+  assert.deepEqual(
+    { fontSize: t.SystemTypography.metadata.fontSize, lineHeight: t.SystemTypography.metadata.lineHeight },
+    { fontSize: 10, lineHeight: 13 },
+  );
+});
+
+test('issue 120: onboarding and profile inputs receive product typography', () => {
+  for (const path of [
+    'app/onboarding/biometrics.tsx',
+    'app/onboarding/goal.tsx',
+    'app/settings/profile.tsx',
+  ]) {
+    assert.match(read(path), /<TextInput[\s\S]*?style=\{\[\s*typography\.body,/, path);
+  }
 });
 
 test('issue 120: no MacroFactor font file and OFL licences listed', () => {
