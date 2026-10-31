@@ -46,6 +46,16 @@ function a11yValue(label: string, value: number | null, unit: string): string {
   return `${value} ${label.toLowerCase()}`;
 }
 
+/** Progress uses canonical values so display-unit rounding cannot change the state. */
+export function macroProgress(consumed: number | null, target?: number) {
+  if (consumed == null || !Number.isFinite(consumed) || consumed < 0
+    || target == null || !Number.isFinite(target) || target <= 0) {
+    return { fill: 0, percent: null, over: false };
+  }
+  const ratio = consumed / target;
+  return { fill: Math.min(ratio, 1), percent: Math.round(ratio * 100), over: consumed > target };
+}
+
 /**
  * Matches HTML `.summary-chips` / `.timeline-summary` macro strip.
  * Null nutrients render as an em dash — never coerce missing to zero.
@@ -58,21 +68,8 @@ export function MacroSummary({
   energyUnit?: EnergyUnit;
 }) {
   const { colors, spacing, typography, font } = useTheme();
-  const energyValue = totals.calories == null ? null : Number(formatEnergy(totals.calories, energyUnit));
-
-  const a11y = [
-    a11yValue('Energy', energyValue, energyUnit),
-    a11yValue('Protein', totals.protein, 'g'),
-    a11yValue('Fat', totals.fat, 'g'),
-    a11yValue('Carbs', totals.carbs, 'g'),
-  ].join(', ');
-
   return (
-    <Card
-      accessibilityRole="text"
-      accessibilityLabel={`Daily macros: ${a11y}`}
-      style={styles.wrap}
-    >
+    <Card style={styles.wrap}>
       <View style={styles.row}>
         {ROWS.map((row, index) => {
           const value = totals[row.key];
@@ -82,6 +79,7 @@ export function MacroSummary({
             | 'fatGoal'
             | 'carbsGoal';
           const goal = totals[goalKey];
+          const progress = macroProgress(value, goal);
           const accent = colors[row.colorKey];
           const isEnergy = row.key === 'calories';
           const label = isEnergy && energyUnit === 'kJ' ? 'Energy' : row.label;
@@ -92,16 +90,21 @@ export function MacroSummary({
           const displayGoal = isEnergy && goal != null
             ? Number(formatEnergy(goal, energyUnit))
             : goal;
+          const targetLabel = displayGoal != null
+            ? `, target ${displayGoal} ${isEnergy ? energyUnitForSpeech(energyUnit) : 'grams'}`
+            : '';
+          const progressLabel = progress.percent == null ? 'progress unavailable' : `${progress.percent}% of target`;
           return (
             <View
               key={row.key}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`${a11yValue(label, displayValue, isEnergy ? energyUnit : row.unit)}${targetLabel}, ${progressLabel}${progress.over ? ', over target' : ''}`}
               style={[
                 styles.cell,
                 {
                   borderEndWidth: index < ROWS.length - 1 ? StyleSheet.hairlineWidth : 0,
                   borderEndColor: colors.divider,
-                  borderBottomColor: accent,
-                  borderBottomWidth: 3,
                   paddingBottom: spacing.xs,
                   paddingHorizontal: spacing.sm,
                 },
@@ -116,7 +119,7 @@ export function MacroSummary({
                 </Text>
               </View>
               <Text
-                style={[typography.bodyStrong, { color: colors.ink, fontVariant: ['tabular-nums'] }]}
+                style={[typography.bodyStrong, { flex: 1, color: colors.ink, fontVariant: ['tabular-nums'] }]}
               >
                 {formatMacroValue(displayValue, unit)}
                 {displayGoal != null ? (
@@ -130,6 +133,24 @@ export function MacroSummary({
                   </Text>
                 ) : null}
               </Text>
+              {progress.over ? (
+                <Text style={[typography.micro, { color: colors.ink }]}>Over target</Text>
+              ) : null}
+              <View
+                style={[styles.track, {
+                  backgroundColor: colors.control,
+                  borderColor: colors.controlBorder,
+                  marginTop: spacing.xs,
+                }]}
+              >
+                <View style={[styles.fill, {
+                  width: `${progress.fill * 100}%`,
+                  backgroundColor: accent,
+                  // A contrasting edge preserves the fill shape for pale nutrient colours.
+                  borderColor: colors.ink,
+                  borderWidth: progress.fill > 0 ? 1 : 0,
+                }]} />
+              </View>
             </View>
           );
         })}
@@ -143,5 +164,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   cell: { flex: 1, minWidth: 0 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
+  track: { height: 8, borderWidth: 1, borderRadius: 4, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: 3 },
   dot: { width: 9, height: 9, borderRadius: 5 },
 });
