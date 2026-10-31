@@ -1,1 +1,2 @@
-smoke-m1-issue-122 PASS 2026-10-29T02:29:06Z
+smoke-m1-issue-122 PASS 2026-10-30T22:44:16Z
+screenshots: all six mascot poses and the mascot empty state rendered unclipped in light and dark

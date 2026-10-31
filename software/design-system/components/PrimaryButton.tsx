@@ -68,7 +68,9 @@ export function PrimaryButton({
       ]}
       {...rest}
     >
-      <Text style={[typography.button, { color: fg, fontSize: compact ? 12 : 15 }]}>
+      <Text
+        style={[typography.control, { color: fg, fontSize: compact ? 12 : 15 }]}
+      >
         {label}
       </Text>
     </Pressable>

@@ -100,7 +100,6 @@ test('issue #119: illustration tokens exist in both palettes', async () => {
     'illoEnergyTint',
     'mascotTint',
     'mascot',
-    'onBrand',
   ]);
   for (const [name, p] of [
     ['light', lightPalette],
@@ -110,6 +109,8 @@ test('issue #119: illustration tokens exist in both palettes', async () => {
       assert.equal(typeof p[key], 'string', `${name}.${key} missing`);
       assert.ok(p[key].length > 0, `${name}.${key} empty`);
     }
+    assert.equal(typeof p.onBrand, 'string', `${name}.onBrand missing`);
+    assert.ok(p.onBrand.length > 0, `${name}.onBrand empty`);
     assert.equal(p.mascot, p.brand, `${name} mascot accent is brand orange`);
   }
   assert.equal(lightPalette.illoProteinTint, '#ffebe5');

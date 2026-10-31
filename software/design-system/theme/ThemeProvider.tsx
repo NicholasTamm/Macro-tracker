@@ -37,6 +37,7 @@ type Props = {
 };
 
 export function ThemeProvider({ children, forcedScheme }: Props) {
+  const parentTheme = useContext(ThemeContext);
   const system = useColorScheme();
   const scheme: ColorSchemeName =
     forcedScheme ?? (system === 'dark' ? 'dark' : 'light');
@@ -59,19 +60,23 @@ export function ThemeProvider({ children, forcedScheme }: Props) {
 
   // Keep native status / navigation chrome in sync with the active palette
   // so System/Light/Dark switches never leave mixed-theme surfaces (#80).
+  // Nested preview providers must not overwrite app-global chrome.
   useEffect(() => {
+    if (parentTheme) return;
     void syncNativeChrome(Platform.OS, scheme, theme.colors.canvas, {
       setRootBackgroundColor: SystemUI.setBackgroundColorAsync,
       setNavigationButtonStyle: NavigationBar.setButtonStyleAsync,
     });
-  }, [scheme, theme.colors.canvas]);
+  }, [parentTheme, scheme, theme.colors.canvas]);
 
   return (
     <ThemeContext.Provider value={theme}>
-      <StatusBar
-        style={scheme === 'dark' ? 'light' : 'dark'}
-        backgroundColor={Platform.OS === 'android' ? theme.colors.canvas : undefined}
-      />
+      {!parentTheme && (
+        <StatusBar
+          style={scheme === 'dark' ? 'light' : 'dark'}
+          backgroundColor={Platform.OS === 'android' ? theme.colors.canvas : undefined}
+        />
+      )}
       {children}
     </ThemeContext.Provider>
   );

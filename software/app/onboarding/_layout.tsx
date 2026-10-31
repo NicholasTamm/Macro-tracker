@@ -3,13 +3,18 @@ import { useTheme } from '@/design-system';
 import { HeaderBackButton } from '@/components/HeaderBackButton';
 
 export default function OnboardingLayout() {
-  const { colors } = useTheme();
+  const { colors, typography } = useTheme();
   return (
     <Stack
       screenOptions={{
         headerShown: true,
         headerStyle: { backgroundColor: colors.canvas },
         headerTintColor: colors.ink,
+        headerTitleStyle: {
+          fontFamily: typography.pageTitle.fontFamily,
+          fontSize: typography.pageTitle.fontSize,
+          fontWeight: typography.pageTitle.fontWeight,
+        },
         headerBackVisible: false,
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.canvas },
