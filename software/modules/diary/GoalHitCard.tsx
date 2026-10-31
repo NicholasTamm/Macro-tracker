@@ -2,16 +2,14 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Card, Mascot, useTheme } from '@/design-system';
-import { useReduceMotion } from '@/design-system/theme/useReduceMotion';
 
 /**
  * Compact goal-hit celebration (issue 125). Sits above the meal slots,
  * outside MacroSummary (art zone, not data zone). Animates in only when
- * Reduce Motion is known to be off; unknown or on means static.
+ * Reduce Motion is known to be off; otherwise renders statically.
  */
-export function GoalHitCard() {
+export function GoalHitCard({ reduceMotion }: { reduceMotion: boolean | null }) {
   const { colors, spacing, typography } = useTheme();
-  const reduceMotion = useReduceMotion();
   return (
     <Animated.View
       entering={reduceMotion === false ? FadeInDown.duration(260) : undefined}

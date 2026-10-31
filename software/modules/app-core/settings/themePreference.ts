@@ -4,11 +4,51 @@ export type ThemePreference = 'system' | 'light' | 'dark';
 
 export const DEFAULT_THEME_PREFERENCE: ThemePreference = 'system';
 export const THEME_SETTING_KEY = 'theme_preference';
+export const WEB_THEME_PREFERENCE_STORAGE_KEY = 'macro-tracker:theme-preference';
+
+type ThemePreferenceStorage = Pick<Storage, 'getItem' | 'setItem'>;
+
+function getWebStorage(): ThemePreferenceStorage | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
+
+type StartupThemeDatabase = {
+  getFirstSync: <T>(sql: string, params?: unknown[]) => T | null;
+  closeSync: () => void;
+};
+
+type OpenStartupThemeDatabase = (name: string) => StartupThemeDatabase;
 
 export function parseThemePreference(value: unknown): ThemePreference {
   return value === 'light' || value === 'dark' || value === 'system'
     ? value
     : DEFAULT_THEME_PREFERENCE;
+}
+
+export function readWebStartupThemePreference(
+  storage: ThemePreferenceStorage | null = getWebStorage(),
+): ThemePreference | null {
+  try {
+    const value = storage?.getItem(WEB_THEME_PREFERENCE_STORAGE_KEY);
+    return value === 'light' || value === 'dark' || value === 'system' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeWebStartupThemePreference(
+  preference: ThemePreference,
+  storage: ThemePreferenceStorage | null = getWebStorage(),
+): void {
+  try {
+    storage?.setItem(WEB_THEME_PREFERENCE_STORAGE_KEY, parseThemePreference(preference));
+  } catch {
+    // SQLite remains authoritative when storage is unavailable or full.
+  }
 }
 
 export function getThemePreference(db: SqlExecutor): ThemePreference {
@@ -17,6 +57,33 @@ export function getThemePreference(db: SqlExecutor): ThemePreference {
     [THEME_SETTING_KEY],
   );
   return parseThemePreference(row?.value);
+}
+
+export function readStartupThemePreference(
+  openDatabaseSync: OpenStartupThemeDatabase,
+): ThemePreference {
+  let db: StartupThemeDatabase | null = null;
+  try {
+    db = openDatabaseSync('UserData.sqlite');
+    const row = db.getFirstSync<{ value: string }>(
+      'SELECT value FROM app_setting WHERE key = ?',
+      [THEME_SETTING_KEY],
+    );
+    return parseThemePreference(row?.value);
+  } catch {
+    return DEFAULT_THEME_PREFERENCE;
+  } finally {
+    db?.closeSync();
+  }
+}
+
+export function initializeNativeThemePreference(
+  openDatabaseSync: OpenStartupThemeDatabase,
+  applyPreference: (preference: ThemePreference) => void,
+): ThemePreference {
+  const preference = readStartupThemePreference(openDatabaseSync);
+  applyPreference(preference);
+  return preference;
 }
 
 export function saveThemePreference(

@@ -35,13 +35,17 @@ export function roundMacroTotals(totals: DayMacroTotals): DayMacroTotals {
   };
 }
 
-export function sumMacroTotalsFromSnapshots(snapshots: NutrientMap[]): DayMacroTotals {
-  return roundMacroTotals({
+export function sumRawMacroTotalsFromSnapshots(snapshots: NutrientMap[]): DayMacroTotals {
+  return {
     calories: sumKey(snapshots, KEYS.calories),
     protein: sumKey(snapshots, KEYS.protein),
     fat: sumKey(snapshots, KEYS.fat),
     carbs: sumKey(snapshots, KEYS.carbs),
-  });
+  };
+}
+
+export function sumMacroTotalsFromSnapshots(snapshots: NutrientMap[]): DayMacroTotals {
+  return roundMacroTotals(sumRawMacroTotalsFromSnapshots(snapshots));
 }
 
 export function sumMacroTotalsFromEntries(entries: DiaryEntry[]): DayMacroTotals {
