@@ -28,9 +28,11 @@ export function isDailyGoalHit(totals: GoalHitTotals, goals: GoalHitGoals): bool
   const protein = totals?.protein;
   if (!isPositive(calorieGoal) || !isPositive(proteinGoal)) return false;
   if (!isFiniteNumber(calories) || !isFiniteNumber(protein)) return false;
+  const calorieMin = calorieGoal * (1 - CALORIE_TOLERANCE);
+  const calorieMax = calorieGoal * (1 + CALORIE_TOLERANCE);
+  const calorieRoundingError = Number.EPSILON * Math.max(1, Math.abs(calorieMax));
   const caloriesOk =
-    calories >= calorieGoal * (1 - CALORIE_TOLERANCE) &&
-    calories <= calorieGoal * (1 + CALORIE_TOLERANCE);
+    calories >= calorieMin - calorieRoundingError && calories <= calorieMax + calorieRoundingError;
   const proteinFloor = proteinGoal * PROTEIN_FLOOR;
   const roundingError = Number.EPSILON * Math.max(1, Math.abs(proteinFloor));
   return caloriesOk && protein >= proteinFloor - roundingError;
