@@ -277,6 +277,7 @@ export default function Analytics() {
             <Text style={[typography.bodyStrong, { color: colors.ink }]}>Last 30 days</Text>
             {summary.state === 'empty' ? (
               <EmptyState
+                mascotPose={samples.length === 0 ? 'scale' : undefined}
                 title={samples.length === 0 ? 'No weights yet' : 'No recent weights'}
                 message={summaryText}
               />
