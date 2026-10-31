@@ -59,15 +59,18 @@ export default function BiometricsScreen() {
         value={value}
         onChangeText={onChange}
         keyboardType="numeric"
-        style={{
-          minHeight: 44,
-          borderWidth: 1,
-          borderColor: colors.controlBorder,
-          borderRadius: radius.card,
-          paddingHorizontal: spacing.md,
-          color: colors.ink,
-          backgroundColor: colors.raised,
-        }}
+        style={[
+          typography.body,
+          {
+            minHeight: 44,
+            borderWidth: 1,
+            borderColor: colors.controlBorder,
+            borderRadius: radius.card,
+            paddingHorizontal: spacing.md,
+            color: colors.ink,
+            backgroundColor: colors.raised,
+          },
+        ]}
       />
     </View>
   );

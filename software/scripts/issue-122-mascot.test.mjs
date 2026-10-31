@@ -19,14 +19,16 @@ test('issue 122: Mascot maps all six poses to stable placeholder files', () => {
   assert.match(src, /from 'expo-image'/);
 });
 
-test('issue 122: placeholder art is flat circles in mascot/brand/ink, no outlines, no raster', () => {
-  const allowed = new Set(['#ffece1', '#fff7f1', '#ff8b41', '#1f1b16']);
+test('issue 122: placeholder art uses at most three flat colours, no outlines or raster', () => {
+  const allowed = new Set(['#ffece1', '#ff8b41', '#1f1b16']);
   for (const file of Object.values(POSES)) {
     const svg = read(`assets/mascot/placeholder-${file}.svg`);
     assert.match(svg, /viewBox="0 0 120 120"/, `${file} square viewBox`);
     assert.doesNotMatch(svg, /stroke|<image|<text|data:/, `${file} flat, vector-only`);
     assert.ok((svg.match(/<circle /g) ?? []).length >= 3, `${file} built from circles`);
-    for (const [hex] of svg.matchAll(/#[0-9a-f]{6}/gi)) assert.ok(allowed.has(hex.toLowerCase()), `${file} colour ${hex}`);
+    const colours = new Set([...svg.matchAll(/#[0-9a-f]{6}/gi)].map(([hex]) => hex.toLowerCase()));
+    assert.ok(colours.size <= 3, `${file} has ${colours.size} colours`);
+    for (const hex of colours) assert.ok(allowed.has(hex), `${file} colour ${hex}`);
     assert.match(svg, /fill="#ffece1"/, `${file} mascotTint body`);
   }
 });
