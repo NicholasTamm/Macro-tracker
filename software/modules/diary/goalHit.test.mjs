@@ -86,7 +86,7 @@ test('issue 125: haptic claim fires once per day across reloads, again next day'
 
 test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, reduce-motion static', () => {
   const today = read('app/(tabs)/today.tsx');
-  assert.match(today, /\{showGoalHit \? <GoalHitCard \/> : null\}/);
+  assert.match(today, /\{showGoalHit \? <GoalHitCard reduceMotion=\{reduceMotion\} \/> : null\}/);
   assert.ok(today.indexOf('<GoalHitCard') > today.indexOf('<MacroSummary'), 'below summary');
   assert.ok(today.indexOf('<GoalHitCard') < today.indexOf('view.slots.map'), 'above meal slots');
   assert.match(today, /Platform\.OS !== 'web'/);
@@ -98,12 +98,36 @@ test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, red
   assert.doesNotMatch(read('design-system/components/MacroSummary.tsx'), /Mascot|GoalHit/);
 });
 
+test('issue 125: Today resolves Reduce Motion before the card mounts', async () => {
+  const today = read('app/(tabs)/today.tsx');
+  const screen = today.slice(today.indexOf('export default function TodayScreen()'));
+  assert.match(screen, /const reduceMotion = useReduceMotion\(\)/);
+  assert.ok(screen.indexOf('useReduceMotion()') < screen.indexOf('showGoalHit ? <GoalHitCard'));
+
+  const hook = read('design-system/theme/useReduceMotion.ts');
+  const body = hook.slice(hook.indexOf('export function useReduceMotion()')).replace('export function', 'function');
+  const js = ts.transpileModule(body, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let state = null, effect, resolveQuery;
+  const query = new Promise((resolve) => { resolveQuery = resolve; });
+  const run = new Function('useState', 'useEffect', 'AccessibilityInfo', `${js}; return useReduceMotion();`);
+  const renderScreen = () => run(() => [state, (value) => { state = value; }], (fn) => { effect ??= fn; }, {
+    isReduceMotionEnabled: () => query,
+    addEventListener: () => ({ remove() {} }),
+  });
+  assert.equal(renderScreen(), null);
+  const cleanup = effect();
+  resolveQuery(false);
+  await query;
+  assert.equal(renderScreen(), false, 'resolved preference is available when the card subsequently mounts');
+  cleanup();
+});
+
 test('issue 125: card renders statically until motion is known to be allowed', () => {
   const source = read('modules/diary/GoalHitCard.tsx');
-  const body = source.slice(source.indexOf('export function GoalHitCard()')).replace('export function', 'function');
+  const body = source.slice(source.indexOf('export function GoalHitCard(')).replace('export function', 'function');
   const js = ts.transpileModule(body, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const render = new Function('React', 'useTheme', 'useReduceMotion', 'Animated', 'FadeInDown', 'Card', 'View', 'Mascot', 'Text', `${js}; return GoalHitCard();`);
-  const run = (motion) => render({ createElement: (type, props) => ({ type, props }) }, () => ({ colors: {}, spacing: {}, typography: {} }), () => motion, { View: 'animated' }, { duration: (ms) => ms }, 'card', 'view', 'mascot', 'text');
+  const render = new Function('React', 'useTheme', 'reduceMotion', 'Animated', 'FadeInDown', 'Card', 'View', 'Mascot', 'Text', `${js}; return GoalHitCard({ reduceMotion });`);
+  const run = (motion) => render({ createElement: (type, props) => ({ type, props }) }, () => ({ colors: {}, spacing: {}, typography: {} }), motion, { View: 'animated' }, { duration: (ms) => ms }, 'card', 'view', 'mascot', 'text');
   for (const [motion, entering] of [[null, undefined], [false, 260], [true, undefined]]) {
     const mounted = run(motion);
     assert.equal(mounted.type, 'animated');

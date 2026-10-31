@@ -21,6 +21,7 @@ import {
   LoadingState,
   ErrorBanner,
   useTheme,
+  useReduceMotion,
   FoodIcon,
 } from '@/design-system';
 import { useUserData } from '@/components/UserDataProvider';
@@ -234,6 +235,7 @@ function DateSelector({
 }
 
 export default function TodayScreen() {
+  const reduceMotion = useReduceMotion();
   const { ready, error, db, snapshot, refresh } = useUserData();
   const { colors, spacing, typography } = useTheme();
   const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
@@ -437,7 +439,7 @@ export default function TodayScreen() {
           </View>
         ) : null}
 
-        {showGoalHit ? <GoalHitCard /> : null}
+        {showGoalHit ? <GoalHitCard reduceMotion={reduceMotion} /> : null}
 
         {view.entryCount === 0 ? (
           <EmptyState
