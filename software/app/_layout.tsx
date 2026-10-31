@@ -3,26 +3,20 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Appearance, Platform, View } from 'react-native';
 import {
-  lightPalette,
-  paletteFor,
   ThemeProvider,
+  useTheme,
   useProductFonts,
-  type ColorSchemeName,
 } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
 import {
   initializeNativeThemePreference,
-  readWebStartupThemePreference,
   readStartupThemePreference,
   writeWebStartupThemePreference,
   type ThemePreference,
 } from '@/modules/app-core/settings';
 
 let appliedThemePreference: ThemePreference | null = null;
-const webStartupThemePreference = Platform.OS === 'web'
-  ? readWebStartupThemePreference()
-  : 'system';
 
 function applyNativeThemePreference(themePreference: ThemePreference) {
   if (Platform.OS === 'web' || appliedThemePreference === themePreference) return;
@@ -59,19 +53,27 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
     // Native remains behind its theme-neutral splash. Web has no native splash,
     // so synchronously paint the last persisted scheme while sql.js hydrates.
     if (Platform.OS !== 'web') return null;
-    const startupScheme: ColorSchemeName | null = webStartupThemePreference === 'system'
-      ? (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light')
-      : webStartupThemePreference;
-    const backgroundColor = startupScheme
-      ? paletteFor(startupScheme).canvas
-      : lightPalette.brand;
-    return <View style={{ flex: 1, backgroundColor }} />;
+    // +html sets this before first paint, including static exports. Keep the
+    // server and client markup identical so hydration cannot flash a light fill.
+    return <View style={{ flex: 1, backgroundColor: 'var(--startup-canvas)' }} />;
   }
 
   return (
     <ThemeProvider forcedScheme={themePreference === 'system' ? undefined : themePreference}>
       {children}
     </ThemeProvider>
+  );
+}
+
+function AppStack() {
+  const { colors } = useTheme();
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="onboarding" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="settings" />
+    </Stack>
   );
 }
 
@@ -82,12 +84,7 @@ export default function RootLayout() {
     <UserDataProvider>
       <PersistedTheme>
         <FoodCatalogProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="onboarding" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="settings" />
-          </Stack>
+          <AppStack />
         </FoodCatalogProvider>
       </PersistedTheme>
     </UserDataProvider>
