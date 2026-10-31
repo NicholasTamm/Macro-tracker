@@ -1,0 +1,27 @@
+smoke-m1-issue-137 PASS 2026-10-31T09:01:57Z
+commit=c7bbb34
+gates=tsc --noEmit; npm run lint; focused startup/theme/settings tests; full package.json suite with --test-concurrency=1; Expo static web export
+# tests 254
+# suites 0
+# pass 254
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13719.131608
+browser=Chromium 390x844; COOP same-origin; COEP credentialless; application/wasm
+checks=no orange full-screen fill in exported index.html; blocked external bundle proves pre-hydration canvas; saved Dark/Light override opposite OS; System/fresh/blocked storage follow OS; repeated reloads retain theme; every startup task <1000ms
+timing=PerformanceObserver longtask + requestAnimationFrame computed canvas sampling; screenMs is the first frame containing the age gate; local machine timings are not the original UAT environment
+{"build":"before","preference":"dark","system":"light","reload":0,"firstFrame":{"t":60.785,"color":"rgb(255, 139, 65)"},"firstNonOrangeFrame":{"t":277.445,"color":"rgb(242, 242, 242)"},"screenMs":294.105,"maxTaskMs":71,"wasm":[{"name":"sql-wasm-browser.wasm","start":237.1899999976158,"duration":3.160000003874302}]}
+{"build":"after","preference":"dark","system":"light","reload":0,"firstFrame":{"t":5.745,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":5.745,"color":"rgb(20, 20, 20)"},"screenMs":255.74,"maxTaskMs":62,"wasm":[{"name":"sql-wasm-browser.wasm","start":154.42000000178814,"duration":4.079999998211861}]}
+{"build":"after","preference":"dark","system":"light","reload":1,"firstFrame":{"t":12.43,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":12.43,"color":"rgb(20, 20, 20)"},"screenMs":112.425,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":83.02499999850988,"duration":7.83500000089407}]}
+{"build":"after","preference":"light","system":"dark","reload":0,"firstFrame":{"t":6.255,"color":"rgb(249, 249, 249)"},"firstNonOrangeFrame":{"t":6.255,"color":"rgb(249, 249, 249)"},"screenMs":189.58,"maxTaskMs":61,"wasm":[{"name":"sql-wasm-browser.wasm","start":153.50999999791384,"duration":3.505000002682209}]}
+{"build":"after","preference":"light","system":"dark","reload":1,"firstFrame":{"t":49.375,"color":"rgb(249, 249, 249)"},"firstNonOrangeFrame":{"t":49.375,"color":"rgb(249, 249, 249)"},"screenMs":132.705,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":96.5650000050664,"duration":3.1699999943375587}]}
+{"build":"after","preference":"system","system":"dark","reload":0,"firstFrame":{"t":7.22,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":7.22,"color":"rgb(20, 20, 20)"},"screenMs":190.545,"maxTaskMs":60,"wasm":[{"name":"sql-wasm-browser.wasm","start":152.02000000327826,"duration":3.3049999997019768}]}
+{"build":"after","preference":"system","system":"dark","reload":1,"firstFrame":{"t":7.525,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":7.525,"color":"rgb(20, 20, 20)"},"screenMs":107.515,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":78.57999999821186,"duration":8.979999996721745}]}
+{"build":"after","preference":null,"system":"dark","reload":0,"firstFrame":{"t":7.515,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":7.515,"color":"rgb(20, 20, 20)"},"screenMs":207.51,"maxTaskMs":62,"wasm":[{"name":"sql-wasm-browser.wasm","start":157.57499999552965,"duration":4.53999999910593}]}
+{"build":"after","preference":null,"system":"dark","reload":1,"firstFrame":{"t":22.175,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":22.175,"color":"rgb(20, 20, 20)"},"screenMs":105.505,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":84.86999999731779,"duration":4.310000002384186}]}
+{"build":"after","preference":null,"system":"light","reload":0,"firstFrame":{"t":12.84,"color":"rgb(249, 249, 249)"},"firstNonOrangeFrame":{"t":12.84,"color":"rgb(249, 249, 249)"},"screenMs":229.5,"maxTaskMs":62,"wasm":[{"name":"sql-wasm-browser.wasm","start":163.46000000089407,"duration":8.449999995529652}]}
+{"build":"after","preference":null,"system":"light","reload":1,"firstFrame":{"t":17.875,"color":"rgb(249, 249, 249)"},"firstNonOrangeFrame":{"t":17.875,"color":"rgb(249, 249, 249)"},"screenMs":134.535,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":108.06499999761581,"duration":4.774999998509884}]}
+{"build":"after","preference":"blocked","system":"dark","reload":0,"firstFrame":{"t":6.705,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":6.705,"color":"rgb(20, 20, 20)"},"screenMs":190.03,"maxTaskMs":61,"wasm":[{"name":"sql-wasm-browser.wasm","start":155.45499999821186,"duration":4.315000005066395}]}
+{"build":"after","preference":"blocked","system":"dark","reload":1,"firstFrame":{"t":15.07,"color":"rgb(20, 20, 20)"},"firstNonOrangeFrame":{"t":15.07,"color":"rgb(20, 20, 20)"},"screenMs":115.065,"maxTaskMs":0,"wasm":[{"name":"sql-wasm-browser.wasm","start":88.97500000149012,"duration":6.174999997019768}]}

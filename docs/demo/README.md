@@ -269,3 +269,22 @@ Manual check on a fresh profile:
 2. Middle steps are plain.
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
+
+## Issue #137 — M1-71 Web startup canvas and main-thread delay
+
+Run `bash docs/demo/smoke-m1-issue-137.sh`. Requires headless `google-chrome`
+(or `CHROME_BIN`). Runs typecheck, lint, focused startup/theme tests, the full
+serialized package suite, and a static Expo export. A Chromium CDP harness serves
+that export with the UAT isolation headers and WASM MIME type at 390×844.
+It blocks the external bundle to verify first paint before hydration, then checks
+saved Light/Dark against the opposite system theme, System, fresh profiles, blocked
+storage, reload persistence, the age gate, and startup long tasks below 1 second.
+Writes `out/issue-137-smoke-result.txt`, including frame, WASM, and task timings.
+
+For a before/after comparison, export the original code first in this worktree,
+then set `ISSUE_137_BASELINE_DIR` to that export directory when running the smoke.
+The original `aa0a7d0` export on this machine painted orange first; the smoke
+result records before/after frame and WASM timings. This machine did not reproduce
+the UAT's 6.5-second duration. The regression test
+also proves web never loads or calls the synchronous Expo SQLite bridge; native
+still uses its persistent Expo database and existing splash configuration.
