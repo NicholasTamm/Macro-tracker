@@ -43,6 +43,9 @@ test('issue 125: rule = calories within ±10% and protein ≥ 90%', async () => 
   assert.equal(isDailyGoalHit({ calories: 1799, protein: 150 }, goals), false, 'calories too low');
   assert.equal(isDailyGoalHit({ calories: 2201, protein: 150 }, goals), false, 'calories too high');
   assert.equal(isDailyGoalHit({ calories: 2000, protein: 134.9 }, goals), false, 'protein below 90%');
+  assert.equal(isDailyGoalHit({ calories: 2000, protein: 93.6 }, { ...goals, proteinGoal: 104 }), true, 'floating-point boundary inclusive');
+  assert.equal(isDailyGoalHit({ calories: 2000, protein: 93.5 }, { ...goals, proteinGoal: 104 }), false, 'below floating-point boundary');
+  assert.equal(isDailyGoalHit({ calories: 2000, protein: 93.6 }, { ...goals, proteinGoal: 104.1 }), false, 'fractional threshold is not rounded down');
 });
 
 test('issue 125: missing goals and null/invalid totals never hit', async () => {
@@ -91,13 +94,14 @@ test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, red
   assert.doesNotMatch(read('design-system/components/MacroSummary.tsx'), /Mascot|GoalHit/);
 });
 
-test('issue 125: animated view mounts only after motion preference resolves', () => {
+test('issue 125: card renders statically while motion preference is unknown or reduced', () => {
   const source = read('modules/diary/GoalHitCard.tsx');
   const body = source.slice(source.indexOf('export function GoalHitCard()')).replace('export function', 'function');
   const js = ts.transpileModule(body, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 } }).outputText;
   const render = new Function('React', 'useTheme', 'useReduceMotion', 'Animated', 'FadeInDown', 'Card', 'View', 'Mascot', 'Text', `${js}; return GoalHitCard();`);
   const run = (motion) => render({ createElement: (type, props) => ({ type, props }) }, () => ({ colors: {}, spacing: {}, typography: {} }), () => motion, { View: 'animated' }, { duration: (ms) => ms }, 'card', 'view', 'mascot', 'text');
-  assert.equal(run(null), null);
+  assert.equal(run(null).type, 'animated');
+  assert.equal(run(null).props.entering, undefined);
   assert.equal(run(false).props.entering, 260);
   assert.equal(run(true).props.entering, undefined);
 });

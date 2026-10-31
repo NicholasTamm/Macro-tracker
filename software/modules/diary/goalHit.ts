@@ -31,7 +31,9 @@ export function isDailyGoalHit(totals: GoalHitTotals, goals: GoalHitGoals): bool
   const caloriesOk =
     calories >= calorieGoal * (1 - CALORIE_TOLERANCE) &&
     calories <= calorieGoal * (1 + CALORIE_TOLERANCE);
-  return caloriesOk && protein >= proteinGoal * PROTEIN_FLOOR;
+  const proteinFloor = proteinGoal * PROTEIN_FLOOR;
+  const roundingError = Number.EPSILON * Math.max(1, Math.abs(proteinFloor));
+  return caloriesOk && protein >= proteinFloor - roundingError;
 }
 
 /** The card shows only on the real current day, never for past or future days. */

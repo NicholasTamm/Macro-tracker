@@ -12,7 +12,6 @@ import { useReduceMotion } from '@/design-system/theme/useReduceMotion';
 export function GoalHitCard() {
   const { colors, spacing, typography } = useTheme();
   const reduceMotion = useReduceMotion();
-  if (reduceMotion === null) return null;
   return (
     <Animated.View
       entering={reduceMotion === false ? FadeInDown.duration(260) : undefined}
