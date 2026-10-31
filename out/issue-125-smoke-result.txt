@@ -1,2 +1,2 @@
-smoke-m1-issue-125 PASS 2026-10-31T04:19:21Z
+smoke-m1-issue-125 PASS 2026-10-31T04:20:43Z
 OK: goal hit at 1950 kcal / 140 g protein; haptic flag set once
