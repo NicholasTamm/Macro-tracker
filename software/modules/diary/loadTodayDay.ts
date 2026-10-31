@@ -6,7 +6,7 @@ import {
   type DiaryEntry,
   type SqlExecutor,
 } from '../app-core/user-data';
-import { sumMacroTotalsFromEntries, type DayMacroTotals } from './macroTotals';
+import { sumMacroTotalsFromEntries, sumRawMacroTotalsFromSnapshots, type DayMacroTotals } from './macroTotals';
 
 export type MealSlotSection = {
   id: string;
@@ -23,6 +23,7 @@ export type TodayDayView = {
   unscheduled: DiaryEntry[];
   unscheduledSubtotals: DayMacroTotals;
   totals: DayMacroTotals;
+  rawTotals: DayMacroTotals;
   goals: {
     calorieGoal?: number;
     proteinGoal?: number;
@@ -77,6 +78,7 @@ export function loadTodayDay(db: SqlExecutor, localDayKey: string): TodayDayView
     unscheduled,
     unscheduledSubtotals: sumMacroTotalsFromEntries(unscheduled),
     totals,
+    rawTotals: sumRawMacroTotalsFromSnapshots(entries.map((entry) => entry.nutritionSnapshot)),
     goals: target
       ? {
           calorieGoal: Math.round(target.energyKcal),

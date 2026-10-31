@@ -91,6 +91,7 @@ test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, red
   assert.ok(today.indexOf('<GoalHitCard') < today.indexOf('view.slots.map'), 'above meal slots');
   assert.match(today, /Platform\.OS !== 'web'/);
   assert.match(today, /Haptics\.notificationAsync\(Haptics\.NotificationFeedbackType\.Success\)\.catch\(/);
+  assert.match(today, /isDailyGoalHit\(view\.rawTotals, view\.goals\)/);
   assert.match(today, /claimGoalHitCelebration\(/);
   const card = read('modules/diary/GoalHitCard.tsx');
   assert.match(card, /entering=\{reduceMotion === false \? FadeInDown/);

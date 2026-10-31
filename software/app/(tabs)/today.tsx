@@ -287,7 +287,7 @@ export default function TodayScreen() {
   const goalHitArgs = {
     viewDayKey: dayKey,
     todayKey,
-    hit: view != null && isDailyGoalHit(view.totals, view.goals),
+    hit: view != null && isDailyGoalHit(view.rawTotals, view.goals),
   };
   const showGoalHit = shouldShowGoalHitCard(goalHitArgs);
   useEffect(() => {

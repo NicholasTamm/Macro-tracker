@@ -46,10 +46,10 @@ try {
     });
   log(900, 60);
   let view = m.loadTodayDay(db, today);
-  assert.equal(m.isDailyGoalHit(view.totals, view.goals), false, 'below target: no card');
+  assert.equal(m.isDailyGoalHit(view.rawTotals, view.goals), false, 'below target: no card');
   log(1050, 80);
   view = m.loadTodayDay(db, today);
-  const hit = m.isDailyGoalHit(view.totals, view.goals);
+  const hit = m.isDailyGoalHit(view.rawTotals, view.goals);
   assert.equal(hit, true, `at target: ${JSON.stringify(view.totals)} vs ${JSON.stringify(view.goals)}`);
   assert.equal(m.claimGoalHitCelebration(db, { viewDayKey: today, todayKey: today, hit }), true, 'first claim fires haptic');
 
@@ -57,7 +57,7 @@ try {
   db.close();
   db = await m.openSqlJsDatabase(bytes); // reload
   view = m.loadTodayDay(db, today);
-  assert.equal(m.shouldShowGoalHitCard({ viewDayKey: today, todayKey: today, hit: m.isDailyGoalHit(view.totals, view.goals) }), true, 'card after reload');
+  assert.equal(m.shouldShowGoalHitCard({ viewDayKey: today, todayKey: today, hit: m.isDailyGoalHit(view.rawTotals, view.goals) }), true, 'card after reload');
   assert.equal(m.getCelebratedGoalDay(db), today, 'flag persisted');
   assert.equal(m.claimGoalHitCelebration(db, { viewDayKey: today, todayKey: today, hit: true }), false, 'no second haptic after reload');
   db.close();
