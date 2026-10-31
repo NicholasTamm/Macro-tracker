@@ -90,3 +90,45 @@ test('issue 125: Today wiring — card outside MacroSummary, guarded haptic, red
   assert.match(card, /<Mascot pose="cheer"/);
   assert.doesNotMatch(read('design-system/components/MacroSummary.tsx'), /Mascot|GoalHit/);
 });
+
+test('issue 125: animated view mounts only after motion preference resolves', () => {
+  const source = read('modules/diary/GoalHitCard.tsx');
+  const body = source.slice(source.indexOf('export function GoalHitCard()')).replace('export function', 'function');
+  const js = ts.transpileModule(body, { compilerOptions: { jsx: ts.JsxEmit.React, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const render = new Function('React', 'useTheme', 'useReduceMotion', 'Animated', 'FadeInDown', 'Card', 'View', 'Mascot', 'Text', `${js}; return GoalHitCard();`);
+  const run = (motion) => render({ createElement: (type, props) => ({ type, props }) }, () => ({ colors: {}, spacing: {}, typography: {} }), () => motion, { View: 'animated' }, { duration: (ms) => ms }, 'card', 'view', 'mascot', 'text');
+  assert.equal(run(null), null);
+  assert.equal(run(false).props.entering, 260);
+  assert.equal(run(true).props.entering, undefined);
+});
+
+test('issue 125: midnight and foreground update the day and clean up', () => {
+  const source = read('app/(tabs)/today.tsx');
+  const start = source.indexOf('  useEffect(() => {', source.indexOf('const [todayKey'));
+  const end = source.indexOf('  }, []);', start) + '  }, []);'.length;
+  const effect = ts.transpileModule(source.slice(start, end), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  let now = new Date(2026, 9, 28, 23, 59, 59).getTime();
+  class FakeDate extends Date { constructor(...args) { super(...(args.length ? args : [now])); } }
+  let scheduled, listener, removed = false, day;
+  const cleanup = new Function('useEffect', 'setTodayKey', 'localDayKeyFromDate', 'Date', 'setTimeout', 'clearTimeout', 'AppState', `${effect}; return cleanup;`)(
+    (fn) => { globalThis.cleanup = fn(); }, (value) => { day = value; }, () => new Date(now).getDate(), FakeDate,
+    (fn, delay) => { scheduled = { fn, delay }; return 1; }, () => {},
+    { addEventListener: (_event, fn) => { listener = fn; return { remove: () => { removed = true; } }; } },
+  );
+  delete globalThis.cleanup;
+  assert.equal(day, 28);
+  assert.equal(scheduled.delay, 1000);
+  now += 1000;
+  scheduled.fn();
+  assert.equal(day, 29);
+  now += 86400000;
+  listener('active');
+  assert.equal(day, 30);
+  cleanup();
+  assert.equal(removed, true);
+});
+
+test('issue 125: claim invokes provider persistence', () => {
+  assert.match(read('app/(tabs)/today.tsx'), /if \(fire\) refresh\(\)/);
+  assert.match(read('components/UserDataProvider.tsx'), /const refresh = useCallback\([\s\S]*?if \(persistSqlJsRef\.current\) writePersistedSqlJs\(db\)/);
+});

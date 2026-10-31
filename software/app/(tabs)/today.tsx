@@ -10,6 +10,7 @@ import {
   Pressable,
   I18nManager,
   Platform,
+  AppState,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -236,6 +237,26 @@ export default function TodayScreen() {
   const { ready, error, db, snapshot, refresh } = useUserData();
   const { colors, spacing, typography } = useTheme();
   const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
+  const [todayKey, setTodayKey] = useState(() => localDayKeyFromDate());
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const updateDay = () => {
+      setTodayKey(localDayKeyFromDate());
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      clearTimeout(timer);
+      timer = setTimeout(updateDay, nextMidnight.getTime() - now.getTime());
+    };
+    updateDay();
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') updateDay();
+    });
+    return () => {
+      clearTimeout(timer);
+      subscription.remove();
+    };
+  }, []);
   const [tick, setTick] = useState(0);
   const [editing, setEditing] = useState<DiaryEntry | null>(null);
   const [undo, setUndo] = useState<UndoAction | null>(null);
@@ -261,7 +282,6 @@ export default function TodayScreen() {
   }, [db, dayKey, tick]);
 
   // Issue 125: goal-hit card on the real current day; haptic at most once per day.
-  const todayKey = localDayKeyFromDate();
   const goalHitArgs = {
     viewDayKey: dayKey,
     todayKey,
@@ -276,10 +296,11 @@ export default function TodayScreen() {
     } catch {
       return;
     }
+    if (fire) refresh();
     if (fire && Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     }
-  }, [db, showGoalHit, todayKey]);
+  }, [db, showGoalHit, todayKey, refresh]);
 
   const onEdit = useCallback((entry: DiaryEntry) => {
     setActionError(null);
