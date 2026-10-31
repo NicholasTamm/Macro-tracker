@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card, PrimaryButton, useTheme } from '@/design-system';
+import { Card, Mascot, PrimaryButton, useTheme, type MascotPose } from '@/design-system';
 
 type Props = {
   title: string;
@@ -12,6 +12,8 @@ type Props = {
   primaryDisabled?: boolean;
   secondaryLabel?: string;
   onSecondary?: () => void;
+  /** Issue 126: decorative mascot above a display-type title (first and last steps only). */
+  mascotPose?: MascotPose;
 };
 
 export function OnboardingShell({
@@ -23,12 +25,21 @@ export function OnboardingShell({
   primaryDisabled,
   secondaryLabel,
   onSecondary,
+  mascotPose,
 }: Props) {
   const { colors, spacing, typography } = useTheme();
   return (
     <SafeAreaView style={[styles.flex, { backgroundColor: colors.canvas }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-        <Text style={[typography.section, { color: colors.ink }]} accessibilityRole="header">
+        {mascotPose ? (
+          <View style={{ alignItems: 'center', marginTop: spacing.sm }}>
+            <Mascot pose={mascotPose} size={120} />
+          </View>
+        ) : null}
+        <Text
+          style={[mascotPose ? typography.display : typography.section, { color: colors.ink }]}
+          accessibilityRole="header"
+        >
           {title}
         </Text>
         {subtitle ? (
@@ -40,6 +51,7 @@ export function OnboardingShell({
             label={primaryLabel}
             onPress={onPrimary}
             disabled={primaryDisabled}
+            variant="brand"
           />
           {secondaryLabel && onSecondary ? (
             <PrimaryButton
