@@ -270,6 +270,14 @@ Manual check on a fresh profile:
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
 
+## Issue #139 — M1-73 Macro summary progress
+
+Run `bash docs/demo/smoke-m1-issue-139.sh`. It runs typecheck, lint, focused macro
+progress tests and the full serialized suite. Headless Chrome checks the real RN
+Web component at 390px in light/dark: empty, half and full tracks, over-target
+text, accessible percentages, alignment and overflow. Requires Chrome (or
+`CHROME_BIN`). Writes `out/issue-139-smoke-result.txt`.
+
 ## Issue #138 — M1-72 Metric food detail quantity
 
 Run `bash docs/demo/smoke-m1-issue-138.sh`. It checks sheet/quick-add wiring,
