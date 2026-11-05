@@ -9,7 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const source = (path) => readFileSync(join(root, path), 'utf8');
-let temp, days, store, detail, FoodDetailSheet;
+let temp, days, store, detail, quick, FoodDetailSheet;
 before(async () => {
   temp = mkdtempSync(join(root, '.issue-141-'));
   async function bundle(entry, name, plugins = []) {
@@ -22,6 +22,7 @@ before(async () => {
   days = await bundle('modules/diary/dayKey.ts', 'days');
   store = await bundle('modules/app-core/user-data/index.ts', 'store');
   detail = await bundle('modules/diary/food-detail/buildFoodDetail.ts', 'detail');
+  quick = await bundle('modules/diary/favorites-recents/quickAdd.ts', 'quick');
   ({ FoodDetailSheet } = await bundle('modules/diary/food-detail/FoodDetailSheet.tsx', 'sheet', [{
     name: 'sheet-ui',
     setup(api) {
@@ -65,10 +66,11 @@ test('Today forwards its selected day, Search uses it for sheet/quick-add/return
   assert.match(today, /useLocalSearchParams/);
   assert.match(today, /const dayKey = resolveRouteDayKey\(date\)/);
   assert.match(today, /onChange=\{\(nextDay\) => router.setParams\(\{ date: nextDay \}\)\}/);
-  assert.match(today, /pathname: '\/food-entry', params: \{ date: dayKey \}/);
+  assert.equal(today.match(/pathname: '\/food-entry', params: \{ date: dayKey \}/g)?.length, 2);
+  assert.match(today, /view.entryCount === 0[\s\S]*?<EmptyState[\s\S]*?\) : \([\s\S]*?<PrimaryButton[\s\S]*?date: dayKey/);
   assert.match(search, /const localDayKey = resolveRouteDayKey\(date\)/);
   assert.match(search, /<FoodDetailSheet[\s\S]*?localDayKey=\{localDayKey\}/);
-  assert.match(search, /quickAddFood\(userDb, repo, \{[^}]*localDayKey,/);
+  assert.match(search, /quickAddFood\(userDb, repo, \{[^}]*localDayKey,[^}]*timestamp: timestampFromLocalDayAndTime\(localDayKey, localTimeHHMM\(\)\)/);
   assert.equal(search.match(/pathname: '\/\(tabs\)\/today', params: \{ date: localDayKey \}/g)?.length, 2);
   assert.match(source('app/(tabs)/_layout.tsx'), /tabPress:[\s\S]*?event.preventDefault\(\);\s*navigation.navigate\('food-entry', \{ date: undefined \}\)/);
 });
@@ -99,5 +101,24 @@ test('real food sheet labels and writes yesterday/tomorrow/other dates; no date 
       assert.equal(store.listDiaryEntriesForDay(db, day).length, 1);
     }
     assert.equal(store.listDiaryEntriesForDay(db, today).length, 1);
+  } finally { db.close(); }
+});
+
+test('quick-add to a populated selected day keeps its timestamp on that day', async () => {
+  const db = await store.openSqlJsDatabase();
+  store.migrateUserStore(db);
+  try {
+    const custom = store.createCustomFood(db, { name: 'Quick date food', basisKind: 'serving', basisAmount: 1, basisUnit: 'bowl', gramWeightForBasis: 100,
+      nutrients: { energy_kcal: 100, protein: 5, carbohydrate: 10, fat_total: 2 } });
+    const day = days.shiftDayKey(days.localDayKeyFromDate(), -1);
+    for (let i = 0; i < 2; i++) {
+      const result = quick.quickAddFood(db, null, { foodKind: 'custom', foodStableId: custom.id, mealSlotId: null, localDayKey: day,
+        timestamp: days.timestampFromLocalDayAndTime(day, days.localTimeHHMM()) });
+      assert.equal(result.ok, true);
+      const entry = store.getDiaryEntry(db, result.entryId);
+      assert.equal(entry.localDayKey, day);
+      assert.equal(days.localDayKeyFromDate(new Date(entry.timestamp)), day);
+    }
+    assert.equal(store.listDiaryEntriesForDay(db, day).length, 2);
   } finally { db.close(); }
 });

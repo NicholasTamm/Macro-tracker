@@ -50,7 +50,7 @@ import {
 } from '@/modules/diary';
 import { FoodDetailSheet } from '@/modules/diary/food-detail/FoodDetailSheet';
 import { CustomFoodEditorSheet } from '@/modules/diary/custom-food/CustomFoodEditorSheet';
-import { resolveRouteDayKey } from '@/modules/diary/dayKey';
+import { localTimeHHMM, resolveRouteDayKey, timestampFromLocalDayAndTime } from '@/modules/diary/dayKey';
 import { quickAddFood } from '@/modules/diary/favorites-recents/quickAdd';
 
 type ListRow = {
@@ -243,6 +243,7 @@ export default function SearchScreen() {
       mealSlotId,
       massUnit,
       localDayKey,
+      timestamp: timestampFromLocalDayAndTime(localDayKey, localTimeHHMM()),
     });
     if (!result.ok) {
       quickAddLockedRef.current = false;

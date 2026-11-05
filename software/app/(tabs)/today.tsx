@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   MacroSummary,
+  PrimaryButton,
   EmptyState,
   OfflinePill,
   Card,
@@ -453,7 +454,12 @@ export default function TodayScreen() {
             actionVariant="brand"
             onAction={() => router.push({ pathname: '/food-entry', params: { date: dayKey } })}
           />
-        ) : null}
+        ) : (
+          <View style={{ marginBottom: spacing.md }}>
+            <PrimaryButton label="Log food" variant="brand"
+              onPress={() => router.push({ pathname: '/food-entry', params: { date: dayKey } })} />
+          </View>
+        )}
 
         {view.slots.map((slot) => (
           <MealSlotCard
