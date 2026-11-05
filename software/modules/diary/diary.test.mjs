@@ -120,6 +120,16 @@ test('empty day: four default slots, zero macros', async () => {
   db.close();
 });
 
+test('Today retains unrounded targets alongside display goals', async () => {
+  const db = await openDb();
+  userData.ensureProfile(db);
+  userData.saveStarterTarget(db, { energyKcal: 2000.4, proteinG: 100.03, carbohydrateG: 200.2, fatG: 70.4 }, undefined, '2026-10-01');
+  const view = loadToday.loadTodayDay(db, '2026-10-03');
+  assert.deepEqual(view.goals, { calorieGoal: 2000, proteinGoal: 100, carbsGoal: 200, fatGoal: 70 });
+  assert.deepEqual(view.rawGoals, { calorieGoal: 2000.4, proteinGoal: 100.03, carbsGoal: 200.2, fatGoal: 70.4 });
+  db.close();
+});
+
 test('populated day: macros reflect entries; timestamp independent of slot id', async () => {
   const db = await openDb();
   userData.ensureDefaultMealSlots(db);

@@ -8,12 +8,12 @@ const softwareRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(join(softwareRoot, p), 'utf8');
 const analytics = read('app/(tabs)/analytics.tsx');
 
-test('issue 124: scale mascot only when there are zero weigh-ins', () => {
-  const start = analytics.indexOf("summary.state === 'empty' ? (");
+test('issue 124: scale mascot for zero weigh-ins and the starter state', () => {
+  const start = analytics.indexOf("!hasWeightTrend(summary) ? (");
   assert.ok(start >= 0);
   const block = analytics.slice(analytics.indexOf('<EmptyState', start), analytics.indexOf('/>', start));
-  assert.match(block, /mascotPose=\{samples\.length === 0 \? 'scale' : undefined\}/);
-  assert.match(block, /title=\{samples\.length === 0 \? 'No weights yet' : 'No recent weights'\}/);
+  assert.match(block, /mascotPose=\{samples\.length === 0 \|\| summary\.count === 1 \? 'scale' : undefined\}/);
+  assert.match(block, /title=\{\s*samples\.length === 0 \? 'No weights yet' :\s*summary\.count === 1 \? 'Your starting weight' : 'No recent weights'\s*\}/);
   assert.equal((analytics.match(/mascotPose=/g) ?? []).length, 1, 'no other analytics art');
 });
 

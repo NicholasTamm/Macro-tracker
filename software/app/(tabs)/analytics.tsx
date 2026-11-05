@@ -22,6 +22,7 @@ import {
 } from '@/modules/app-core/user-data';
 import {
   chartPoints,
+  hasWeightTrend,
   convertWeightInput,
   formatWeightDate,
   formatWeight,
@@ -275,10 +276,13 @@ export default function Analytics() {
         <Card>
           <View style={{ gap: spacing.md }}>
             <Text style={[typography.bodyStrong, { color: colors.ink }]}>Last 30 days</Text>
-            {summary.state === 'empty' ? (
+            {!hasWeightTrend(summary) ? (
               <EmptyState
-                mascotPose={samples.length === 0 ? 'scale' : undefined}
-                title={samples.length === 0 ? 'No weights yet' : 'No recent weights'}
+                mascotPose={samples.length === 0 || summary.count === 1 ? 'scale' : undefined}
+                title={
+                  samples.length === 0 ? 'No weights yet' :
+                    summary.count === 1 ? 'Your starting weight' : 'No recent weights'
+                }
                 message={summaryText}
               />
             ) : (

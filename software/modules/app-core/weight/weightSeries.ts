@@ -176,6 +176,11 @@ export function summarizeWeights(windowed: readonly WeightSample[]): WeightSumma
   };
 }
 
+/** A trend needs at least two live weigh-ins in the selected window. */
+export function hasWeightTrend(summary: WeightSummary): boolean {
+  return summary.count >= 2;
+}
+
 function formatChange(changeKg: number, unit: MassUnit): string {
   const d = toDisplayWeight(Math.abs(changeKg), unit);
   if (d === 0) return `no change`;
@@ -193,7 +198,7 @@ export function weightSummaryText(
   }
   const latest = formatWeight(summary.latestKg, unit);
   if (summary.count === 1) {
-    return `1 weight in the last ${days} days: ${latest}. Log another to see a change.`;
+    return `Starting weight ${latest}. Log another weigh-in to see your trend.`;
   }
   const parts = [
     `${summary.count} weights in the last ${days} days.`,

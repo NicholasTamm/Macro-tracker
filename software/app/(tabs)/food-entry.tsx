@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   FoodRow,
@@ -50,6 +50,7 @@ import {
 } from '@/modules/diary';
 import { FoodDetailSheet } from '@/modules/diary/food-detail/FoodDetailSheet';
 import { CustomFoodEditorSheet } from '@/modules/diary/custom-food/CustomFoodEditorSheet';
+import { localTimeHHMM, resolveRouteDayKey, timestampFromLocalDayAndTime } from '@/modules/diary/dayKey';
 import { quickAddFood } from '@/modules/diary/favorites-recents/quickAdd';
 
 type ListRow = {
@@ -67,6 +68,8 @@ export default function SearchScreen() {
   const { db: userDb, ready: userReady, snapshot, refresh } = useUserData();
   const { repo, ready: catalogReady, error: catalogError } = useFoodCatalog();
   const router = useRouter();
+  const { date } = useLocalSearchParams<{ date?: string | string[] }>();
+  const localDayKey = resolveRouteDayKey(date);
 
   const [query, setQuery] = useState('');
   const [browsing, setBrowsing] = useState(true);
@@ -239,6 +242,8 @@ export default function SearchScreen() {
       foodStableId,
       mealSlotId,
       massUnit,
+      localDayKey,
+      timestamp: timestampFromLocalDayAndTime(localDayKey, localTimeHHMM()),
     });
     if (!result.ok) {
       quickAddLockedRef.current = false;
@@ -249,7 +254,7 @@ export default function SearchScreen() {
     }
     refresh();
     setBrowseTick((n) => n + 1);
-    router.push('/(tabs)/today');
+    router.push({ pathname: '/(tabs)/today', params: { date: localDayKey } });
   };
 
   const a11ySummary = formatSearchA11ySummary({
@@ -498,6 +503,7 @@ export default function SearchScreen() {
         model={detailModel}
         db={userDb}
         energyUnit={energyUnit}
+        localDayKey={localDayKey}
         onClose={() => {
           setDetailOpen(false);
           setDetailModel(null);
@@ -507,7 +513,7 @@ export default function SearchScreen() {
           setDetailModel(null);
           refresh();
           setBrowseTick((n) => n + 1);
-          router.push('/(tabs)/today');
+          router.push({ pathname: '/(tabs)/today', params: { date: localDayKey } });
         }}
       />
 
