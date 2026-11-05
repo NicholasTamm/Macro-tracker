@@ -379,3 +379,15 @@ It checks four-digit energy and decimal grams (including rounding 999.9 to 1000)
 for wrapping, clipping, overflow and full accessible values. The harness isolates
 theme context; it does not exercise the full Expo diary flow.
 Requires Chrome (or `CHROME_BIN`). Result: `out/issue-149-smoke-result.txt`.
+
+## Issue #150 — M1-84 Time-aware log defaults
+
+Run `bash docs/demo/smoke-m1-issue-150.sh`. It runs typecheck, lint, focused
+meal-boundary/date/log regressions and the full suite with `--test-concurrency=1`.
+Headless Chrome at 390×844 checks the production log sheet in light/dark with a
+fixed 15:55 local clock: Dinner with the current time today, slot default times
+on other dates, explicit initial slots and manual meal changes, including the
+submitted date/time. The harness isolates native context and persistence; it does
+not exercise the full Expo Search/SQLite flow. Requires Chrome (or `CHROME_BIN`).
+Result: `out/issue-150-smoke-result.txt`. The selection rule is documented in
+`software/modules/diary/food-detail/README.md`.
