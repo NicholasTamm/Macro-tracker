@@ -34,9 +34,9 @@ const ROWS: Row[] = [
   { key: 'carbs', label: 'Carbs', unit: 'g', colorKey: 'carbs' },
 ];
 
-function formatMacroValue(value: number | null, unit: string): string {
+function formatMacroValue(value: number | null): string {
   if (value == null) return '—';
-  return `${value}${unit}`;
+  return String(Math.round(value));
 }
 
 function a11yValue(label: string, value: number | null, unit: string): string {
@@ -85,7 +85,7 @@ export function MacroSummary({
           const accent = colors[row.colorKey];
           const isEnergy = row.key === 'calories';
           const label = isEnergy && energyUnit === 'kJ' ? 'Energy' : row.label;
-          const unit = isEnergy ? ` ${energyUnit}` : row.unit;
+          const unit = isEnergy ? energyUnit : row.unit;
           const displayValue = isEnergy && value != null
             ? Number(formatEnergy(value, energyUnit))
             : value;
@@ -117,21 +117,24 @@ export function MacroSummary({
                 <Text
                   style={[typography.micro, { color: colors.muted }]}
                 >
-                  {label}
+                  {`${label} (${unit})`}
                 </Text>
               </View>
               <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
                 style={[typography.bodyStrong, { flex: 1, color: colors.ink, fontVariant: ['tabular-nums'] }]}
               >
-                {formatMacroValue(displayValue, unit)}
+                {formatMacroValue(displayValue)}
                 {displayGoal != null ? (
                   <Text
                     style={{
+                      ...typography.caption,
                       color: colors.muted,
                       ...font('500'),
                     }}
                   >
-                    {` / ${displayGoal}${unit}`}
+                    {` /${formatMacroValue(displayGoal)}`}
                   </Text>
                 ) : null}
               </Text>
