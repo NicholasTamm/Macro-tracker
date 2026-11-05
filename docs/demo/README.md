@@ -270,6 +270,19 @@ Manual check on a fresh profile:
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
 
+## Issue #141 — M1-75 Search logging uses the viewed day
+
+Run `bash docs/demo/smoke-m1-issue-141.sh`. It checks date wiring, typecheck,
+route validation, food-sheet labels and actual sql.js writes, then the full
+serialized test suite. Result: `out/issue-141-smoke-result.txt`.
+
+For browser verification, serve an Expo web export and set `ISSUE141_BASE_URL`
+to its URL. The smoke then runs `software/scripts/smoke-issue-141-web.mjs` in
+headless Chrome at 390×844. Set `PLAYWRIGHT_CORE_PATH` to an existing
+`playwright-core` installation and `CHROME_BIN` if Chrome is not at
+`/usr/bin/google-chrome`. It checks Yesterday/Tomorrow logging and return day,
+persisted diary dates, tab-bar Search after a dated visit, and invalid/missing dates.
+
 ## Issue #140 — M1-74 Today day-navigation chevrons
 
 Run `bash docs/demo/smoke-m1-issue-140.sh`. It runs typecheck, lint, focused
