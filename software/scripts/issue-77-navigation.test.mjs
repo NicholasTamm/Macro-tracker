@@ -32,10 +32,13 @@ async function bundleRoute(relativePath, development, name) {
       name: 'issue-77-navigation-stubs',
       setup(buildApi) {
         buildApi.onResolve(
-          { filter: /^(expo-router|@expo\/vector-icons|@\/design-system)$/ },
+          { filter: /^(expo-router|react-native|@expo\/vector-icons|@\/design-system)$/ },
           ({ path }) => ({ path, namespace: 'navigation-stub' }),
         );
         buildApi.onLoad({ filter: /.*/, namespace: 'navigation-stub' }, ({ path }) => {
+          if (path === 'react-native') {
+            return { contents: "export const Platform = { OS: 'web' };", loader: 'js' };
+          }
           if (path === 'expo-router') {
             return {
               contents: `import React from 'react';
