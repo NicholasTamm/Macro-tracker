@@ -418,6 +418,7 @@ export default function SearchScreen() {
         />
       ) : showEmptyResults ? (
         <EmptyState
+          mascotPose="think"
           title="No matching foods"
           message="Try another search. Packaged online search is not available offline."
         />

@@ -358,3 +358,13 @@ Headless Chrome at 390×844 renders the production sheet through React Native We
 in light/dark for grams, serving units, and a failed calculation. The harness
 isolates native theme/safe-area context; it does not exercise the full Expo diary
 flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-147-smoke-result.txt`.
+
+## Issue #148 — M1-82 Search no-results mascot
+
+Run `bash docs/demo/smoke-m1-issue-148.sh`. It runs typecheck, lint, focused
+no-results and shared EmptyState regressions, and all package.json tests with
+`--test-concurrency=1`. Headless Chrome at 390×844 renders the production
+no-results JSX with real EmptyState, Mascot and placeholder SVG in light/dark,
+checking image loading, 96px sizing, preserved copy, and the icon-free fallback.
+The harness isolates theme context; it does not exercise the full Expo catalog
+search flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-148-smoke-result.txt`.
