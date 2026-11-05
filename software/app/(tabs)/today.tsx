@@ -211,7 +211,7 @@ function DateSelector({
       ]}
     >
       <Text style={{ color: colors.ink, fontSize: 18, ...font('700') }}>
-        {(delta < 0) === I18nManager.isRTL ? '›' : '‹'}
+        {(delta < 0) === Boolean(I18nManager.isRTL) ? '›' : '‹'}
       </Text>
     </Pressable>
   );
@@ -403,6 +403,7 @@ export default function TodayScreen() {
         <View style={{ marginBottom: spacing.md }}>
           <MacroSummary
             energyUnit={energyUnit}
+            progressTotals={{ ...view.rawTotals, ...view.rawGoals }}
             totals={{
               calories: view.totals.calories,
               protein: view.totals.protein,

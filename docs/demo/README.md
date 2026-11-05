@@ -282,3 +282,32 @@ headless Chrome at 390×844. Set `PLAYWRIGHT_CORE_PATH` to an existing
 `playwright-core` installation and `CHROME_BIN` if Chrome is not at
 `/usr/bin/google-chrome`. It checks Yesterday/Tomorrow logging and return day,
 persisted diary dates, tab-bar Search after a dated visit, and invalid/missing dates.
+
+## Issue #140 — M1-74 Today day-navigation chevrons
+
+Run `bash docs/demo/smoke-m1-issue-140.sh`. It runs typecheck, lint, focused
+DateSelector tests for LTR, RTL, and missing/undefined web RTL flags, then the
+full serialized test suite. Headless Chrome at 390×844 checks the rendered
+Previous day (`‹`) and Next day (`›`) buttons on Expo web `/today`.
+Requires Chrome (or `CHROME_BIN`); override the Expo port with
+`EXPO_WEB_SMOKE_PORT` if needed. Result: `out/issue-140-smoke-result.txt`.
+
+## Issue #139 — M1-73 Macro summary progress
+
+Run `bash docs/demo/smoke-m1-issue-139.sh`. It runs typecheck, lint, focused macro
+progress tests and the full serialized suite. Headless Chrome checks the real RN
+Web component at 390px in light/dark: empty, half and full tracks, over-target
+text, accessible percentages, alignment and overflow. Requires Chrome (or
+`CHROME_BIN`). Writes `out/issue-139-smoke-result.txt`.
+
+## Issue #138 — M1-72 Metric food detail quantity
+
+Run `bash docs/demo/smoke-m1-issue-138.sh`. It checks sheet/quick-add wiring,
+then runs typecheck, lint, focused default quantity and history regressions,
+and the full suite with `--test-concurrency=1`. Writes
+`out/issue-138-smoke-result.txt` on success.
+
+Web check: with a metric profile and no history, search for roasted chicken
+breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
+**Grams** selected. Log a different quantity/unit and reopen to confirm history
+wins. Imperial profiles keep their source serving default.

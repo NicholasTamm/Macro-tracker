@@ -1,5 +1,5 @@
-smoke-m1-issue-141 PASS 2026-11-05T01:44:29Z
-HEAD 340f566ecc9aed09dbc85de5889ba234868759aa
+smoke-m1-issue-141 PASS 2026-11-05T01:52:47Z
+HEAD 7b5b4e2321ef2b24f8242c32187fb1604fd8ac3f
 software-tree a72a1c5822ae6df64955ef440dda31c5eda53b2f
 focused source checks, typecheck, regression tests, full serialized suite PASS
-Expo web / Chrome 390x844: Yesterday and Tomorrow labels, persisted dates and return day PASS; repeated tab-bar logging after changing day, retained Search tab reset, missing/invalid dates PASS.
+Web sheet render/submit with real sql.js: labels, calendar day and meal timestamp PASS (regression tests).
