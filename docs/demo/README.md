@@ -368,3 +368,14 @@ no-results JSX with real EmptyState, Mascot and placeholder SVG in light/dark,
 checking image loading, 96px sizing, preserved copy, and the icon-free fallback.
 The harness isolates theme context; it does not exercise the full Expo catalog
 search flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-148-smoke-result.txt`.
+
+## Issue #149 — M1-83 Macro summary one-line values
+
+Run `bash docs/demo/smoke-m1-issue-149.sh`. It runs typecheck, lint, focused
+formatted-string and progress tests, and the full suite with `--test-concurrency=1`.
+Headless Chrome renders the real MacroSummary through React Native Web at
+390×844 with Today's padding, light/dark, Figtree/system fonts and kcal/kJ.
+It checks four-digit energy and decimal grams (including rounding 999.9 to 1000)
+for wrapping, clipping, overflow and full accessible values. The harness isolates
+theme context; it does not exercise the full Expo diary flow.
+Requires Chrome (or `CHROME_BIN`). Result: `out/issue-149-smoke-result.txt`.
