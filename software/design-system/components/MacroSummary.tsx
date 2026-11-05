@@ -62,9 +62,11 @@ export function macroProgress(consumed: number | null, target?: number) {
  */
 export function MacroSummary({
   totals,
+  progressTotals = totals,
   energyUnit = 'kcal',
 }: {
   totals: MacroTotals;
+  progressTotals?: MacroTotals;
   energyUnit?: EnergyUnit;
 }) {
   const { colors, spacing, typography, font } = useTheme();
@@ -79,7 +81,7 @@ export function MacroSummary({
             | 'fatGoal'
             | 'carbsGoal';
           const goal = totals[goalKey];
-          const progress = macroProgress(value, goal);
+          const progress = macroProgress(progressTotals[row.key], progressTotals[goalKey]);
           const accent = colors[row.colorKey];
           const isEnergy = row.key === 'calories';
           const label = isEnergy && energyUnit === 'kJ' ? 'Energy' : row.label;
@@ -136,7 +138,7 @@ export function MacroSummary({
               {progress.over ? (
                 <Text style={[typography.micro, { color: colors.ink }]}>Over target</Text>
               ) : null}
-              <View
+              {progress.percent != null ? <View
                 style={[styles.track, {
                   backgroundColor: colors.control,
                   borderColor: colors.controlBorder,
@@ -150,7 +152,7 @@ export function MacroSummary({
                   borderColor: colors.ink,
                   borderWidth: progress.fill > 0 ? 1 : 0,
                 }]} />
-              </View>
+              </View> : null}
             </View>
           );
         })}

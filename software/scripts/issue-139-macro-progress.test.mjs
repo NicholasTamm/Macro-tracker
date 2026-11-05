@@ -72,6 +72,30 @@ test('issue 139: kJ rounding cannot hide an overage; unavailable progress is ann
   assert.match(cells[2].props.accessibilityLabel, /progress unavailable/);
 });
 
+test('issue 139: Today progress uses raw values while showing rounded values', () => {
+  const totals = { calories: 100, calorieGoal: 100, protein: 100, proteinGoal: 100, fat: 0, carbs: 0 };
+  const progressTotals = { ...totals, calories: 100.04, protein: 100.04, proteinGoal: 100.03 };
+  const cells = children(children(MacroSummary({ totals, progressTotals }))[0]);
+  for (const cell of cells.slice(0, 2)) {
+    assert.match(cell.props.accessibilityLabel, /100% of target, over target/);
+    assert.equal(children(cell).at(-2).props.children, 'Over target');
+  }
+  const today = readFileSync(new URL('../app/(tabs)/today.tsx', import.meta.url), 'utf8');
+  assert.match(today, /progressTotals=\{\{ \.\.\.view\.rawTotals, \.\.\.view\.rawGoals \}\}/);
+});
+
+test('issue 139: goal-less and invalid summaries omit unavailable tracks', () => {
+  const totals = { calories: 200, protein: 20, fat: null, fatGoal: 10, carbs: 30, carbsGoal: 0 };
+  const cells = children(children(MacroSummary({ totals }))[0]);
+  for (const cell of cells) {
+    assert.match(cell.props.accessibilityLabel, /progress unavailable/);
+    assert.equal(children(cell).length, 2);
+  }
+  for (const path of ['../modules/diary/food-detail/FoodDetailSheet.tsx', '../modules/diary/entry-edit/DiaryEntryEditSheet.tsx']) {
+    assert.match(readFileSync(new URL(path, import.meta.url), 'utf8'), /<MacroSummary totals=\{macros\} energyUnit=\{energyUnit\} \/>/);
+  }
+});
+
 function contrast(a, b) {
   const luminance = (hex) => hex.slice(1).match(/../g).map(x => parseInt(x, 16) / 255)
     .map(x => x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4)
