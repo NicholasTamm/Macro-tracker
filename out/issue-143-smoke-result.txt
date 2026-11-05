@@ -1,6 +1,6 @@
-smoke-m1-issue-143 PASS 2026-11-05T01:57:00Z
+smoke-m1-issue-143 PASS 2026-11-05T01:58:24Z
 PASS: typecheck, lint, focused weight regressions, full package.json test suite (--test-concurrency=1).
 PASS: Chrome 390x844 light/dark rendered the production WeightChart through React Native Web.
-Browser geometry: every 10px dot lies fully within plot bounds (including first/last day); one mean per civil day; single-day flat series centered.
+Browser geometry: every 10px dot lies fully within plot bounds (including first/last day); one mean per civil day; single-day today point at its date position.
 Repro: Oct 8/15/22/30, including 80.9 and 80.4 on Oct 30, renders four daily dots; today mean 80.65 kg. Summary/list retain all five entries.
 Browser scope: isolated production chart; full Analytics CRUD flow not browser-automated.
