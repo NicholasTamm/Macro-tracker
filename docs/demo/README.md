@@ -348,3 +348,13 @@ settings sub-pages in dark mode, header divider tokens, Light/Dark/System saves
 without reload, and live OS appearance changes. Requires Chrome (or `CHROME_BIN`);
 use `EXPO_WEB_SMOKE_PORT` to override port 18144. Result:
 `out/issue-144-smoke-result.txt`.
+
+## Issue #147 — M1-81 Diary edit subtitle
+
+Run `bash docs/demo/smoke-m1-issue-147.sh`. It checks the production sheet's
+unit subtitle and calculation error copy, existing immutable diary-edit behavior,
+typecheck, lint, and all package.json tests with `--test-concurrency=1`.
+Headless Chrome at 390×844 renders the production sheet through React Native Web
+in light/dark for grams, serving units, and a failed calculation. The harness
+isolates native theme/safe-area context; it does not exercise the full Expo diary
+flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-147-smoke-result.txt`.
