@@ -251,10 +251,7 @@ export function chartPoints(
   }
   return Array.from(daily.values(), ({ id, date, totalKg, count }) => {
     const kilograms = totalKg / count;
-    const x =
-      daily.size === 1 || date == null
-        ? 0.5
-        : Math.min(1, Math.max(0, (date - start) / days));
+    const x = date == null ? 0.5 : Math.min(1, Math.max(0, (date - start) / days));
     const y = span === 0 ? 0.5 : (kilograms - min) / span;
     return { id, x, y, kilograms };
   });

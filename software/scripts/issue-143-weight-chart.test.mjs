@@ -77,13 +77,17 @@ test('issue 143: same civil day uses the mean; all summary values and entries su
   assert.deepEqual(samples, original, 'aggregation must not mutate the entry list');
 });
 
-test('issue 143: a single day of equal weigh-ins yields one centered finite point', () => {
+test('issue 143: a single day of weigh-ins stays at its date position', () => {
   assert.deepEqual(weight.chartPoints([], now), []);
   const points = weight.chartPoints([
     sample('a', '2026-10-30', 80), sample('b', '2026-10-30', 80),
   ], now);
   assert.equal(points.length, 1);
-  assert.deepEqual(points[0], { id: 'a', x: 0.5, y: 0.5, kilograms: 80 });
+  assert.deepEqual(points[0], { id: 'a', x: 1, y: 0.5, kilograms: 80 });
+  const earlier = weight.chartPoints([
+    sample('a', '2026-10-20', 80), sample('b', '2026-10-20', 82),
+  ], now);
+  assert.deepEqual(earlier[0], { id: 'a', x: 20 / 30, y: 0.5, kilograms: 81 });
 });
 
 test('issue 143: legacy instants aggregate by the local civil date used by x scaling', () => {

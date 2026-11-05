@@ -68,7 +68,7 @@ mkdir -p "$ROOT/out"
   echo "smoke-m1-issue-143 PASS $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo 'PASS: typecheck, lint, focused weight regressions, full package.json test suite (--test-concurrency=1).'
   echo 'PASS: Chrome 390x844 light/dark rendered the production WeightChart through React Native Web.'
-  echo 'Browser geometry: every 10px dot lies fully within plot bounds (including first/last day); one mean per civil day; single-day flat series centered.'
+  echo 'Browser geometry: every 10px dot lies fully within plot bounds (including first/last day); one mean per civil day; single-day today point at its date position.'
   echo 'Repro: Oct 8/15/22/30, including 80.9 and 80.4 on Oct 30, renders four daily dots; today mean 80.65 kg. Summary/list retain all five entries.'
   echo 'Browser scope: isolated production chart; full Analytics CRUD flow not browser-automated.'
 } > "$ROOT/out/issue-143-smoke-result.txt"

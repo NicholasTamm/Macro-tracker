@@ -27,6 +27,7 @@ function verify() {
   try {
     const charts = [...document.querySelectorAll('[role="img"]')];
     if (charts.length !== cases.length) throw new Error('charts did not mount');
+    let todayCenter;
     charts.forEach((chart, index) => {
       const plot = chart.firstElementChild;
       const dots = [...plot.firstElementChild.children];
@@ -44,6 +45,10 @@ function verify() {
         centers.push(rect.left + rect.width / 2);
       });
       if (new Set(centers).size !== expected.length) throw new Error('dots overlap');
+      if (index === 0) todayCenter = centers.at(-1);
+      if (index === 2 && Math.abs(centers[0] - todayCenter) > 1) {
+        throw new Error('single-day today point is not at the right edge');
+      }
     });
     document.body.append(Object.assign(document.createElement('pre'), {
       textContent: `ISSUE_143_BROWSER_PASS ${scheme}: endpoints and same-day means visible`,
