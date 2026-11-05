@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import {
   View,
@@ -34,6 +34,7 @@ import {
   loadTodayDay,
   localDayKeyFromDate,
   shiftDayKey,
+  resolveRouteDayKey,
   editDiaryEntryQuantity,
   deleteDiaryEntry,
   applyDiaryUndo,
@@ -238,7 +239,8 @@ export default function TodayScreen() {
   const reduceMotion = useReduceMotion();
   const { ready, error, db, snapshot, refresh } = useUserData();
   const { colors, spacing, typography } = useTheme();
-  const [dayKey, setDayKey] = useState(() => localDayKeyFromDate());
+  const { date } = useLocalSearchParams<{ date?: string | string[] }>();
+  const dayKey = resolveRouteDayKey(date);
   const [todayKey, setTodayKey] = useState(() => localDayKeyFromDate());
 
   useEffect(() => {
@@ -396,7 +398,7 @@ export default function TodayScreen() {
           <OfflinePill label="Offline" />
         </View>
 
-        <DateSelector dayKey={dayKey} onChange={setDayKey} />
+        <DateSelector dayKey={dayKey} onChange={(nextDay) => router.setParams({ date: nextDay })} />
 
         <View style={{ marginBottom: spacing.md }}>
           <MacroSummary
@@ -448,7 +450,7 @@ export default function TodayScreen() {
             message="Log a food when you're ready and we'll keep count with you."
             actionLabel="Log food"
             actionVariant="brand"
-            onAction={() => router.push('/food-entry')}
+            onAction={() => router.push({ pathname: '/food-entry', params: { date: dayKey } })}
           />
         ) : null}
 

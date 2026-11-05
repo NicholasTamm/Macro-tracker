@@ -16,6 +16,19 @@ export function parseDayKey(localDayKey: string): Date {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
 
+/** Resolve an untrusted route date, rejecting arrays and calendar overflow. */
+export function resolveRouteDayKey(
+  value: string | string[] | undefined,
+  todayKey: string = localDayKeyFromDate(),
+): string {
+  if (typeof value !== 'string') return todayKey;
+  try {
+    return localDayKeyFromDate(parseDayKey(value)) === value ? value : todayKey;
+  } catch {
+    return todayKey;
+  }
+}
+
 export function shiftDayKey(localDayKey: string, deltaDays: number): string {
   const dt = parseDayKey(localDayKey);
   dt.setDate(dt.getDate() + deltaDays);

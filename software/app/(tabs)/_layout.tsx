@@ -44,6 +44,13 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="food-entry"
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            // Tab routes retain params; a fresh Search tab visit always logs today.
+            event.preventDefault();
+            navigation.navigate('food-entry', { date: undefined });
+          },
+        })}
         options={{
           title: 'Search',
           tabBarAccessibilityLabel: 'Search foods',
