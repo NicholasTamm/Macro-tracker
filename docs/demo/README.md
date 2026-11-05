@@ -338,3 +338,13 @@ pop. It also checks Settings/sub-page Back/Forward, repeated tab visits, and all
 five direct `/settings/*` links with header return to Settings and Today.
 Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
 Writes `out/issue-146-smoke-result.txt`.
+
+## Issue #144 — M1-78 Navigation theme surfaces
+
+Run `bash docs/demo/smoke-m1-issue-144.sh`. It runs typecheck, lint, focused
+palette/navigation regressions and the full serialized test suite. Chrome at
+390×844 checks the real Expo web app: Today, Search, Analytics, Settings and all
+settings sub-pages in dark mode, header divider tokens, Light/Dark/System saves
+without reload, and live OS appearance changes. Requires Chrome (or `CHROME_BIN`);
+use `EXPO_WEB_SMOKE_PORT` to override port 18144. Result:
+`out/issue-144-smoke-result.txt`.
