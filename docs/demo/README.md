@@ -269,3 +269,15 @@ Manual check on a fresh profile:
 2. Middle steps are plain.
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
+
+## Issue #138 — M1-72 Metric food detail quantity
+
+Run `bash docs/demo/smoke-m1-issue-138.sh`. It checks sheet/quick-add wiring,
+then runs typecheck, lint, focused default quantity and history regressions,
+and the full suite with `--test-concurrency=1`. Writes
+`out/issue-138-smoke-result.txt` on success.
+
+Web check: with a metric profile and no history, search for roasted chicken
+breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
+**Grams** selected. Log a different quantity/unit and reopen to confirm history
+wins. Imperial profiles keep their source serving default.
