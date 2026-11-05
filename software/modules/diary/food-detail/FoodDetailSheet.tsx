@@ -31,6 +31,7 @@ import {
 import { formatServingPickerLabel } from './servingLabel';
 import { computeLiveNutrients } from './computeLiveNutrients';
 import { logFoodToDiary } from './logFoodEntry';
+import { defaultMealForLog } from './defaultMeal';
 import {
   parseQuantityInput,
   quantityErrorMessage,
@@ -111,7 +112,6 @@ export function FoodDetailSheet({
 
   useEffect(() => {
     if (!visible || !model) return;
-    setTimeText(localTimeHHMM());
     setLogError(null);
     setSubmitting(false);
     submitLockedRef.current = false;
@@ -144,20 +144,10 @@ export function FoodDetailSheet({
     ensureDefaultMealSlots(db);
     const list = listMealSlots(db);
     setSlots(list.map((s) => ({ id: s.id, name: s.name, defaultTime: s.defaultTime })));
-    let selectedId: string | null = null;
-    if (initialMealSlotId) {
-      selectedId = initialMealSlotId;
-    } else if (list.length > 0) {
-      selectedId = list[0].id;
-    }
-    setMealSlotId(selectedId);
-    if (selectedId) {
-      const selected = list.find((s) => s.id === selectedId);
-      if (selected?.defaultTime) {
-        setTimeText(selected.defaultTime);
-      }
-    }
-  }, [visible, db, initialMealSlotId]);
+    const defaults = defaultMealForLog(list, localDayKey, initialMealSlotId);
+    setMealSlotId(defaults.mealSlotId);
+    setTimeText(defaults.timeText);
+  }, [visible, db, model, localDayKey, initialMealSlotId]);
 
   // If grams becomes unavailable while selected, fall back to first serving.
   useEffect(() => {
