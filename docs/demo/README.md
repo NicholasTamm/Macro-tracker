@@ -244,7 +244,7 @@ Run `bash docs/demo/smoke-m1-issue-124.sh`. Result: `out/issue-124-smoke-result.
 
 Manual check:
 1. With no weights logged, open Analytics. "Last 30 days" shows the scale mascot above "No weights yet".
-2. Log one weight. The mascot is replaced by the chart.
+2. Log one weight. The starter state shows that weight with the scale mascot. Log a second in-range weight to show the chart (#142).
 3. If every weight is older than 30 days, the "No recent weights" state shows no art.
 
 ## Issue #125 — M1-67 Goal-hit celebration
@@ -270,6 +270,11 @@ Manual check on a fresh profile:
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
 
+## Issue #142 — M1-76 Starter weight trend state
+
+Run `bash docs/demo/smoke-m1-issue-142.sh`. It checks the zero/one/two weigh-in threshold, real onboarding seed and delete transitions, range filtering, kg/lb copy and the chart art fence; runs typecheck, lint and the full suite with `--test-concurrency=1`; then exports Expo web. Result: `out/issue-142-smoke-result.txt`.
+
+Browser check at 390×844: finish onboarding with 80 kg and open Analytics. The scale card says “Starting weight 80.0 kg. Log another weigh-in to see your trend.” with no chart. Entries still offers Edit/Delete. Add a second recent weigh-in to show the chart; delete it to restore the starter state; delete the seed to show “No weights yet”. Historical-only entries keep “No recent weights” without art.
 ## Issue #141 — M1-75 Search logging uses the viewed day
 
 Run `bash docs/demo/smoke-m1-issue-141.sh`. It checks date wiring, typecheck,
