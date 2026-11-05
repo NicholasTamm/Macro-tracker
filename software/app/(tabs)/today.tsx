@@ -210,7 +210,7 @@ function DateSelector({
       ]}
     >
       <Text style={{ color: colors.ink, fontSize: 18, ...font('700') }}>
-        {(delta < 0) === I18nManager.isRTL ? '›' : '‹'}
+        {(delta < 0) === Boolean(I18nManager.isRTL) ? '›' : '‹'}
       </Text>
     </Pressable>
   );
