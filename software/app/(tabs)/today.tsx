@@ -401,6 +401,7 @@ export default function TodayScreen() {
         <View style={{ marginBottom: spacing.md }}>
           <MacroSummary
             energyUnit={energyUnit}
+            progressTotals={{ ...view.rawTotals, ...view.rawGoals }}
             totals={{
               calories: view.totals.calories,
               protein: view.totals.protein,

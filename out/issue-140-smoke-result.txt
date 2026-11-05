@@ -1,5 +1,5 @@
-smoke-m1-issue-140 PASS 2026-11-05T01:44:19Z
-commit=efd8d63
+smoke-m1-issue-140 PASS 2026-11-05T01:51:44Z
+commit=95900b7
 typecheck=npx tsc --noEmit PASS
 lint=npm run lint PASS (existing warnings only)
 focused=node --test scripts/issue-140-day-navigation.test.mjs PASS

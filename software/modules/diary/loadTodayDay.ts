@@ -30,6 +30,7 @@ export type TodayDayView = {
     fatGoal?: number;
     carbsGoal?: number;
   };
+  rawGoals: TodayDayView['goals'];
   entryCount: number;
 };
 
@@ -85,6 +86,14 @@ export function loadTodayDay(db: SqlExecutor, localDayKey: string): TodayDayView
           proteinGoal: Math.round(target.proteinG),
           fatGoal: Math.round(target.fatG),
           carbsGoal: Math.round(target.carbohydrateG),
+        }
+      : {},
+    rawGoals: target
+      ? {
+          calorieGoal: target.energyKcal,
+          proteinGoal: target.proteinG,
+          fatGoal: target.fatG,
+          carbsGoal: target.carbohydrateG,
         }
       : {},
     entryCount: entries.length,
