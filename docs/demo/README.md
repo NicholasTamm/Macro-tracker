@@ -326,3 +326,13 @@ Web check: with a metric profile and no history, search for roasted chicken
 breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
 **Grams** selected. Log a different quantity/unit and reopen to confirm history
 wins. Imperial profiles keep their source serving default.
+
+## Issue #144 — M1-78 Navigation theme surfaces
+
+Run `bash docs/demo/smoke-m1-issue-144.sh`. It runs typecheck, lint, focused
+palette/navigation regressions and the full serialized test suite. Chrome at
+390×844 checks the real Expo web app: Today, Search, Analytics, Settings and all
+settings sub-pages in dark mode, header divider tokens, Light/Dark/System saves
+without reload, and live OS appearance changes. Requires Chrome (or `CHROME_BIN`);
+use `EXPO_WEB_SMOKE_PORT` to override port 18144. Result:
+`out/issue-144-smoke-result.txt`.
