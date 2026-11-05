@@ -270,6 +270,16 @@ Manual check on a fresh profile:
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
 
+## Issue #143 — M1-77 Weight chart endpoints and same-day weigh-ins
+
+Run `bash docs/demo/smoke-m1-issue-143.sh`. It checks endpoint x scaling, daily
+aggregation, unchanged summaries and entry-list wiring, typecheck, lint, and the
+full serialized test suite. Chrome at 390×844 checks the production chart through
+React Native Web in light/dark, including both range endpoints and the reported
+Oct 30 reproduction. Result: `out/issue-143-smoke-result.txt`.
+
+The chart plots the **mean of each civil day's live weigh-ins**. Summary values
+and the entry list continue to include every entry.
 ## Issue #142 — M1-76 Starter weight trend state
 
 Run `bash docs/demo/smoke-m1-issue-142.sh`. It checks the zero/one/two weigh-in threshold, real onboarding seed and delete transitions, range filtering, kg/lb copy and the chart art fence; runs typecheck, lint and the full suite with `--test-concurrency=1`; then exports Expo web. Result: `out/issue-142-smoke-result.txt`.

@@ -246,7 +246,7 @@ test('empty and sparse states have sensible copy', () => {
   assert.equal(one.changeKg, null);
   assert.match(weight.weightSummaryText(one, 'kg'), /^Starting weight 72\.0 kg\. Log another weigh-in to see your trend\./);
   const pts = weight.chartPoints([mk('a', 3, 72)], NOW);
-  assert.equal(pts[0].x, 0.5, 'single sample is centered instead of clipped at the chart edge');
+  assert.equal(pts[0].x, 0.9, 'single sample retains its date position');
   assert.equal(pts[0].y, 0.5);
 
   const two = weight.summarizeWeights([mk('a', 3, 72), mk('b', 1, 71.5)]);
