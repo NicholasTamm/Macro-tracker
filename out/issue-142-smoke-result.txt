@@ -1,0 +1,10 @@
+smoke-m1-issue-142 PASS 2026-11-05T01:51:19Z
+HEAD 89f35e0907cb790d19a68fd2a5de3795371481a0
+PASS: TypeScript, lint, focused tests, full package.json suite with --test-concurrency=1
+PASS: real sql.js onboarding seeds 80 kg; one weight hides chart; second shows chart; deletion restores starter then empty
+PASS: range excludes old/future/deleted entries; kg/lb starter copy; Entries remain available; no chart mascot
+PASS: Expo web export bundles starter copy, No weights yet and scale asset
+Browser check: at 390x844, complete onboarding with 80 kg, open Analytics; verify starter/scale with no chart, add second weigh-in for chart, delete back to zero for No weights yet.
+Browser verification executed separately via Chrome DevTools Protocol against Expo web (fresh profile):
+PASS Chrome 390x844: onboarding 80 kg -> starter + scale, no chart; second weigh-in -> chart without mascot; delete -> starter; Edit works; delete seed -> No weights yet, retained after reload
+Full suite: 253 tests passed, 0 failed. Focused suite: 17 tests passed, 0 failed.
