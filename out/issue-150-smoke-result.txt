@@ -1,0 +1,16 @@
+smoke-m1-issue-150 PASS 2026-11-05T07:26:08Z
+PASS: npx tsc --noEmit
+PASS: npm run lint (no errors)
+PASS: focused nearest-slot boundaries, custom/untimed slots, explicit slots, dates, log tests
+PASS: full package.json test suite with --test-concurrency=1
+PASS: Headless Chrome, production FoodDetailSheet + React Native Web at 390x844, light/dark:
+  fixed local clock 2026-11-05 15:55 -> Dinner, 15:55;
+  yesterday/tomorrow -> Dinner, 18:30;
+  explicit Breakfast -> 15:55 today, 08:00 yesterday;
+  manual Lunch remains selected through rerender and submits 12:30;
+  explicit Snacks today -> 15:55;
+  real log handler submits matching slot/date/local timestamp for every case.
+Browser harness isolates native theme/safe-area context and persistence boundary.
+It exercises production state/effects/calculation/submission, not a full Expo Search or SQLite flow.
+Rule: nearest timed slot within local day, ties later, no midnight wrap;
+  built-in boundaries 10:15 (Lunch), 15:30 (Dinner); today uses now to the minute.
