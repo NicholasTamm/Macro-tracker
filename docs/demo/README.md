@@ -277,3 +277,15 @@ progress tests and the full serialized suite. Headless Chrome checks the real RN
 Web component at 390px in light/dark: empty, half and full tracks, over-target
 text, accessible percentages, alignment and overflow. Requires Chrome (or
 `CHROME_BIN`). Writes `out/issue-139-smoke-result.txt`.
+
+## Issue #138 — M1-72 Metric food detail quantity
+
+Run `bash docs/demo/smoke-m1-issue-138.sh`. It checks sheet/quick-add wiring,
+then runs typecheck, lint, focused default quantity and history regressions,
+and the full suite with `--test-concurrency=1`. Writes
+`out/issue-138-smoke-result.txt` on success.
+
+Web check: with a metric profile and no history, search for roasted chicken
+breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
+**Grams** selected. Log a different quantity/unit and reopen to confirm history
+wins. Imperial profiles keep their source serving default.
