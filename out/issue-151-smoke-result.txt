@@ -1,0 +1,16 @@
+smoke-m1-issue-151 PASS 2026-11-05T07:30:04Z
+PASS: npx tsc --noEmit
+PASS: npm run lint (no errors)
+PASS: focused production biometrics validation, onboarding and settings tests
+PASS: full package.json test suite with --test-concurrency=1
+PASS: Headless Chrome, production BiometricsScreen, OnboardingShell and PrimaryButton
+  through React Native Web at 390x844, light/dark, cm/kg and in/lb:
+  fresh profile fields blank; Continue disabled with control fill/muted label at full opacity;
+  partial input, underage birth year, zero/negative/cleared measurements block saving;
+  valid input enables brand CTA, saves canonical cm/kg, refreshes and routes to Goal.
+PASS: regression tests preserve saved profile values and reject nonfinite/nonnumeric input,
+  whitespace, fractional/out-of-range birth years, and every cleared required field.
+Root cause: hard-coded fallback birth year/height/weight silently satisfied existing validation.
+The onboarding model has no skip path; secondary action remains Back.
+Browser harness isolates persistence, router, native theme and safe-area context.
+It exercises production input/state/validation/submission and styles, not a full Expo/SQLite flow.

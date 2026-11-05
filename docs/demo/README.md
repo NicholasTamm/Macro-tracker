@@ -391,3 +391,14 @@ submitted date/time. The harness isolates native context and persistence; it doe
 not exercise the full Expo Search/SQLite flow. Requires Chrome (or `CHROME_BIN`).
 Result: `out/issue-150-smoke-result.txt`. The selection rule is documented in
 `software/modules/diary/food-detail/README.md`.
+
+## Issue #151 — M1-85 Biometrics validation gate
+
+Run `bash docs/demo/smoke-m1-issue-151.sh`. It runs typecheck, lint, focused
+biometrics/onboarding/settings regressions and the full suite with
+`--test-concurrency=1`. Headless Chrome at 390×844 checks the production biometrics
+screen, shell and brand button through React Native Web in light/dark and metric/
+imperial units: blank initial values, disabled tokens, invalid/cleared input,
+and valid canonical save plus Goal navigation. The harness isolates persistence,
+router, native theme and safe-area context; it does not run the full Expo/SQLite
+flow. Requires Chrome (or `CHROME_BIN`). Writes `out/issue-151-smoke-result.txt`.
