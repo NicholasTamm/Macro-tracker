@@ -9,7 +9,7 @@ export type EmptyStateProps = {
   message?: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Custom decorative art in place of the neutral glyph (issue 122). */
+  /** Custom decorative art for this empty state. */
   illustration?: React.ReactNode;
   /** Shorthand for `illustration={<Mascot pose={...} />}`. Ignored when `illustration` is set. */
   mascotPose?: MascotPose;
@@ -18,9 +18,8 @@ export type EmptyStateProps = {
 };
 
 /**
- * Matches HTML `.empty-state` specimen. With no `illustration` or
- * `mascotPose` it keeps the neutral glyph, so existing call sites are
- * unchanged until they migrate.
+ * Matches HTML `.empty-state` specimen. Without an illustration or mascot
+ * pose, render only the copy and optional action.
  */
 export function EmptyState({
   title,
@@ -38,20 +37,15 @@ export function EmptyState({
       accessibilityLabel={message ? `${title}. ${message}` : title}
       style={[styles.wrap, { padding: spacing.xl, gap: spacing.md }]}
     >
-      <View
-        style={styles.graphic}
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-      >
-        {illustration ??
-          (mascotPose ? (
-            <Mascot pose={mascotPose} size={96} />
-          ) : (
-            <View style={[styles.circle, { backgroundColor: colors.control }]}>
-              <Text style={{ fontSize: 20 }}>📋</Text>
-            </View>
-          ))}
-      </View>
+      {illustration != null || mascotPose ? (
+        <View
+          style={styles.graphic}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          {illustration ?? (mascotPose ? <Mascot pose={mascotPose} size={96} /> : null)}
+        </View>
+      ) : null}
       <Text style={[typography.section, { color: colors.ink, textAlign: 'center' }]}>
         {title}
       </Text>
@@ -70,11 +64,4 @@ export function EmptyState({
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center' },
   graphic: { minHeight: 74, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
-  circle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

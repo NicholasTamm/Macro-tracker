@@ -1,0 +1,10 @@
+smoke-m1-issue-148 PASS 2026-11-05T07:17:22Z
+HEAD 1d53b6dddc398b4927f36226ce94dda7002b600e
+software-tree 1b8dc18a5a9fd8397792a7e851acc6f172212cae
+PASS: npx tsc --noEmit
+PASS: npm run lint (no errors; existing warnings only)
+PASS: focused no-results, fallback, custom illustration, CTA, and existing empty-state regressions
+PASS: full package.json test suite with --test-concurrency=1
+PASS: Chrome at 390x844, light/dark, no-results think mascot loaded at 96px and text-only fallback
+Browser: production no-results JSX, EmptyState and Mascot + RN Web at 390x844 in light/dark; actual placeholder SVG loads at 96px, copy preserved, no clipboard, text-only fallback.
+Harness isolates theme context and uses real design tokens, expo-image and UI components. Full Expo search/catalog flow was not exercised.

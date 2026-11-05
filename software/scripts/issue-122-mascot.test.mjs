@@ -40,14 +40,14 @@ test('issue 122: mascot is decorative and hidden from screen readers', () => {
   assert.doesNotMatch(src, /accessibilityLabel/);
 });
 
-test('issue 122: EmptyState takes an illustration, keeps neutral default, CTA variant', () => {
+test('issue 122: EmptyState takes an illustration, has no default icon, CTA variant', () => {
   const src = read('design-system/components/EmptyState.tsx');
   assert.match(src, /illustration\?: React\.ReactNode/);
   assert.match(src, /mascotPose\?: MascotPose/);
   assert.match(src, /actionVariant = 'primary'/);
   assert.match(src, /variant=\{actionVariant\}/);
   assert.match(src, /illustration \?\?/);
-  assert.match(src, /📋/, 'neutral default kept for unmigrated call sites');
+  assert.doesNotMatch(src, /📋/, 'unillustrated empty states have no fallback icon');
 });
 
 test('issue 122: gallery shows every pose and a mascot empty state', () => {
