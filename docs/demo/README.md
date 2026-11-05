@@ -269,3 +269,12 @@ Manual check on a fresh profile:
 2. Middle steps are plain.
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
+
+## Issue #140 — M1-74 Today day-navigation chevrons
+
+Run `bash docs/demo/smoke-m1-issue-140.sh`. It runs typecheck, lint, focused
+DateSelector tests for LTR, RTL, and missing/undefined web RTL flags, then the
+full serialized test suite. Headless Chrome at 390×844 checks the rendered
+Previous day (`‹`) and Next day (`›`) buttons on Expo web `/today`.
+Requires Chrome (or `CHROME_BIN`); override the Expo port with
+`EXPO_WEB_SMOKE_PORT` if needed. Result: `out/issue-140-smoke-result.txt`.
