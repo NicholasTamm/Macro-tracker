@@ -1,0 +1,5 @@
+smoke-m1-issue-141 PASS 2026-11-05T01:54:11Z
+HEAD ec0ea21bb2671b9ac20e3a66389d98eb1dad2448
+software-tree a10d540acd0504409967924984eda19bdd48d21c
+focused source checks, typecheck, regression tests, full serialized suite PASS
+Web sheet render/submit with real sql.js: labels, calendar day and meal timestamp PASS (regression tests).

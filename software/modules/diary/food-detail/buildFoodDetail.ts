@@ -25,7 +25,7 @@ export type FoodDetailModel = {
   /** Per-100 g nutrients for seed; basis nutrients for custom. */
   nutrients: NutrientMap;
   servings: ServingChoice[];
-  /** Default unit: default serving when present, else grams. */
+  /** Default unit: grams for metric, otherwise the source serving when present. */
   defaultUnit: { kind: 'grams' } | { kind: 'serving'; servingId: number };
   /** Present for custom foods. */
   customBasis: CustomBasis | null;
@@ -76,10 +76,8 @@ export function buildSeedFoodDetail(
         ? { kind: 'grams' }
         : { kind: 'serving', servingId: defaultRaw.servingId },
     customBasis: null,
-    suggestedQuantity:
-      massUnit === 'kg' && defaultRaw?.gramWeight && defaultRaw.gramWeight > 0
-        ? defaultRaw.gramWeight
-        : 1,
+    // A metric starting amount must not inherit an ounce/household portion.
+    suggestedQuantity: massUnit === 'kg' ? 100 : 1,
   };
 }
 
@@ -123,7 +121,7 @@ export function buildCustomFoodDetail(
     customBasis: basis,
     suggestedQuantity:
       massUnit === 'kg' && food.gramWeightForBasis != null && food.gramWeightForBasis > 0
-        ? food.gramWeightForBasis
+        ? 100
         : food.basisAmount > 0
           ? food.basisAmount
           : 1,

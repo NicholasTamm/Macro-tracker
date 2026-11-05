@@ -47,6 +47,7 @@ import {
 import { newEntityId } from '../../app-core/user-data/ids';
 import {
   localDayKeyFromDate,
+  formatDayLabel,
   localTimeHHMM,
   parseLocalTimeHHMM,
   timestampFromLocalDayAndTime,
@@ -57,6 +58,7 @@ export type FoodDetailSheetProps = {
   model: FoodDetailModel | null;
   db: SqlExecutor | null;
   energyUnit: EnergyUnit;
+  localDayKey?: string;
   /** Pre-select meal slot when opened from a Today slot (optional). */
   initialMealSlotId?: string | null;
   onClose: () => void;
@@ -85,6 +87,7 @@ export function FoodDetailSheet({
   model,
   db,
   energyUnit,
+  localDayKey = localDayKeyFromDate(),
   initialMealSlotId = null,
   onClose,
   onLogged,
@@ -175,8 +178,6 @@ export function FoodDetailSheet({
     if (!model || !unit || !qtyParsed.ok) return null;
     return computeLiveNutrients(model, qtyParsed.value, unit);
   }, [model, unit, qtyParsed]);
-
-  const localDayKey = localDayKeyFromDate();
 
   const canLog =
     !!model &&
@@ -513,7 +514,7 @@ export function FoodDetailSheet({
             ) : null}
 
             <PrimaryButton
-              label={submitting ? 'Logging…' : 'Log to Today'}
+              label={submitting ? 'Logging…' : `Log to ${formatDayLabel(localDayKey)}`}
               disabled={!canLog}
               onPress={onLog}
             />
