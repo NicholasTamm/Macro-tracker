@@ -24,14 +24,16 @@ export default function BiometricsScreen() {
   const heightUnit = p?.heightUnit ?? 'cm';
 
   const [sex, setSex] = useState<Sex>(p?.sex ?? 'unspecified');
-  const [birthYear, setBirthYear] = useState(String(p?.birthYear ?? 1995));
+  const [birthYear, setBirthYear] = useState(String(p?.birthYear ?? ''));
 
   const initialHeightDisplay = useMemo(() => {
-    const cm = p?.heightCm ?? 170;
+    const cm = p?.heightCm;
+    if (cm == null) return '';
     return String(heightUnit === 'in' ? round1(cmToIn(cm)) : cm);
   }, [p?.heightCm, heightUnit]);
   const initialWeightDisplay = useMemo(() => {
-    const kg = p?.weightKg ?? 70;
+    const kg = p?.weightKg;
+    if (kg == null) return '';
     return String(massUnit === 'lb' ? round1(kgToLb(kg)) : kg);
   }, [p?.weightKg, massUnit]);
 
