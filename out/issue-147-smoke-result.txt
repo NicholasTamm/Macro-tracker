@@ -1,0 +1,10 @@
+smoke-m1-issue-147 PASS 2026-11-05T07:13:04Z
+HEAD 3df31167e63810d6b2810ed7b4a80e9afae5744e
+software-tree 82b9755ff4c203bb8fe1eeb7abedc95852ee7c58
+PASS: npx tsc --noEmit
+PASS: npm run lint (no errors; existing warnings only)
+PASS: focused subtitle/error copy and existing immutable diary-edit regression tests
+PASS: full package.json test suite with --test-concurrency=1
+PASS: Chrome at 390x844, light/dark, diary edit subtitle and calculation error copy
+Browser: production DiaryEntryEditSheet + RN Web at 390x844 in light/dark; gram/serving subtitle and failed-calculation copy contain no developer wording.
+Harness isolates native theme/safe-area context and uses real design tokens and UI components. Full Expo diary flow was not exercised.
