@@ -327,6 +327,18 @@ breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
 **Grams** selected. Log a different quantity/unit and reopen to confirm history
 wins. Imperial profiles keep their source serving default.
 
+## Issue #146 — M1-80 Web tabs after Settings browser Back
+
+Run `bash docs/demo/smoke-m1-issue-146.sh`. It checks the production tab config
+with the installed TabRouter, typecheck, lint, focused tests and the full suite
+with `--test-concurrency=1`, then starts Expo web and headless Chrome at 390×844.
+The browser smoke opens `/settings` with an outside-app history entry, enters
+Units & appearance, presses browser Back and taps Today, asserting no history
+pop. It also checks Settings/sub-page Back/Forward, repeated tab visits, and all
+five direct `/settings/*` links with header return to Settings and Today.
+Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
+Writes `out/issue-146-smoke-result.txt`.
+
 ## Issue #144 — M1-78 Navigation theme surfaces
 
 Run `bash docs/demo/smoke-m1-issue-144.sh`. It runs typecheck, lint, focused

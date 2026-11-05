@@ -41,10 +41,13 @@ async function renderLayoutOptions(relativePath) {
         name: 'issue-120-layout-stubs',
         setup(buildApi) {
           buildApi.onResolve(
-            { filter: /^(expo-router|@expo\/vector-icons|@\/design-system|@\/components\/HeaderBackButton)$/ },
+            { filter: /^(expo-router|react-native|@expo\/vector-icons|@\/design-system|@\/components\/HeaderBackButton)$/ },
             ({ path }) => ({ path, namespace: 'layout-stub' }),
           );
           buildApi.onLoad({ filter: /.*/, namespace: 'layout-stub' }, ({ path }) => {
+            if (path === 'react-native') {
+              return { contents: "export const Platform = { OS: 'web' };", loader: 'js' };
+            }
             if (path === 'expo-router') {
               return {
                 contents: `import React from 'react';

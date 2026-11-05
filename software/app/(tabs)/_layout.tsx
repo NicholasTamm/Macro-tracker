@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { Platform } from 'react-native';
 import { useTheme } from '@/design-system';
 
 export default function TabsLayout() {
@@ -8,6 +9,9 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      // Web tab visits must append browser history. The default firstRoute
+      // invents a Today entry on deep links, so tapping Today looks like a pop.
+      backBehavior={Platform.OS === 'web' ? 'fullHistory' : 'firstRoute'}
       screenOptions={{
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
