@@ -1,0 +1,14 @@
+smoke-m1-issue-145 PASS 2026-11-08T12:41:46Z
+HEAD d7b83e6ae16da9ac1146dc1df0a3db6d4ba076d6
+software-tree 7ce7ebb67de0617471c921c8376380168cc1aba7
+typecheck=npx tsc --noEmit PASS
+lint=npm run lint PASS (existing warnings only)
+focused=node --test scripts/issue-145-tab-sizing.test.mjs PASS (10 tests)
+regression=production Tabs config: full caption line-height + icon + padding + border + safe-area inset; >=44px hit height on web/iOS/Android
+full-suite=node --test --test-concurrency=1 (all package.json test files) PASS
+PASS Expo web Chrome 390x844 light: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).
+PASS Expo web Chrome 414x844 light: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).
+PASS Expo web Chrome 430x844 light: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).
+PASS Expo web Chrome 390x844 dark: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).
+PASS Expo web Chrome 414x844 dark: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).
+PASS Expo web Chrome 430x844 dark: Figtree labels Today/Analytics/Search/Settings/Gallery have full line boxes, unclipped glyph bounds, >=44px targets; screen controls above bar (59px).

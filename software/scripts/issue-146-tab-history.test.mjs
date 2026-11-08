@@ -20,12 +20,13 @@ async function tabsConfig(platform) {
     plugins: [{
       name: 'tab-layout-ui',
       setup(api) {
-        api.onResolve({ filter: /^(expo-router|react-native|@expo\/vector-icons|@\/design-system)$/ },
+        api.onResolve({ filter: /^(expo-router|react-native|react-native-safe-area-context|@expo\/vector-icons|@\/design-system)$/ },
           ({ path }) => ({ path, namespace: 'ui' }));
         api.onLoad({ filter: /.*/, namespace: 'ui' }, ({ path }) => ({ loader: 'js', contents:
           path === 'react-native' ? `export const Platform = { OS: ${JSON.stringify(platform)} };` :
+          path === 'react-native-safe-area-context' ? `export const useSafeAreaInsets = () => ({ bottom: 0 });` :
           path === 'expo-router' ? `export const Tabs = Object.assign(() => null, { Screen: () => null });` :
-          path === '@/design-system' ? `export const useTheme = () => ({ colors: {}, typography: {} });` :
+          path === '@/design-system' ? `export const useTheme = () => ({ colors: {}, typography: { caption: { lineHeight: 14 } }, spacing: { xl: 24, xs: 4, sm: 8 } });` :
           `export const Feather = () => null, MaterialIcons = () => null;`,
         }));
       },
