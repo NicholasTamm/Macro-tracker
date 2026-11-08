@@ -402,3 +402,14 @@ imperial units: blank initial values, disabled tokens, invalid/cleared input,
 and valid canonical save plus Goal navigation. The harness isolates persistence,
 router, native theme and safe-area context; it does not run the full Expo/SQLite
 flow. Requires Chrome (or `CHROME_BIN`). Writes `out/issue-151-smoke-result.txt`.
+
+## Issue #145 — M1-79 Tab label descenders
+
+Run `bash docs/demo/smoke-m1-issue-145.sh`. It checks production tab sizing with
+zero/21/34px safe-area insets on web/iOS/Android, typecheck, lint, focused tests
+and all package.json tests with `--test-concurrency=1`. Headless Chrome opens
+Expo web Settings at 390/414/430×844 in light/dark with Figtree loaded, checking
+all tab label line boxes, ancestor clipping, hit targets and content separation.
+Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
+Writes `out/issue-145-smoke-result.txt`. Native safe-area sizing is unit-tested;
+a physical device home-indicator check is not automated.

@@ -2,10 +2,16 @@ import { Tabs } from 'expo-router';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design-system';
 
 export default function TabsLayout() {
-  const { colors, typography } = useTheme();
+  const { colors, typography, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
+  const iconHeight = spacing.xl + spacing.xs;
+  // Include the caption's full line box, room for the tab button's padding,
+  // the top border, and the home indicator. Navigation reserves this height.
+  const tabBarHeight = iconHeight + typography.caption.lineHeight! + spacing.sm * 2 + 1 + insets.bottom;
 
   return (
     <Tabs
@@ -16,7 +22,10 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: typography.caption,
+        tabBarIconStyle: { height: iconHeight },
         tabBarStyle: {
+          height: tabBarHeight,
+          paddingBottom: insets.bottom,
           backgroundColor: colors.raised,
           borderTopColor: colors.divider,
         },

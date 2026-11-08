@@ -32,10 +32,13 @@ async function bundleRoute(relativePath, development, name) {
       name: 'issue-77-navigation-stubs',
       setup(buildApi) {
         buildApi.onResolve(
-          { filter: /^(expo-router|react-native|@expo\/vector-icons|@\/design-system)$/ },
+          { filter: /^(expo-router|react-native|react-native-safe-area-context|@expo\/vector-icons|@\/design-system)$/ },
           ({ path }) => ({ path, namespace: 'navigation-stub' }),
         );
         buildApi.onLoad({ filter: /.*/, namespace: 'navigation-stub' }, ({ path }) => {
+          if (path === 'react-native-safe-area-context') {
+            return { contents: 'export const useSafeAreaInsets = () => ({ bottom: 0 });', loader: 'js' };
+          }
           if (path === 'react-native') {
             return { contents: "export const Platform = { OS: 'web' };", loader: 'js' };
           }
@@ -55,8 +58,9 @@ async function bundleRoute(relativePath, development, name) {
                 export function useTheme() {
                   return {
                     colors: { ink: '#000', muted: '#666', raised: '#fff', divider: '#ddd', canvas: '#fff' },
+                    spacing: { xl: 24, xs: 4, sm: 8 },
                     typography: {
-                      caption: { fontFamily: 'Figtree_500Medium' },
+                      caption: { fontFamily: 'Figtree_500Medium', lineHeight: 14 },
                       pageTitle: { fontFamily: 'Nunito_700Bold' },
                     },
                   };
