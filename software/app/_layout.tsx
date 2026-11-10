@@ -52,7 +52,7 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     // Native remains behind its theme-neutral splash. Web has no native splash,
-    // so synchronously paint the last persisted scheme while sql.js hydrates.
+    // so synchronously paint the last persisted scheme while SQLite opens.
     if (Platform.OS !== 'web') return null;
     // +html sets this before first paint, including static exports. Keep the
     // server and client markup identical so hydration cannot flash a light fill.

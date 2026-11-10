@@ -7,7 +7,7 @@ import { build } from 'esbuild';
 
 const require = createRequire(import.meta.url);
 const root = new URL('../', import.meta.url).pathname;
-async function bundle(entry, platform) {
+async function bundle(entry, platform, unavailable = false) {
   const result = await build({
     entryPoints: [root + entry], bundle: true, platform: 'node', format: 'cjs',
     write: false, external: ['react', 'sql.js'],
@@ -19,6 +19,12 @@ async function bundle(entry, platform) {
       b.onResolve({ filter: /^expo-sqlite$/ }, () => ({ path: 'sqlite', namespace: 'sqlite' }));
       b.onLoad({ filter: /.*/, namespace: 'sqlite' }, () => ({ contents: `
         globalThis.startupCalls.loaded = true;
+        ${unavailable ? "throw new Error('Expo SQLite unavailable');" : ''}
+        export async function openDatabaseAsync(name) {
+          globalThis.startupCalls.asyncOpened = name;
+          await new Promise(resolve => { globalThis.startupCalls.finishOpen = resolve; });
+          return { closeSync() {}, execSync() {}, runSync() {}, getFirstSync() { return {value: 1}; }, getAllSync() { return []; } };
+        }
         export function openDatabaseSync(name) {
           globalThis.startupCalls.opened = name;
           return { closeSync() {}, execSync() {}, runSync() {}, getFirstSync() {}, getAllSync() {} };
@@ -63,15 +69,32 @@ test('static fallback and head bootstrap share the canvas before hydration', () 
   assert.match(html, /__html: webStartupStyle/);
 });
 
-test('web opens asynchronous sql.js without even loading the synchronous expo-sqlite bridge', async () => {
+test('web awaits Expo SQLite on the existing persistent path and retains the SqlExecutor contract', async () => {
   const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'web');
+  let settled = false;
+  const opening = openRuntimeDb().then(value => { settled = true; return value; });
+  await Promise.resolve();
+  assert.equal(settled, false, 'open must yield while the worker initializes');
+  assert.equal(startupCalls.loaded, true);
+  assert.equal(startupCalls.asyncOpened, 'UserData.sqlite');
+  assert.equal(startupCalls.opened, undefined);
+  startupCalls.finishOpen();
+  const opened = await opening;
+  assert.equal(opened.persistSqlJs, false);
+  assert.equal(opened.db.get('SELECT 1 AS value').value, 1);
+  opened.db.exec('SELECT 1');
+  opened.db.run('SELECT 1');
+  assert.equal(opened.db.all('SELECT 1').length, 0);
+  opened.db.close();
+});
+
+test('sql.js remains the existing fallback only when Expo SQLite is unavailable', async () => {
+  const { openRuntimeDb } = await bundle('components/UserDataProvider.tsx', 'web', true);
   const opened = await openRuntimeDb();
   assert.equal(opened.persistSqlJs, true);
   assert.equal(opened.db.get('SELECT 1 AS value').value, 1);
   opened.db.close();
-  assert.deepEqual(startupCalls, {});
 });
-
 
 test('native still opens the persistent Expo database synchronously', async () => {
   const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'ios');

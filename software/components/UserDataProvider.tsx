@@ -79,28 +79,32 @@ function writePersistedSqlJs(db: SqlExecutor): void {
 }
 
 export async function openRuntimeDb(): Promise<{ db: SqlExecutor; persistSqlJs: boolean }> {
-  // expo-sqlite's synchronous web bridge can block waiting for its worker.
-  // Web already persists via sql.js; go straight to its async WASM loader.
-  if (Platform.OS !== 'web') {
-    try {
-      // Native / Expo Go path — expo-sqlite persists on device.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const SQLite = require('expo-sqlite') as {
-        openDatabaseSync?: (name: string) => {
-          execSync: (sql: string) => void;
-          runSync: (sql: string, params?: unknown[]) => void;
-          getFirstSync: <T>(sql: string, params?: unknown[]) => T | null;
-          getAllSync: <T>(sql: string, params?: unknown[]) => T[];
-          closeSync?: () => void;
-        };
+  try {
+    // Keep Expo SQLite and its default persistent database on every platform.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const SQLite = require('expo-sqlite') as {
+      openDatabaseAsync?: (name: string) => Promise<Parameters<typeof wrapExpoSqlite>[0]>;
+      openDatabaseSync?: (name: string) => {
+        execSync: (sql: string) => void;
+        runSync: (sql: string, params?: unknown[]) => void;
+        getFirstSync: <T>(sql: string, params?: unknown[]) => T | null;
+        getAllSync: <T>(sql: string, params?: unknown[]) => T[];
+        closeSync?: () => void;
       };
-      if (typeof SQLite.openDatabaseSync === 'function') {
-        const raw = SQLite.openDatabaseSync('UserData.sqlite');
-        return { db: wrapExpoSqlite(raw), persistSqlJs: false };
-      }
-    } catch {
-      // fall through to sql.js (web / Node / limited runtimes)
+    };
+    // Web's synchronous open busy-waits for worker/WASM initialization. Await
+    // the same database instead so the startup canvas can paint during the open.
+    // The returned database still supports our synchronous SqlExecutor methods.
+    if (Platform.OS === 'web' && typeof SQLite.openDatabaseAsync === 'function') {
+      const raw = await SQLite.openDatabaseAsync('UserData.sqlite');
+      return { db: wrapExpoSqlite(raw), persistSqlJs: false };
     }
+    if (typeof SQLite.openDatabaseSync === 'function') {
+      const raw = SQLite.openDatabaseSync('UserData.sqlite');
+      return { db: wrapExpoSqlite(raw), persistSqlJs: false };
+    }
+  } catch {
+    // fall through to sql.js (web / Node / limited runtimes)
   }
   const bytes = readPersistedSqlJs();
   const db = await openSqlJsDatabase(bytes);
