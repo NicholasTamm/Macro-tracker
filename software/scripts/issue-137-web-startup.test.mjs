@@ -7,7 +7,7 @@ import { build } from 'esbuild';
 
 const require = createRequire(import.meta.url);
 const root = new URL('../', import.meta.url).pathname;
-async function bundle(entry, platform, unavailable = false) {
+async function bundle(entry, platform, unavailable = false, options = {}) {
   const result = await build({
     entryPoints: [root + entry], bundle: true, platform: 'node', format: 'cjs',
     write: false, external: ['react', 'sql.js'],
@@ -23,7 +23,7 @@ async function bundle(entry, platform, unavailable = false) {
         export async function openDatabaseAsync(name) {
           globalThis.startupCalls.asyncOpened = name;
           await new Promise(resolve => { globalThis.startupCalls.finishOpen = resolve; });
-          return { closeSync() {}, execSync() {}, runSync() {}, getFirstSync() { return {value: 1}; }, getAllSync() { return []; } };
+          return { closeSync() { globalThis.startupCalls.closed = true; }, execSync() { if (globalThis.startupCalls.failSync) throw new Error('sync unavailable'); }, runSync() {}, getFirstSync() { return {value: 1}; }, getAllSync() { return []; } };
         }
         export function openDatabaseSync(name) {
           globalThis.startupCalls.opened = name;
@@ -33,9 +33,11 @@ async function bundle(entry, platform, unavailable = false) {
     } }],
   });
   const module = { exports: {} };
-  const startupCalls = {};
+  const startupCalls = { ...options.calls };
   vm.runInNewContext(result.outputFiles[0].text, { module, exports: module.exports, require,
-    Uint8Array, Buffer, console, process, URL, startupCalls }, { filename: entry });
+    Uint8Array, Buffer, console, process, URL, startupCalls,
+    SharedArrayBuffer: options.noSharedArrayBuffer ? undefined : SharedArrayBuffer,
+    localStorage: options.localStorage }, { filename: entry });
   return { ...module.exports, startupCalls };
 }
 
@@ -101,5 +103,40 @@ test('native still opens the persistent Expo database synchronously', async () =
   const opened = await openRuntimeDb();
   assert.equal(opened.persistSqlJs, false);
   assert.deepEqual(startupCalls, { loaded: true, opened: 'UserData.sqlite' });
+  opened.db.close();
+});
+
+
+test('web retains a previously persisted sql.js database even when Expo is available', async () => {
+  const { openRuntimeDb: openFallback } = await bundle('components/UserDataProvider.tsx', 'web', true);
+  const original = await openFallback();
+  original.db.exec('CREATE TABLE retained (value TEXT)');
+  original.db.run('INSERT INTO retained VALUES (?)', ['saved data']);
+  const stored = Buffer.from(original.db.exportBytes()).toString('base64');
+  original.db.close();
+  const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'web', false, {
+    localStorage: { getItem(key) { assert.equal(key, 'macro-tracker:UserData.sqljs.b64'); return stored; } },
+  });
+  const opened = await openRuntimeDb();
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(opened.db.get('SELECT value FROM retained').value, 'saved data');
+  assert.equal(startupCalls.loaded, undefined);
+  opened.db.close();
+});
+
+test('web falls back when synchronous worker access is unavailable', async () => {
+  const withoutSharedMemory = await bundle('components/UserDataProvider.tsx', 'web', false, { noSharedArrayBuffer: true });
+  const fallback = await withoutSharedMemory.openRuntimeDb();
+  assert.equal(fallback.persistSqlJs, true);
+  assert.equal(withoutSharedMemory.startupCalls.asyncOpened, undefined);
+  fallback.db.close();
+
+  const failingProbe = await bundle('components/UserDataProvider.tsx', 'web', false, { calls: { failSync: true } });
+  const opening = failingProbe.openRuntimeDb();
+  await Promise.resolve();
+  failingProbe.startupCalls.finishOpen();
+  const opened = await opening;
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(failingProbe.startupCalls.closed, true);
   opened.db.close();
 });
