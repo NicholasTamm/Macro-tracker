@@ -1,0 +1,158 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import vm from 'node:vm';
+import { build } from 'esbuild';
+
+const require = createRequire(import.meta.url);
+const root = new URL('../', import.meta.url).pathname;
+async function bundle(entry, platform, unavailable = false, options = {}) {
+  const result = await build({
+    entryPoints: [root + entry], bundle: true, platform: 'node', format: 'cjs',
+    write: false, external: ['react', 'sql.js'],
+    plugins: [{ name: 'startup-platform', setup(b) {
+      b.onResolve({ filter: /^react-native$/ }, () => ({ path: 'platform', namespace: 'mock' }));
+      b.onLoad({ filter: /.*/, namespace: 'mock' }, () => ({
+        contents: `export const Platform = { OS: ${JSON.stringify(platform)} };`,
+      }));
+      b.onResolve({ filter: /^expo-sqlite$/ }, () => ({ path: 'sqlite', namespace: 'sqlite' }));
+      b.onLoad({ filter: /.*/, namespace: 'sqlite' }, () => ({ contents: `
+        globalThis.startupCalls.loaded = true;
+        ${unavailable ? "throw new Error('Expo SQLite unavailable');" : ''}
+        export async function openDatabaseAsync(name) {
+          globalThis.startupCalls.asyncOpened = name;
+          await new Promise(resolve => { globalThis.startupCalls.finishOpen = resolve; });
+          return { closeSync() { globalThis.startupCalls.closed = true; }, execSync() { if (globalThis.startupCalls.failSync) throw new Error('sync unavailable'); }, runSync() {}, getFirstSync() { return {value: 1}; }, getAllSync() { return []; } };
+        }
+        export function openDatabaseSync(name) {
+          globalThis.startupCalls.opened = name;
+          return { closeSync() {}, execSync() {}, runSync() {}, getFirstSync() {}, getAllSync() {} };
+        }`,
+      }));
+    } }],
+  });
+  const module = { exports: {} };
+  const startupCalls = { ...options.calls };
+  vm.runInNewContext(result.outputFiles[0].text, { module, exports: module.exports, require,
+    Uint8Array, Buffer, console, process, URL, startupCalls,
+    SharedArrayBuffer: options.noSharedArrayBuffer ? undefined : SharedArrayBuffer,
+    localStorage: options.localStorage }, { filename: entry });
+  return { ...module.exports, startupCalls };
+}
+
+test('head bootstrap uses palette canvases and safely honors only forced saved themes', async () => {
+  const { webStartupScript, webStartupStyle } = await bundle('design-system/theme/webStartup.ts');
+  assert.match(webStartupStyle, /prefers-color-scheme: dark/);
+  assert.match(webStartupStyle, /--startup-canvas: #f9f9f9/);
+  assert.match(webStartupStyle, /--startup-canvas: #141414/);
+  assert.doesNotMatch(webStartupStyle + webStartupScript, /ff8b41/i);
+  for (const preference of ['dark', 'light', 'system', null, 'invalid']) {
+    const style = { setProperty(key, value) { this[key] = value; } };
+    vm.runInNewContext(webStartupScript, {
+      localStorage: { getItem(key) { assert.equal(key, 'macro-tracker:theme-preference'); return preference; } },
+      document: { documentElement: { style } },
+    });
+    assert.equal(style['--startup-canvas'], preference === 'dark' ? '#141414' : preference === 'light' ? '#f9f9f9' : undefined);
+  }
+  assert.doesNotThrow(() => vm.runInNewContext(webStartupScript, {
+    get localStorage() { throw new Error('storage blocked'); },
+  }));
+  assert.doesNotThrow(() => vm.runInNewContext(webStartupScript, {}));
+});
+
+test('static fallback and head bootstrap share the canvas before hydration', () => {
+  const layout = readFileSync(root + 'app/_layout.tsx', 'utf8');
+  const html = readFileSync(root + 'app/+html.tsx', 'utf8');
+  assert.match(layout, /backgroundColor: 'var\(--startup-canvas\)'/);
+  assert.doesNotMatch(layout, /lightPalette\.brand/);
+  assert.match(layout, /contentStyle: \{ backgroundColor: colors\.canvas \}/);
+  assert.ok(html.indexOf('__html: webStartupScript') < html.indexOf('<body>'));
+  assert.match(html, /__html: webStartupStyle/);
+});
+
+test('web awaits Expo SQLite on the existing persistent path and retains the SqlExecutor contract', async () => {
+  const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'web');
+  let settled = false;
+  const opening = openRuntimeDb().then(value => { settled = true; return value; });
+  await Promise.resolve();
+  assert.equal(settled, false, 'open must yield while the worker initializes');
+  assert.equal(startupCalls.loaded, true);
+  assert.equal(startupCalls.asyncOpened, 'UserData.sqlite');
+  assert.equal(startupCalls.opened, undefined);
+  startupCalls.finishOpen();
+  const opened = await opening;
+  assert.equal(opened.persistSqlJs, false);
+  assert.equal(opened.db.get('SELECT 1 AS value').value, 1);
+  opened.db.exec('SELECT 1');
+  opened.db.run('SELECT 1');
+  assert.equal(opened.db.all('SELECT 1').length, 0);
+  opened.db.close();
+});
+
+test('sql.js remains the existing fallback only when Expo SQLite is unavailable', async () => {
+  const { openRuntimeDb } = await bundle('components/UserDataProvider.tsx', 'web', true);
+  const opened = await openRuntimeDb();
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(opened.db.get('SELECT 1 AS value').value, 1);
+  opened.db.close();
+});
+
+test('native still opens the persistent Expo database synchronously', async () => {
+  const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'ios');
+  const opened = await openRuntimeDb();
+  assert.equal(opened.persistSqlJs, false);
+  assert.deepEqual(startupCalls, { loaded: true, opened: 'UserData.sqlite' });
+  opened.db.close();
+});
+
+
+test('web retains a populated fallback database when Expo becomes available', async () => {
+  const { openRuntimeDb: openFallback } = await bundle('components/UserDataProvider.tsx', 'web', true);
+  const original = await openFallback();
+  original.db.exec('CREATE TABLE retained (value TEXT)');
+  original.db.run('INSERT INTO retained VALUES (?)', ['saved data']);
+  const stored = Buffer.from(original.db.exportBytes()).toString('base64');
+  original.db.close();
+  const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'web', false, {
+    localStorage: { getItem(key) { assert.equal(key, 'macro-tracker:UserData.sqljs.b64'); return stored; } },
+  });
+  const opened = await openRuntimeDb();
+  assert.equal(startupCalls.asyncOpened, undefined);
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(opened.db.get('SELECT value FROM retained').value, 'saved data');
+  opened.db.run('UPDATE retained SET value = ?', ['updated data']);
+  const updated = Buffer.from(opened.db.exportBytes()).toString('base64');
+  opened.db.close();
+  const reopened = await bundle('components/UserDataProvider.tsx', 'web', false, {
+    localStorage: { getItem() { return updated; } },
+  });
+  const restored = await reopened.openRuntimeDb();
+  assert.equal(restored.db.get('SELECT value FROM retained').value, 'updated data');
+  restored.db.close();
+
+  const unavailable = await bundle('components/UserDataProvider.tsx', 'web', true, {
+    localStorage: { getItem() { return stored; } },
+  });
+  const fallback = await unavailable.openRuntimeDb();
+  assert.equal(fallback.persistSqlJs, true);
+  assert.equal(fallback.db.get('SELECT value FROM retained').value, 'saved data');
+  fallback.db.close();
+});
+
+test('web falls back when synchronous worker access is unavailable', async () => {
+  const withoutSharedMemory = await bundle('components/UserDataProvider.tsx', 'web', false, { noSharedArrayBuffer: true });
+  const fallback = await withoutSharedMemory.openRuntimeDb();
+  assert.equal(fallback.persistSqlJs, true);
+  assert.equal(withoutSharedMemory.startupCalls.asyncOpened, undefined);
+  fallback.db.close();
+
+  const failingProbe = await bundle('components/UserDataProvider.tsx', 'web', false, { calls: { failSync: true } });
+  const opening = failingProbe.openRuntimeDb();
+  await Promise.resolve();
+  failingProbe.startupCalls.finishOpen();
+  const opened = await opening;
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(failingProbe.startupCalls.closed, true);
+  opened.db.close();
+});

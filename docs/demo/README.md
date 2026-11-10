@@ -413,3 +413,30 @@ all tab label line boxes, ancestor clipping, hit targets and content separation.
 Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
 Writes `out/issue-145-smoke-result.txt`. Native safe-area sizing is unit-tested;
 a physical device home-indicator check is not automated.
+
+## Issue #137 — M1-71 Web startup canvas and database open timing
+
+Run `bash docs/demo/smoke-m1-issue-137.sh`. Requires headless `google-chrome`
+(or `CHROME_BIN`). Runs typecheck, lint, focused startup/theme tests, the full
+serialized package suite, and a static Expo export. A Chromium CDP harness serves
+that export with isolation headers and the WASM MIME type at 390×844.
+It blocks the external bundle to verify the neutral canvas before hydration,
+then checks saved Light/Dark against the opposite system theme, System, fresh
+startup theme cache, blocked localStorage, and reloads. Theme fixtures are written
+through the actual Expo SQLite worker into the persistent `UserData.sqlite`;
+localStorage holds only the existing startup theme cache. The checks require an
+async Expo user-database open, frames during that open, no orange startup frames,
+and records startup task durations. Existing queries and migrations remain
+synchronous; task durations are diagnostic, not a startup-latency gate. A second
+run delays SQLite WASM by 1.2 seconds
+to verify painting continues while the database initializes.
+
+Web uses Expo SQLite's async open with its existing database name and default
+location; native keeps its synchronous open. The existing sql.js fallback remains
+for runtimes where Expo SQLite is unavailable. No storage migration is added.
+Writes `out/issue-137-smoke-result.txt`, including frame and worker open timings.
+Local timings do not reproduce or establish the UAT's reported seven-second delay.
+For an optional synchronous-open investigation, set `ISSUE_137_BASELINE_DIR` to
+an export with the original provider. That diagnostic records frames, main-thread
+resume time, and whether the original open fell back to sql.js; it does not assert
+the original build succeeds on the Expo path.

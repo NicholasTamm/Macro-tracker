@@ -68,9 +68,7 @@ test('startup surfaces cannot conflict with a persisted forced theme', async () 
   assert.match(src, /setNavigationButtonStyle: NavigationBar\.setButtonStyleAsync/);
   assert.match(src, /StatusBar/);
   assert.match(layout, /SplashScreen\.preventAutoHideAsync/);
-  assert.match(layout, /readWebStartupThemePreference\(\)/);
-  assert.match(layout, /paletteFor\(startupScheme\)\.canvas/);
-  assert.match(layout, /: lightPalette\.brand/);
+  assert.match(layout, /backgroundColor: 'var\(--startup-canvas\)'/);
   assert.match(layout, /writeWebStartupThemePreference\(themePreference\)/);
   assert.match(layout, /initializeNativeThemePreference\(SQLite\.openDatabaseSync, applyNativeThemePreference\)/);
   assert.match(layout, /applyNativeThemePreference\(themePreference\)/);
