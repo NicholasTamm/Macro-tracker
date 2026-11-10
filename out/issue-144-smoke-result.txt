@@ -1,0 +1,10 @@
+smoke-m1-issue-144 PASS 2026-11-05T07:07:42Z
+commit=208028c
+typecheck=npx tsc --noEmit PASS
+lint=npm run lint PASS (existing warnings only)
+focused=node --test scripts/issue-144-navigation-theme.test.mjs PASS
+regression=light/dark palette mapping, supplied palette tokens, navigation fonts, live root provider wiring PASS
+full-suite=node --test --test-concurrency=1 (all package.json test files) PASS
+web-verification=Expo web in headless Chrome at 390x844; Today, Search, Analytics, Settings and all five settings sub-pages have no default light navigation backgrounds/hairlines in dark mode
+live-theme=Light/Dark/System saves without reload; system light/dark changes; canvas and header divider tokens PASS
+scope=web browser verified; native device not exercised; light screen styles and palette unchanged, navigation defaults now follow design tokens

@@ -244,9 +244,9 @@ test('empty and sparse states have sensible copy', () => {
   const one = weight.summarizeWeights([mk('a', 3, 72)]);
   assert.equal(one.state, 'sparse');
   assert.equal(one.changeKg, null);
-  assert.match(weight.weightSummaryText(one, 'kg'), /^1 weight in the last 30 days: 72\.0 kg\. Log another/);
+  assert.match(weight.weightSummaryText(one, 'kg'), /^Starting weight 72\.0 kg\. Log another weigh-in to see your trend\./);
   const pts = weight.chartPoints([mk('a', 3, 72)], NOW);
-  assert.equal(pts[0].x, 0.5, 'single sample is centered instead of clipped at the chart edge');
+  assert.equal(pts[0].x, 0.9, 'single sample retains its date position');
   assert.equal(pts[0].y, 0.5);
 
   const two = weight.summarizeWeights([mk('a', 3, 72), mk('b', 1, 71.5)]);
@@ -300,7 +300,7 @@ test('chart exposes accessible text summary; analytics screen wires CRUD', () =>
   assert.match(screen, /dateChanged \? \{ timestamp: parsedDate\.timestamp \} : \{\}/);
   assert.match(
     screen,
-    /title=\{samples\.length === 0 \? 'No weights yet' : 'No recent weights'\}/,
+    /title=\{\s*samples\.length === 0 \? 'No weights yet' :\s*summary\.count === 1 \? 'Your starting weight' : 'No recent weights'\s*\}/,
     'Historical-only history must not be labeled as no weight history',
   );
 });

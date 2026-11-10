@@ -43,20 +43,22 @@ export function WeightChart({
           },
         ]}
       >
-        {points.map((p) => (
-          <View
-            key={p.id}
-            style={[
-              styles.dot,
-              {
-                backgroundColor: colors.weightTrend,
-                start: `${p.x * 100}%`,
-                bottom: p.y * (CHART_HEIGHT - DOT * 2) + DOT / 2,
-                marginStart: -DOT / 2,
-              },
-            ]}
-          />
-        ))}
+        <View style={styles.xRange}>
+          {points.map((p) => (
+            <View
+              key={p.id}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: colors.weightTrend,
+                  start: `${p.x * 100}%`,
+                  bottom: p.y * (CHART_HEIGHT - DOT * 2) + DOT / 2,
+                  marginStart: -DOT / 2,
+                },
+              ]}
+            />
+          ))}
+        </View>
       </View>
       {minLabel && maxLabel ? (
         <View
@@ -86,6 +88,14 @@ const styles = StyleSheet.create({
     width: DOT,
     height: DOT,
     borderRadius: DOT / 2,
+  },
+  // Inset dot centers by a full diameter, leaving room for radius + plot border.
+  xRange: {
+    position: 'absolute',
+    start: DOT,
+    end: DOT,
+    top: 0,
+    bottom: 0,
   },
   axis: {
     flexDirection: 'row',

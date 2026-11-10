@@ -41,10 +41,16 @@ async function renderLayoutOptions(relativePath) {
         name: 'issue-120-layout-stubs',
         setup(buildApi) {
           buildApi.onResolve(
-            { filter: /^(expo-router|@expo\/vector-icons|@\/design-system|@\/components\/HeaderBackButton)$/ },
+            { filter: /^(expo-router|react-native|react-native-safe-area-context|@expo\/vector-icons|@\/design-system|@\/components\/HeaderBackButton)$/ },
             ({ path }) => ({ path, namespace: 'layout-stub' }),
           );
           buildApi.onLoad({ filter: /.*/, namespace: 'layout-stub' }, ({ path }) => {
+            if (path === 'react-native-safe-area-context') {
+              return { contents: 'export const useSafeAreaInsets = () => ({ bottom: 0 });', loader: 'js' };
+            }
+            if (path === 'react-native') {
+              return { contents: "export const Platform = { OS: 'web' };", loader: 'js' };
+            }
             if (path === 'expo-router') {
               return {
                 contents: `import React from 'react';
@@ -60,6 +66,7 @@ async function renderLayoutOptions(relativePath) {
                 contents: `export function useTheme() {
                   return {
                     colors: { ink: '#000', muted: '#666', raised: '#fff', divider: '#ddd', canvas: '#fff' },
+                    spacing: { xl: 24, xs: 4, sm: 8 },
                     typography: {
                       caption: { fontFamily: 'Figtree_500Medium', fontSize: 11, lineHeight: 14 },
                       pageTitle: { fontFamily: 'Nunito_700Bold', fontSize: 28, lineHeight: 32 },

@@ -176,6 +176,11 @@ export function summarizeWeights(windowed: readonly WeightSample[]): WeightSumma
   };
 }
 
+/** A trend needs at least two live weigh-ins in the selected window. */
+export function hasWeightTrend(summary: WeightSummary): boolean {
+  return summary.count >= 2;
+}
+
 function formatChange(changeKg: number, unit: MassUnit): string {
   const d = toDisplayWeight(Math.abs(changeKg), unit);
   if (d === 0) return `no change`;
@@ -193,7 +198,7 @@ export function weightSummaryText(
   }
   const latest = formatWeight(summary.latestKg, unit);
   if (summary.count === 1) {
-    return `1 weight in the last ${days} days: ${latest}. Log another to see a change.`;
+    return `Starting weight ${latest}. Log another weigh-in to see your trend.`;
   }
   const parts = [
     `${summary.count} weights in the last ${days} days.`,
@@ -214,7 +219,10 @@ export type ChartPoint = {
   kilograms: number;
 };
 
-/** Normalized chart coordinates for windowed samples. */
+/**
+ * One chart point per civil day, using the mean of that day's live weigh-ins.
+ * Chart-only aggregation: summaries and the entry list still use every sample.
+ */
 export function chartPoints(
   windowed: readonly WeightSample[],
   now: Date,
@@ -228,14 +236,23 @@ export function chartPoints(
   const min = Math.min(...kgs);
   const max = Math.max(...kgs);
   const span = max - min;
-  return live.map((s) => {
+  const daily = new Map<string, { id: string; date: number | null; totalKg: number; count: number }>();
+  for (const s of live) {
     const dateKey = weightDateKeyFromTimestamp(s.timestamp);
     const date = dateKey ? dayNumber(dateKey) : null;
-    const x =
-      live.length === 1 || date == null
-        ? 0.5
-        : Math.min(1, Math.max(0, (date - start) / days));
-    const y = span === 0 ? 0.5 : (s.kilograms - min) / span;
-    return { id: s.id, x, y, kilograms: s.kilograms };
+    const key = dateKey ?? s.id;
+    const day = daily.get(key);
+    if (day) {
+      day.totalKg += s.kilograms;
+      day.count += 1;
+    } else {
+      daily.set(key, { id: s.id, date, totalKg: s.kilograms, count: 1 });
+    }
+  }
+  return Array.from(daily.values(), ({ id, date, totalKg, count }) => {
+    const kilograms = totalKg / count;
+    const x = date == null ? 0.5 : Math.min(1, Math.max(0, (date - start) / days));
+    const y = span === 0 ? 0.5 : (kilograms - min) / span;
+    return { id, x, y, kilograms };
   });
 }

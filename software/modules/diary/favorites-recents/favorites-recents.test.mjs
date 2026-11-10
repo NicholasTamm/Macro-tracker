@@ -359,7 +359,7 @@ test('custom quick-add honors metric and imperial defaults without a remembered 
   assert.deepEqual(imperial.defaultUnit, { kind: 'serving', servingId: 0 });
   assert.equal(imperial.suggestedQuantity, 1);
   assert.deepEqual(metric.defaultUnit, { kind: 'grams' });
-  assert.equal(metric.suggestedQuantity, 250);
+  assert.equal(metric.suggestedQuantity, 100);
 
   const result = quick.quickAddFood(db, null, {
     foodKind: 'custom',
@@ -368,7 +368,7 @@ test('custom quick-add honors metric and imperial defaults without a remembered 
     massUnit: 'kg',
   });
   assert.equal(result.ok, true);
-  assert.equal(result.quantity, 250);
+  assert.equal(result.quantity, 100);
   assert.equal(result.unitLabel, 'g');
   db.close();
 });

@@ -1,18 +1,31 @@
 import { Tabs } from 'expo-router';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/design-system';
 
 export default function TabsLayout() {
-  const { colors, typography } = useTheme();
+  const { colors, typography, spacing } = useTheme();
+  const insets = useSafeAreaInsets();
+  const iconHeight = spacing.xl + spacing.xs;
+  // Include the caption's full line box, room for the tab button's padding,
+  // the top border, and the home indicator. Navigation reserves this height.
+  const tabBarHeight = iconHeight + typography.caption.lineHeight! + spacing.sm * 2 + 1 + insets.bottom;
 
   return (
     <Tabs
+      // Web tab visits must append browser history. The default firstRoute
+      // invents a Today entry on deep links, so tapping Today looks like a pop.
+      backBehavior={Platform.OS === 'web' ? 'fullHistory' : 'firstRoute'}
       screenOptions={{
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: typography.caption,
+        tabBarIconStyle: { height: iconHeight },
         tabBarStyle: {
+          height: tabBarHeight,
+          paddingBottom: insets.bottom,
           backgroundColor: colors.raised,
           borderTopColor: colors.divider,
         },
@@ -44,6 +57,13 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="food-entry"
+        listeners={({ navigation }) => ({
+          tabPress: (event) => {
+            // Tab routes retain params; a fresh Search tab visit always logs today.
+            event.preventDefault();
+            navigation.navigate('food-entry', { date: undefined });
+          },
+        })}
         options={{
           title: 'Search',
           tabBarAccessibilityLabel: 'Search foods',

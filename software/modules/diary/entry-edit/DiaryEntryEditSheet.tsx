@@ -125,7 +125,7 @@ export function DiaryEntryEditSheet({
                 {entry.foodDisplayName}
               </Text>
               <Text style={[typography.caption, { color: colors.muted }]}>
-                {entry.unitLabel} · snapshot locked (seed/custom edits won't rewrite)
+                Unit: {entry.unitLabel}
               </Text>
             </View>
 
@@ -168,7 +168,7 @@ export function DiaryEntryEditSheet({
                 Recalculated nutrients
               </Text>
               {preview == null && qtyParsed.ok ? (
-                <ErrorBanner title="Cannot recalculate" message="Invalid snapshot scale." tone="error" />
+                <ErrorBanner title="Cannot recalculate" message="Unable to calculate nutrients for this entry." tone="error" />
               ) : (
                 <MacroSummary totals={macros} energyUnit={energyUnit} />
               )}

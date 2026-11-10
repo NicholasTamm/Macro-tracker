@@ -21,15 +21,15 @@ test('issue 123: empty Today shows emptyPlate mascot with a brand Log food CTA t
   assert.match(block, /mascotPose="emptyPlate"/);
   assert.match(block, /actionLabel="Log food"/);
   assert.match(block, /actionVariant="brand"/);
-  assert.match(block, /onAction=\{\(\) => router\.push\('\/food-entry'\)\}/);
-  assert.match(today, /import \{ router \} from 'expo-router'/);
+  assert.match(block, /onAction=\{\(\) => router\.push\(\{ pathname: '\/food-entry', params: \{ date: dayKey \} \}\)\}/);
+  assert.match(today, /import \{ router, useLocalSearchParams \} from 'expo-router'/);
   assert.match(today, /\{view\.entryCount === 0 \? \(/, 'only rendered while the day has no entries');
 });
 
-test('issue 123: empty browse in Food Entry uses think; no-results stays plain', () => {
+test('issue 123: empty browse and no-results in Food Entry use think', () => {
   assert.match(emptyStateBlock(entry, 'showEmptyBrowse ? ('), /mascotPose="think"/);
   const noResults = emptyStateBlock(entry, 'showEmptyResults ? (');
-  assert.doesNotMatch(noResults, /mascotPose|illustration/);
+  assert.match(noResults, /mascotPose="think"/);
 });
 
 test('issue 123: data zones stay art-free', () => {

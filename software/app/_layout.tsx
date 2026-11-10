@@ -9,6 +9,7 @@ import {
 } from '@/design-system';
 import { UserDataProvider, useUserData } from '@/components/UserDataProvider';
 import { FoodCatalogProvider } from '@/components/FoodCatalogProvider';
+import { NavigationThemeProvider } from '@/components/NavigationThemeProvider';
 import {
   initializeNativeThemePreference,
   readStartupThemePreference,
@@ -60,7 +61,7 @@ function PersistedTheme({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeProvider forcedScheme={themePreference === 'system' ? undefined : themePreference}>
-      {children}
+      <NavigationThemeProvider>{children}</NavigationThemeProvider>
     </ThemeProvider>
   );
 }

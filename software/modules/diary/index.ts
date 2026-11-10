@@ -25,6 +25,7 @@ export {
 export {
   localDayKeyFromDate,
   parseDayKey,
+  resolveRouteDayKey,
   shiftDayKey,
   formatDayLabel,
   formatEntryTime,

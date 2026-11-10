@@ -244,7 +244,7 @@ Run `bash docs/demo/smoke-m1-issue-124.sh`. Result: `out/issue-124-smoke-result.
 
 Manual check:
 1. With no weights logged, open Analytics. "Last 30 days" shows the scale mascot above "No weights yet".
-2. Log one weight. The mascot is replaced by the chart.
+2. Log one weight. The starter state shows that weight with the scale mascot. Log a second in-range weight to show the chart (#142).
 3. If every weight is older than 30 days, the "No recent weights" state shows no art.
 
 ## Issue #125 — M1-67 Goal-hit celebration
@@ -269,6 +269,150 @@ Manual check on a fresh profile:
 2. Middle steps are plain.
 3. "Starter target" shows the cheer mascot.
 4. Every primary CTA is brand orange with a dark label. When disabled, it shows a muted label on the control grey, not a faded orange.
+
+## Issue #143 — M1-77 Weight chart endpoints and same-day weigh-ins
+
+Run `bash docs/demo/smoke-m1-issue-143.sh`. It checks endpoint x scaling, daily
+aggregation, unchanged summaries and entry-list wiring, typecheck, lint, and the
+full serialized test suite. Chrome at 390×844 checks the production chart through
+React Native Web in light/dark, including both range endpoints and the reported
+Oct 30 reproduction. Result: `out/issue-143-smoke-result.txt`.
+
+The chart plots the **mean of each civil day's live weigh-ins**. Summary values
+and the entry list continue to include every entry.
+## Issue #142 — M1-76 Starter weight trend state
+
+Run `bash docs/demo/smoke-m1-issue-142.sh`. It checks the zero/one/two weigh-in threshold, real onboarding seed and delete transitions, range filtering, kg/lb copy and the chart art fence; runs typecheck, lint and the full suite with `--test-concurrency=1`; then exports Expo web. Result: `out/issue-142-smoke-result.txt`.
+
+Browser check at 390×844: finish onboarding with 80 kg and open Analytics. The scale card says “Starting weight 80.0 kg. Log another weigh-in to see your trend.” with no chart. Entries still offers Edit/Delete. Add a second recent weigh-in to show the chart; delete it to restore the starter state; delete the seed to show “No weights yet”. Historical-only entries keep “No recent weights” without art.
+## Issue #141 — M1-75 Search logging uses the viewed day
+
+Run `bash docs/demo/smoke-m1-issue-141.sh`. It checks date wiring, typecheck,
+route validation, food-sheet labels and actual sql.js writes, then the full
+serialized test suite. Result: `out/issue-141-smoke-result.txt`.
+
+For browser verification, serve an Expo web export and set `ISSUE141_BASE_URL`
+to its URL. The smoke then runs `software/scripts/smoke-issue-141-web.mjs` in
+headless Chrome at 390×844. Set `PLAYWRIGHT_CORE_PATH` to an existing
+`playwright-core` installation and `CHROME_BIN` if Chrome is not at
+`/usr/bin/google-chrome`. It checks Yesterday/Tomorrow logging and return day,
+persisted diary dates, tab-bar Search after a dated visit, and invalid/missing dates.
+
+## Issue #140 — M1-74 Today day-navigation chevrons
+
+Run `bash docs/demo/smoke-m1-issue-140.sh`. It runs typecheck, lint, focused
+DateSelector tests for LTR, RTL, and missing/undefined web RTL flags, then the
+full serialized test suite. Headless Chrome at 390×844 checks the rendered
+Previous day (`‹`) and Next day (`›`) buttons on Expo web `/today`.
+Requires Chrome (or `CHROME_BIN`); override the Expo port with
+`EXPO_WEB_SMOKE_PORT` if needed. Result: `out/issue-140-smoke-result.txt`.
+
+## Issue #139 — M1-73 Macro summary progress
+
+Run `bash docs/demo/smoke-m1-issue-139.sh`. It runs typecheck, lint, focused macro
+progress tests and the full serialized suite. Headless Chrome checks the real RN
+Web component at 390px in light/dark: empty, half and full tracks, over-target
+text, accessible percentages, alignment and overflow. Requires Chrome (or
+`CHROME_BIN`). Writes `out/issue-139-smoke-result.txt`.
+
+## Issue #138 — M1-72 Metric food detail quantity
+
+Run `bash docs/demo/smoke-m1-issue-138.sh`. It checks sheet/quick-add wiring,
+then runs typecheck, lint, focused default quantity and history regressions,
+and the full suite with `--test-concurrency=1`. Writes
+`out/issue-138-smoke-result.txt` on success.
+
+Web check: with a metric profile and no history, search for roasted chicken
+breast, egg, cooked brown rice, and banana. Each opens with Quantity **100** and
+**Grams** selected. Log a different quantity/unit and reopen to confirm history
+wins. Imperial profiles keep their source serving default.
+
+## Issue #146 — M1-80 Web tabs after Settings browser Back
+
+Run `bash docs/demo/smoke-m1-issue-146.sh`. It checks the production tab config
+with the installed TabRouter, typecheck, lint, focused tests and the full suite
+with `--test-concurrency=1`, then starts Expo web and headless Chrome at 390×844.
+The browser smoke opens `/settings` with an outside-app history entry, enters
+Units & appearance, presses browser Back and taps Today, asserting no history
+pop. It also checks Settings/sub-page Back/Forward, repeated tab visits, and all
+five direct `/settings/*` links with header return to Settings and Today.
+Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
+Writes `out/issue-146-smoke-result.txt`.
+
+## Issue #144 — M1-78 Navigation theme surfaces
+
+Run `bash docs/demo/smoke-m1-issue-144.sh`. It runs typecheck, lint, focused
+palette/navigation regressions and the full serialized test suite. Chrome at
+390×844 checks the real Expo web app: Today, Search, Analytics, Settings and all
+settings sub-pages in dark mode, header divider tokens, Light/Dark/System saves
+without reload, and live OS appearance changes. Requires Chrome (or `CHROME_BIN`);
+use `EXPO_WEB_SMOKE_PORT` to override port 18144. Result:
+`out/issue-144-smoke-result.txt`.
+
+## Issue #147 — M1-81 Diary edit subtitle
+
+Run `bash docs/demo/smoke-m1-issue-147.sh`. It checks the production sheet's
+unit subtitle and calculation error copy, existing immutable diary-edit behavior,
+typecheck, lint, and all package.json tests with `--test-concurrency=1`.
+Headless Chrome at 390×844 renders the production sheet through React Native Web
+in light/dark for grams, serving units, and a failed calculation. The harness
+isolates native theme/safe-area context; it does not exercise the full Expo diary
+flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-147-smoke-result.txt`.
+
+## Issue #148 — M1-82 Search no-results mascot
+
+Run `bash docs/demo/smoke-m1-issue-148.sh`. It runs typecheck, lint, focused
+no-results and shared EmptyState regressions, and all package.json tests with
+`--test-concurrency=1`. Headless Chrome at 390×844 renders the production
+no-results JSX with real EmptyState, Mascot and placeholder SVG in light/dark,
+checking image loading, 96px sizing, preserved copy, and the icon-free fallback.
+The harness isolates theme context; it does not exercise the full Expo catalog
+search flow. Requires Chrome (or `CHROME_BIN`). Result: `out/issue-148-smoke-result.txt`.
+
+## Issue #149 — M1-83 Macro summary one-line values
+
+Run `bash docs/demo/smoke-m1-issue-149.sh`. It runs typecheck, lint, focused
+formatted-string and progress tests, and the full suite with `--test-concurrency=1`.
+Headless Chrome renders the real MacroSummary through React Native Web at
+390×844 with Today's padding, light/dark, Figtree/system fonts and kcal/kJ.
+It checks four-digit energy and decimal grams (including rounding 999.9 to 1000)
+for wrapping, clipping, overflow and full accessible values. The harness isolates
+theme context; it does not exercise the full Expo diary flow.
+Requires Chrome (or `CHROME_BIN`). Result: `out/issue-149-smoke-result.txt`.
+
+## Issue #150 — M1-84 Time-aware log defaults
+
+Run `bash docs/demo/smoke-m1-issue-150.sh`. It runs typecheck, lint, focused
+meal-boundary/date/log regressions and the full suite with `--test-concurrency=1`.
+Headless Chrome at 390×844 checks the production log sheet in light/dark with a
+fixed 15:55 local clock: Dinner with the current time today, slot default times
+on other dates, explicit initial slots and manual meal changes, including the
+submitted date/time. The harness isolates native context and persistence; it does
+not exercise the full Expo Search/SQLite flow. Requires Chrome (or `CHROME_BIN`).
+Result: `out/issue-150-smoke-result.txt`. The selection rule is documented in
+`software/modules/diary/food-detail/README.md`.
+
+## Issue #151 — M1-85 Biometrics validation gate
+
+Run `bash docs/demo/smoke-m1-issue-151.sh`. It runs typecheck, lint, focused
+biometrics/onboarding/settings regressions and the full suite with
+`--test-concurrency=1`. Headless Chrome at 390×844 checks the production biometrics
+screen, shell and brand button through React Native Web in light/dark and metric/
+imperial units: blank initial values, disabled tokens, invalid/cleared input,
+and valid canonical save plus Goal navigation. The harness isolates persistence,
+router, native theme and safe-area context; it does not run the full Expo/SQLite
+flow. Requires Chrome (or `CHROME_BIN`). Writes `out/issue-151-smoke-result.txt`.
+
+## Issue #145 — M1-79 Tab label descenders
+
+Run `bash docs/demo/smoke-m1-issue-145.sh`. It checks production tab sizing with
+zero/21/34px safe-area insets on web/iOS/Android, typecheck, lint, focused tests
+and all package.json tests with `--test-concurrency=1`. Headless Chrome opens
+Expo web Settings at 390/414/430×844 in light/dark with Figtree loaded, checking
+all tab label line boxes, ancestor clipping, hit targets and content separation.
+Requires Chrome (or `CHROME_BIN`); override `EXPO_WEB_SMOKE_PORT` if needed.
+Writes `out/issue-145-smoke-result.txt`. Native safe-area sizing is unit-tested;
+a physical device home-indicator check is not automated.
 
 ## Issue #137 — M1-71 Web startup canvas and main-thread delay
 
