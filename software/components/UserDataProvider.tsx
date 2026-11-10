@@ -79,9 +79,6 @@ function writePersistedSqlJs(db: SqlExecutor): void {
 }
 
 export async function openRuntimeDb(): Promise<{ db: SqlExecutor; persistSqlJs: boolean }> {
-  const bytes = Platform.OS === 'web' ? readPersistedSqlJs() : undefined;
-  if (bytes) return { db: await openSqlJsDatabase(bytes), persistSqlJs: true };
-
   try {
     // Keep Expo SQLite and its default persistent database on every platform.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -116,7 +113,7 @@ export async function openRuntimeDb(): Promise<{ db: SqlExecutor; persistSqlJs: 
   } catch {
     // fall through to sql.js (web / Node / limited runtimes)
   }
-  const db = await openSqlJsDatabase(bytes ?? readPersistedSqlJs());
+  const db = await openSqlJsDatabase(readPersistedSqlJs());
   return { db, persistSqlJs: true };
 }
 
