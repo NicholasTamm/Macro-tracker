@@ -107,7 +107,7 @@ test('native still opens the persistent Expo database synchronously', async () =
 });
 
 
-test('web prefers the active Expo database when a saved fallback also exists', async () => {
+test('web retains a populated fallback database when Expo becomes available', async () => {
   const { openRuntimeDb: openFallback } = await bundle('components/UserDataProvider.tsx', 'web', true);
   const original = await openFallback();
   original.db.exec('CREATE TABLE retained (value TEXT)');
@@ -117,14 +117,19 @@ test('web prefers the active Expo database when a saved fallback also exists', a
   const { openRuntimeDb, startupCalls } = await bundle('components/UserDataProvider.tsx', 'web', false, {
     localStorage: { getItem(key) { assert.equal(key, 'macro-tracker:UserData.sqljs.b64'); return stored; } },
   });
-  const opening = openRuntimeDb();
-  await Promise.resolve();
-  assert.equal(startupCalls.asyncOpened, 'UserData.sqlite');
-  startupCalls.finishOpen();
-  const opened = await opening;
-  assert.equal(opened.persistSqlJs, false);
-  assert.equal(opened.db.get('SELECT 1 AS value').value, 1);
+  const opened = await openRuntimeDb();
+  assert.equal(startupCalls.asyncOpened, undefined);
+  assert.equal(opened.persistSqlJs, true);
+  assert.equal(opened.db.get('SELECT value FROM retained').value, 'saved data');
+  opened.db.run('UPDATE retained SET value = ?', ['updated data']);
+  const updated = Buffer.from(opened.db.exportBytes()).toString('base64');
   opened.db.close();
+  const reopened = await bundle('components/UserDataProvider.tsx', 'web', false, {
+    localStorage: { getItem() { return updated; } },
+  });
+  const restored = await reopened.openRuntimeDb();
+  assert.equal(restored.db.get('SELECT value FROM retained').value, 'updated data');
+  restored.db.close();
 
   const unavailable = await bundle('components/UserDataProvider.tsx', 'web', true, {
     localStorage: { getItem() { return stored; } },
